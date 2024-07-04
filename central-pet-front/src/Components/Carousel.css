@@ -1,17 +1,65 @@
-.carousel {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .carousel-item {
+        transition: opacity 2s ease, z-index 0.5s ease;
+    }
+}
+
+@layer components {
+    .carousel {
+        @apply grid grid-rows-1 h-full mt-8;
+    }
+
+    .carousel-container {
+        @apply flex overflow-hidden w-full h-[80%] relative items-center;
+    }
+
+    .carousel-item {
+        @apply w-full h-full absolute p-5 box-border bg-[#f0f0f0] top-0 left-0 bottom-0 opacity-0 z-0;
+    }
+
+    .carousel-item h3 {
+        @apply text-2xl mb-5;
+    }
+
+    .carousel-item img {
+        @apply h-[75%] w-auto flex mx-auto mb-5 left-[50%] max-h-[80%];
+    }
+
+    .carousel-item p {
+        @apply my-9 text-center;
+    }
+
+    .carousel-item.active {
+        @apply z-[1] opacity-100;
+    }
+
+    .controls {
+        @apply mt-[10px];
+    }
+
+    .controls button {
+        @apply mx-0 my-2;
+    }
+}
+
+/* .carousel {
     display: grid;
     grid-template-rows: 1fr;
     height: 100%;
-}
+} */
 
-.carousel-container {
+/* .carousel-container {
     overflow: hidden;
     width: 100%;
     height: 80%;
     position: relative;
-}
+} */
 
-.carousel-item {
+/* .carousel-item {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -23,23 +71,24 @@
     left: 0;
     opacity: 0;
     z-index: 0;
-}
+} */
 
-.carousel-item img {
+/* .carousel-item img {
     max-height: 80%;
     width: auto;
     display: block;
     margin: 0 auto;
-}
+} */
 
-.carousel-item.active {
+/* .carousel-item.active {
     z-index: 1;
     opacity: 1;
-}
+} */
 
 .controls {
     margin-top: 10px;
 }
+
 .controls button {
     margin: 0 5px;
 }

@@ -1,6 +1,41 @@
 @import url('@/styles/variables.css');
 
-.app-container {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .app-container {
+        @apply flex flex-col min-h-screen;
+    }
+
+    .header {
+        @apply grid fixed w-full pb-2 h-[var(--header-height)] p-2 bg-gradient-to-r from-cyan-300 to-white border-b border-gray-300 items-center z-10;
+        grid-template-columns: auto 1fr auto;
+    }
+
+    .side-panel {
+        @apply bg-gray-100 hidden md:block fixed left-[var(--main-content-width)] top-[var(--header-height)] w-[var(--side-panel-width)] bottom-[var(--footer-height)];
+    }
+
+    .main-content {
+        @apply w-full md:fixed left-0 top-[var(--header-height)] w-[var(--main-content-width)] p-4 overflow-hidden bottom-[var(--footer-height)] z-0;
+    }
+
+    .footer {
+        @apply fixed left-0 bottom-0 w-full p-4 border-t border-gray-300 h-[var(--footer-height)];
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            @apply relative left-0 top-0 right-0;
+            width: 100%;
+            height: calc(100vh - var(--header-height) - var(--footer-height));
+        }
+    }
+}
+
+/* .app-container {
     display: grid;
     grid-template-rows: var(--header-height) auto var(--footer-height);
     grid-template-columns: 1fr auto;
@@ -16,6 +51,7 @@
     left: 0;
     height: 8.2vh;
     width: 100%;
+    z-index: 2;
 }
 
 .main-content {
@@ -50,7 +86,7 @@
     width: 100%;
 }
 
-/* Media query for smaller screens */
+
 @media screen and (max-width: 768px) {
     .mainContent {
         padding-top: 10%;
@@ -58,5 +94,6 @@
 
     .sidePanel {
         display: none;
+
     }
-}
+} */

@@ -7,12 +7,10 @@ import "./MainPage.css";
 const MainPage: React.FC = () => {
   return (
     <div className="main-page">
-      <h1>Welcome to Central Pet!</h1>
-      <p>Check out our latest pets:</p>
+      <h1>Bem-vindo ao Central Pet!</h1>
       <div className="carousel-area">
         <Carousel petsData={petsData} />
       </div>
-      {/* Add more sections or components as needed */}
     </div>
   );
 };

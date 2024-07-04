@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import "./DropdownMenu.css";
 
 type DropdownMenuProps = {
   title: string;
@@ -10,7 +11,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
   const dropdownRef = useRef<HTMLLIElement>(null);
 
   const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => !prev);
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -23,13 +24,17 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
   };
 
   useEffect(() => {
-    console.log("Adding event listenter");
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      console.log("Removing event listenter");
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+  ) => {
+    e.stopPropagation();
+  };
 
   return (
     <li
@@ -41,9 +46,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
       {isOpen && (
         <ul className="dropdown-menu">
           {items.map((item, index) => (
-            <li key={index}>
-              <Link to={item.link}>{item.label}</Link>
-            </li>
+            <Link to={item.link} onClick={handleLinkClick}>
+              <li key={index}>{item.label}</li>
+            </Link>
           ))}
         </ul>
       )}

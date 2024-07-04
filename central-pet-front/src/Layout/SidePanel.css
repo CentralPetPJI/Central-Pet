@@ -1,5 +1,6 @@
 .side-panel {
     padding: 1.5em;
+    border-left: 1px solid #ddddff;
 }
 
 .report {

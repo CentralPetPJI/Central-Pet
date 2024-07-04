@@ -1,10 +1,17 @@
-.main-page {
-    display: block;
-    height: 100vh;
-    position: relative;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.carousel-area {
-    height: 75vh;
-    position: relative;
+@layer components {
+    .main-page {
+        @apply block h-full relative;
+    }
+
+    .main-page h1 {
+        @apply whitespace-nowrap text-nowrap text-lg;
+    }
+
+    .carousel-area {
+        @apply h-[90vh] relative mt-3 mr-3;
+    }
 }

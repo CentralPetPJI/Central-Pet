@@ -23,9 +23,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="app-container">
-      <Header />
+      <div ref={headerRef}>
+        <Header />
+      </div>
       <main className="main-content">{children}</main>
-      <SidePanel className="custom-side-panel" />
+      <SidePanel className="side-panel" />
       <Footer />
     </div>
   );

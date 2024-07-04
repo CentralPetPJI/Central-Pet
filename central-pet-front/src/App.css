@@ -1,4 +1,4 @@
-@import url('@/styles/variables.css');
+/* @import url('@/styles/variables.css');
 
 body {
   margin: 0;
@@ -9,17 +9,17 @@ body {
 .app-container {
   display: grid;
   grid-template-rows: var(--header-height) 1fr var(--footer-height);
-  grid-template-columns: var(--main-content-width) auto; /* Adjust the side panel width as needed */
+  grid-template-columns: var(--main-content-width) auto; 
   min-height: 100vh;
 }
 
 .main-content {
-  grid-row: 2 / 3; /* Updated grid row value */
-  grid-column: 1 / 2; /* Updated grid column value */
+  grid-row: 2 / 3; 
+  grid-column: 1 / 2; 
   padding: 1em;
 }
 
-/* Styles for Header, Footer, SidePanel go here */
+
 
 .side-panel {
   position: relative;
@@ -32,31 +32,31 @@ body {
 
 .headerSection {
   height: var(--header-height);
-  flex: 0 0 auto; /* Fixed height for header */
+  flex: 0 0 auto; 
 }
 
 .footer {
   height: var(--footer-height);
-  flex: 0 0 auto; /* Fixed height for footer */
+  flex: 0 0 auto; 
 }
 
 .headerSection,
 .mainContent,
 .footerSection {
-  z-index: 1; /* Ensure they are at the same z-index level */
+  z-index: 1; 
 }
 
 .sidePanel {
-  z-index: 2; /* Place side panel above other sections */
+  z-index: 2; 
 }
 
-/* Media query for smaller screens */
+
 @media screen and (max-width: 768px) {
   .mainContent {
-    padding-top: 10%; /* Increase padding for smaller screens */
+    padding-top: 10%; 
   }
 
   .sidePanel {
-    display: none; /* Hide side panel on smaller screens */
+    display: none; 
   }
-}
+} */

@@ -25,7 +25,7 @@ const Header = () => {
             title="Instituições"
             items={[
               { label: "Consultar", link: "" },
-              { label: "Cadastrtar", link: "" },
+              { label: "Cadastrar", link: "" },
             ]}
           />
         </ul>
