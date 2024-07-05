@@ -5,6 +5,7 @@ import MainPage from "@/Pages/MainPage";
 import RegisterPage from "@/Pages/RegisterPage/RegisterPage";
 import LoginPage from "@/Pages/LoginPage/LoginPage";
 import NotFoundPage from "@/Pages/NotFoundPage/NotFoundPage";
+import AboutPage from "@/Pages/Help/AboutPage/AboutPage";
 
 const App: React.FC = () => {
   return (
@@ -12,35 +13,51 @@ const App: React.FC = () => {
       <Routes>
         <Route
           path="/"
-          Component={() => (
+          element={
             <Layout>
               <MainPage />
             </Layout>
-          )}
+          }
         />
         <Route
           path="/register"
-          Component={() => (
+          element={
             <Layout>
               <RegisterPage />
             </Layout>
-          )}
+          }
         />
         <Route
           path="/login"
-          Component={() => (
+          element={
             <Layout>
               <LoginPage />
             </Layout>
+          }
+        />
+        {/* <Route
+          path="/instructions"
+          Component={() => (
+            <Layout>
+              <Instructions />
+            </Layout>
           )}
+        /> */}
+        <Route
+          path="/about"
+          element={
+            <Layout>
+              <AboutPage />
+            </Layout>
+          }
         />
         <Route
           path="*"
-          Component={() => (
+          element={
             <Layout>
               <NotFoundPage />
             </Layout>
-          )}
+          }
         />
       </Routes>
     </Router>

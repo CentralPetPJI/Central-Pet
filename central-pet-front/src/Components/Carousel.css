@@ -10,15 +10,15 @@
 
 @layer components {
     .carousel {
-        @apply grid grid-rows-1 h-full mt-8;
+        @apply relative grid grid-rows-1 h-full;
     }
 
     .carousel-container {
-        @apply flex overflow-hidden w-full h-[80%] relative items-center;
+        @apply relative flex overflow-hidden items-center h-full;
     }
 
     .carousel-item {
-        @apply w-full h-full absolute p-5 box-border bg-[#f0f0f0] top-0 left-0 bottom-0 opacity-0 z-0;
+        @apply w-full h-[90%] absolute p-5 box-border bg-[#f0f0f0] opacity-0 z-0;
     }
 
     .carousel-item h3 {

@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .titulo {
+        @apply text-center my-5 font-bold text-3xl;
+    }
+
+    .info-section {
+        @apply relative mx-10;
+    }
+
+    .info,
+    .general {
+        @apply text-balance mb-5;
+    }
+
+    .info .contact {
+        @apply font-sans font-bold;
+    }
+}

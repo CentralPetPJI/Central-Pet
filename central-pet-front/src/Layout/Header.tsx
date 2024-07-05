@@ -19,13 +19,18 @@ const Header = () => {
             items={[
               { label: "Procurar", link: "" },
               { label: "Cadastrar", link: "" },
+              { label: "Solicitações", link: "" },
             ]}
           />
           <DropdownMenu
             title="Instituições"
+            items={[{ label: "Consultar", link: "" }]}
+          />
+          <DropdownMenu
+            title="Ajuda"
             items={[
-              { label: "Consultar", link: "" },
-              { label: "Cadastrar", link: "" },
+              { label: "Cadastro de Pet", link: "" },
+              { label: "Sobre Nós", link: "/about" },
             ]}
           />
         </ul>
