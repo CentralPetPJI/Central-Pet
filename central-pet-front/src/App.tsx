@@ -6,6 +6,7 @@ import RegisterPage from "@/Pages/RegisterPage/RegisterPage";
 import LoginPage from "@/Pages/LoginPage/LoginPage";
 import NotFoundPage from "@/Pages/NotFoundPage/NotFoundPage";
 import AboutPage from "@/Pages/Help/AboutPage/AboutPage";
+import CadastroPetAjuda from "@/Pages/Help/Instructions/CadastroPetAjuda";
 import "@/styles/global.css";
 
 const App: React.FC = () => {
@@ -36,14 +37,14 @@ const App: React.FC = () => {
             </Layout>
           }
         />
-        {/* <Route
+        <Route
           path="/instructions"
-          Component={() => (
+          element={
             <Layout>
-              <Instructions />
+              <CadastroPetAjuda />
             </Layout>
-          )}
-        /> */}
+          }
+        />
         <Route
           path="/about"
           element={

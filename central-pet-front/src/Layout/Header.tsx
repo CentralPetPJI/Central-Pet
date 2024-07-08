@@ -29,7 +29,10 @@ const Header = () => {
           <DropdownMenu
             title="Ajuda"
             items={[
-              { label: "Cadastro de Pet", link: "" },
+              {
+                label: "Cadastro de Pet",
+                link: "/instructions",
+              },
               { label: "Sobre Nós", link: "/about" },
             ]}
           />

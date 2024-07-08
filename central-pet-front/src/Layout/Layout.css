@@ -13,7 +13,6 @@
 
     .mobile-menu-container {
         @apply block relative max-h-[50vh] w-full md:hidden z-[15] top-[5.5em];
-
     }
 
     .mobile-menu {
@@ -25,13 +24,13 @@
     }
 
     .menu-toggle {
-        @apply w-full border rounded text-center align-bottom bg-white;
+        @apply w-full border rounded text-center align-bottom bg-gray-400;
         top: calc(5.5em + 1em);
         font-size: 6px;
     }
 
     .main-content {
-        @apply fixed h-full w-[75vw] left-0 p-4 overflow-hidden top-[5.5em] z-0;
+        @apply fixed h-full w-[75vw] left-0 p-4 overflow-x-auto top-[5.5em] z-0;
         height: calc(100vh - 5.5em - 7vh);
     }
 

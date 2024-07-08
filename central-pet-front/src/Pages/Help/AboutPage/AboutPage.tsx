@@ -3,10 +3,10 @@ import "./AboutPage.css";
 
 const AboutPage: React.FC = () => {
   return (
-    <>
+    <div className="about-container">
       <h2 className="titulo">Sobre a Central Pet</h2>
       <div className="info-section">
-        <p className="general">
+        <p className="info">
           Esta aplicação foi desenvolvida com o intuito de auxiliar e facilitar
           a comunicação entre pessoas e instituições engajadas em ajudar no
           processo de adoção de animais de estimação.
@@ -31,7 +31,7 @@ const AboutPage: React.FC = () => {
           erro ou problema possa ser corrigido o quanto antes.
         </p>
       </div>
-    </>
+    </div>
   );
 };
 

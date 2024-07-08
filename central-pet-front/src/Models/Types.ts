@@ -4,5 +4,5 @@ export interface Pet {
     caracteristicasFisicas: string;
     caracteristicasComportamentais: string;
     observacoes: string;
-    photo: string; // Assuming you added photo to the Pet model
+    photo: string;
 }
