@@ -11,13 +11,32 @@
         @apply grid fixed w-full min-h-[5em] h-[5.5em] items-center justify-center z-10;
     }
 
-    .side-panel {
-        @apply fixed bg-gray-100 hidden md:block left-[75vw] top-[5.5em] w-[25vw] bottom-[7vh];
+    .mobile-menu-container {
+        @apply block relative max-h-[50vh] w-full md:hidden z-[15] top-[5.5em];
+
+    }
+
+    .mobile-menu {
+        @apply bg-white left-0 right-0 overflow-hidden transition-all duration-500 ease-in-out h-0 relative top-0;
+    }
+
+    .mobile-menu.open {
+        @apply h-max;
+    }
+
+    .menu-toggle {
+        @apply w-full border rounded text-center align-bottom bg-white;
+        top: calc(5.5em + 1em);
+        font-size: 6px;
     }
 
     .main-content {
         @apply fixed h-full w-[75vw] left-0 p-4 overflow-hidden top-[5.5em] z-0;
         height: calc(100vh - 5.5em - 7vh);
+    }
+
+    .side-panel {
+        @apply fixed bg-gray-100 hidden md:block left-[75vw] top-[5.5em] w-[25vw] bottom-[7vh];
     }
 
     .footer {
@@ -27,7 +46,8 @@
     @media (max-width: 768px) {
         .main-content {
             width: 100%;
-            height: calc(100vh - 5.5em - 7vh);
+            /*height: calc(100vh - 5.5em - 7vh -);
+            top: calc(5.5em +);*/
         }
 
         .nav,
@@ -38,68 +58,9 @@
         .side-panel {
             @apply hidden;
         }
+
+        .menu-toggle {
+            @apply block;
+        }
     }
 }
-
-/* .app-container {
-    display: grid;
-    grid-template-rows: var(--header-height) auto var(--footer-height);
-    grid-template-columns: 1fr auto;
-    min-height: 100vh;
-    margin: none;
-    max-width: 100%;
-}
-
-.header {
-    position: fixed;
-    max-height: var(--header-height);
-    top: 0;
-    left: 0;
-    height: 8.2vh;
-    width: 100%;
-    z-index: 2;
-}
-
-.main-content {
-    position: fixed;
-    top: var(--header-height);
-    bottom: var(--footer-height);
-    max-width: var(--main-content-width);
-    max-height: calc(100vh - var(--header-height) - var(--footer-height));
-    right: var(--side-panel-width);
-    left: 0;
-    padding: 1em;
-    margin: 0;
-}
-
-.side-panel {
-    position: fixed;
-    max-height: calc(100vh - var(--header-height) - var(--footer-height));
-    max-width: calc(100vw - var(--main-content-width));
-    top: var(--header-height);
-    bottom: var(--footer-height);
-    left: var(--main-content-width);
-    padding: 3em;
-    border-left: 0.1em solid #ccc;
-    width: 20%;
-    overflow-y: hidden;
-}
-
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-}
-
-
-@media screen and (max-width: 768px) {
-    .mainContent {
-        padding-top: 10%;
-    }
-
-    .sidePanel {
-        display: none;
-
-    }
-} */

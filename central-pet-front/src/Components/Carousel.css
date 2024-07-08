@@ -10,7 +10,7 @@
 
 @layer components {
     .carousel {
-        @apply relative grid grid-rows-1 h-full;
+        @apply relative grid grid-rows-1 h-full z-0;
     }
 
     .carousel-container {
@@ -22,11 +22,11 @@
     }
 
     .carousel-item h3 {
-        @apply text-2xl mb-5;
+        @apply text-2xl mb-5 z-0;
     }
 
     .carousel-item img {
-        @apply h-[75%] w-auto flex mx-auto mb-5 left-[50%] max-h-[80%];
+        @apply h-[75%] w-auto flex mx-auto mb-5 left-[50%] max-h-[80%] z-0;
     }
 
     .carousel-item p {
@@ -45,45 +45,6 @@
         @apply mx-0 my-2;
     }
 }
-
-/* .carousel {
-    display: grid;
-    grid-template-rows: 1fr;
-    height: 100%;
-} */
-
-/* .carousel-container {
-    overflow: hidden;
-    width: 100%;
-    height: 80%;
-    position: relative;
-} */
-
-/* .carousel-item {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    transition: opacity 2s ease, z-index 0.5s ease;
-    padding: 20px;
-    box-sizing: border-box;
-    background-color: #f0f0f0;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    z-index: 0;
-} */
-
-/* .carousel-item img {
-    max-height: 80%;
-    width: auto;
-    display: block;
-    margin: 0 auto;
-} */
-
-/* .carousel-item.active {
-    z-index: 1;
-    opacity: 1;
-} */
 
 .controls {
     margin-top: 10px;

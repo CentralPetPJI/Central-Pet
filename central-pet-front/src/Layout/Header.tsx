@@ -36,10 +36,8 @@ const Header = () => {
         </ul>
       </nav>
       <div className="auth">
-        <>
-          <a href="/register">Register</a>
-          <a href="/login">Login</a>
-        </>
+        <Link to="/login">Login</Link>
+        <Link to="/register">Register</Link>
       </div>
     </header>
   );
