@@ -1,36 +1,42 @@
-@import url('@/styles/variables.css');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer components {
     .app-container {
-        @apply flex flex-col min-h-screen;
+        @apply flex flex-col h-full min-w-full absolute;
     }
 
     .header {
-        @apply grid fixed w-full pb-2 h-[var(--header-height)] p-2 bg-gradient-to-r from-cyan-300 to-white border-b border-gray-300 items-center z-10;
-        grid-template-columns: auto 1fr auto;
+        @apply grid fixed w-full min-h-[5em] h-[5.5em] items-center justify-center z-10;
     }
 
     .side-panel {
-        @apply bg-gray-100 hidden md:block fixed left-[var(--main-content-width)] top-[var(--header-height)] w-[var(--side-panel-width)] bottom-[var(--footer-height)];
+        @apply fixed bg-gray-100 hidden md:block left-[75vw] top-[5.5em] w-[25vw] bottom-[7vh];
     }
 
     .main-content {
-        @apply w-full md:fixed left-0 top-[var(--header-height)] w-[var(--main-content-width)] p-4 overflow-hidden bottom-[var(--footer-height)] z-0;
+        @apply fixed h-full w-[75vw] left-0 p-4 overflow-hidden top-[5.5em] z-0;
+        height: calc(100vh - 5.5em - 7vh);
     }
 
     .footer {
-        @apply fixed left-0 bottom-0 w-full p-4 border-t border-gray-300 h-[var(--footer-height)];
+        @apply fixed left-0 bottom-0 w-full p-4 border-t border-gray-300 h-[7vh];
     }
 
     @media (max-width: 768px) {
         .main-content {
-            @apply relative left-0 top-0 right-0;
             width: 100%;
-            height: calc(100vh - var(--header-height) - var(--footer-height));
+            height: calc(100vh - 5.5em - 7vh);
+        }
+
+        .nav,
+        .auth {
+            @apply hidden;
+        }
+
+        .side-panel {
+            @apply hidden;
         }
     }
 }

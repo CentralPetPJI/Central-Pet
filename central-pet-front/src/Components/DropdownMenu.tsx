@@ -34,6 +34,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>
   ) => {
     e.stopPropagation();
+    setIsOpen(false);
   };
 
   return (

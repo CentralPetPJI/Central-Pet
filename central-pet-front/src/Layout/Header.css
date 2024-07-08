@@ -3,16 +3,22 @@
 @tailwind utilities;
 
 @layer components {
+    .header {
+        @apply grid fixed w-full min-h-[5.5em] pb-2 h-[1erm] bg-gradient-to-r from-cyan-300 to-white border-gray-300 items-center justify-center;
+        grid-template-columns: auto 1fr auto;
+        border-bottom: 1px solid #ddddff;
+    }
+
     .logo {
-        @apply flex flex-col items-center space-y-1 m-1.5;
+        @apply relative flex flex-col self-center items-center space-y-1;
     }
 
     .logoLink {
-        @apply inline-block items-center space-x-2 w-max m-1 h-auto;
+        @apply flex items-center space-x-2 w-max m-1 h-auto;
     }
 
     .logo img {
-        @apply w-8 h-8;
+        @apply w-6 h-6 md:w-8 md:h-8;
     }
 
     .logo p {
@@ -20,7 +26,7 @@
     }
 
     nav {
-        @apply text-lg mr-[10px];
+        @apply relative text-lg;
     }
 
     .nav-menu {
@@ -46,6 +52,27 @@
     .auth a,
     .auth button {
         @apply p-2 border rounded content-normal;
+    }
+
+    @media (max-width: 768px) {
+
+        .logoLink,
+        .logo {
+            @apply justify-center w-full;
+        }
+
+        .logo {
+            @apply flex flex-row space-x-3;
+        }
+
+        .header {
+            @apply grid-cols-1 justify-items-center;
+        }
+
+        nav,
+        .auth {
+            @apply hidden;
+        }
     }
 }
 

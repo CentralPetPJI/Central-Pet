@@ -1,12 +1,10 @@
-@import url('@/styles/variables.css');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer components {
     .main-page {
-        @apply block h-full relative;
+        @apply block h-full;
     }
 
     .main-page h1 {
@@ -14,6 +12,6 @@
     }
 
     .carousel-area {
-        @apply relative h-[95%] overflow-hidden;
+        @apply mt-3 mr-3 w-full h-[95%] overflow-hidden;
     }
 }
