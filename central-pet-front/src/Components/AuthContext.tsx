@@ -2,6 +2,8 @@ import { createContext, useState, useEffect, ReactNode } from "react";
 import api from "../services/api";
 import { User } from "../../../shared/types/User";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 interface AuthContextProps {
   user: User | null;
   register: (formData: RegisterFormData) => Promise<void>;
@@ -53,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const register = async (formData: RegisterFormData) => {
     try {
-      const res = await api.post("auth/register", formData);
+      const res = await api.post(`${API_BASE_URL}/auth/register`, formData);
       localStorage.setItem("auth-token", res.data.token);
       setUser(res.data.user);
     } catch (error) {
