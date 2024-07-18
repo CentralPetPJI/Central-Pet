@@ -1,79 +1,112 @@
 import React, { useState } from "react";
+import { useAuth } from "@/Components/useAuth";
 import "./RegisterPage.css";
 
+interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  role: "user" | "institution";
+  cpf?: string;
+  cnpj?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 const RegisterPage: React.FC = () => {
-  const [registrationType, setRegistrationType] = useState<string>("user");
+  const [formData, setFormData] = useState<RegisterFormData>({
+    username: "",
+    email: "",
+    password: "",
+    role: "user",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  const { register } = useAuth();
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    register(formData);
+  };
 
   const handleRegistrationTypeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setRegistrationType(event.target.value);
+    setFormData({
+      ...formData,
+      role: event.target.value as "user" | "institution",
+    });
   };
 
   return (
-    <div className="flex flex-col items-center p-4 h-full">
-      <h1 className="text-2xl font-bold mb-4">
+    <div className="register-page-container">
+      <h1 className="register-page-title">
         Registro de Usuário ou Instituição
       </h1>
-      <form className="w-full mt-5 max-w-lg h-auto bg-white p-6 rounded-2xl shadow-md">
-        <label className="block mb-4">
+      <form className="register-form" onSubmit={onSubmit}>
+        <label className="form-label">
           Tipo de Registro:
           <select
-            value={registrationType}
+            name="role"
+            value={formData.role}
             onChange={handleRegistrationTypeChange}
-            className="block w-full mt-2 p-2 border rounded"
+            className="form-select"
           >
             <option value="user">Usuário</option>
             <option value="institution">Instituição</option>
           </select>
         </label>
-        <label className="block mb-4">
+        <label className="form-label">
           Nome do usuário:
-          <input type="text" className="block w-full mt-2 p-2 border rounded" />
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={onChange}
+            className="form-input"
+          />
         </label>
-        <label className="block mb-4">
+        <label className="form-label">
           E-mail:
           <input
             type="email"
-            className="block w-full mt-2 p-2 border rounded"
+            name="email"
+            value={formData.email}
+            onChange={onChange}
+            className="form-input"
           />
         </label>
-        <label className="block mb-4">
+        <label className="form-label">
           Senha:
           <input
             type="password"
-            className="block w-full mt-2 p-2 border rounded"
+            name="password"
+            value={formData.password}
+            onChange={onChange}
+            className="form-input"
           />
         </label>
-        <label className="block mb-4">
+        <label className="form-label">
           Repetir a senha:
-          <input
-            type="password"
-            className="block w-full mt-2 p-2 border rounded"
-          />
+          <input type="password" className="form-input" />
         </label>
-        {registrationType === "user" && (
-          <label className="block mb-4">
+        {formData.role === "user" && (
+          <label className="form-label">
             CPF:
-            <input
-              type="text"
-              className="block w-full mt-2 p-2 border rounded"
-            />
+            <input type="text" className="form-input" />
           </label>
         )}
-        {registrationType === "institution" && (
-          <label className="block mb-4">
+        {formData.role === "institution" && (
+          <label className="form-label">
             CNPJ:
-            <input
-              type="text"
-              className="block w-full mt-2 p-2 border rounded"
-            />
+            <input type="text" className="form-input" />
           </label>
         )}
-        <button
-          type="submit"
-          className="w-[50%] ml-[25%] p-2 my-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
+        <button type="submit" className="form-button">
           Register
         </button>
       </form>

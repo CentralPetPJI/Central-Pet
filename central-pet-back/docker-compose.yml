@@ -1,0 +1,7 @@
+services:
+  mongo:
+    image: mongo
+    container_name: central-pet
+    ports:
+      - "27017:27017"
+    

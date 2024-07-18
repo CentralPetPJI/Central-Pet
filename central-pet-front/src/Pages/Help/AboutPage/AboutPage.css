@@ -4,11 +4,11 @@
 
 @layer components {
     .about-container {
-        @apply flex flex-col items-center justify-center bg-white p-10 rounded-lg shadow-md max-w-3xl mx-auto my-0;
+        @apply flex flex-col items-center justify-center bg-white p-6 rounded-lg shadow-md max-w-3xl mx-auto mt-3;
     }
 
     .titulo {
-        @apply text-center my-5 font-bold text-3xl text-gray-800;
+        @apply text-center my-5 font-bold text-2xl text-gray-800;
     }
 
     .info-section {

@@ -22,11 +22,11 @@ const AboutPage: React.FC = () => {
           maravilhosos eles são.
         </p>
         <p className="info">
-          A aplicação foi desenvolvida apenas por um desenvolvedor em processo
+          Esta aplicação foi desenvolvida por um único desenvolvedor em processo
           de aprimoramento de suas habilidades de desenvolvimento de software,
-          por isso é possível que existam erros ou alguns problemas no
-          funcionamento da mesma. Em caso de constatação de qualquer tipo de
-          erro, peço que entre em contato comigo pelo email
+          por isso é possível que existam erros ou problemas no funcionamento da
+          mesma. Em caso de constatação de qualquer tipo de erro, peço que entre
+          em contato comigo pelo email
           <span className="contact"> guilhermefsaito@gmail.com</span> para que o
           erro ou problema possa ser corrigido o quanto antes.
         </p>

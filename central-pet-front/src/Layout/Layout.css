@@ -24,7 +24,7 @@
     }
 
     .menu-toggle {
-        @apply w-full border rounded text-center align-bottom bg-gray-400;
+        @apply w-full border rounded-b text-center align-bottom bg-gray-400;
         top: calc(5.5em + 1em);
         font-size: 6px;
     }
