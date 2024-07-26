@@ -6,7 +6,8 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     },
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -22,6 +23,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "../shared/**/*.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

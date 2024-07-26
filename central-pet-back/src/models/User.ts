@@ -1,23 +1,16 @@
 import mongoose, { CallbackError, Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { User as SharedUser } from '@shared/types/User';
 
-export interface IUser extends Document {
-  username: string;
-  email: string;
-  password: string;
-  role: 'user' | 'institution';
-  cpf?: string;
-  cnpj?: string;
-  createdAt: Date;
-  updatedAt: Date;
+export interface IUser extends Omit<SharedUser, '_id'>, Document {
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
-const userSchema: Schema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
+const userSchema: Schema = new mongoose.Schema<IUser>({
+  username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'institution'], required: true },
+  role: { type: String, enum: ['user', 'institution'] },
   cpf: { type: String },
   cnpj: { type: String },
   createdAt: { type: Date, default: Date.now },
@@ -29,7 +22,8 @@ userSchema.pre<IUser>('save', async function (next) {
 
   try {
     const salt = await bcrypt.genSalt();
-    this.password = await bcrypt.hash(this.password, salt);
+    const hashedPassword = await bcrypt.hash(this.password as string, salt);
+    this.password = hashedPassword as string;
     next();
   } catch (err) {
     next(err as CallbackError);

@@ -20,7 +20,8 @@ userSchema.pre('save', async function (next) {
         return next();
     try {
         const salt = await bcryptjs_1.default.genSalt();
-        this.password = await bcryptjs_1.default.hash(this.password, salt);
+        const hashedPassword = await bcryptjs_1.default.hash(this.password, salt);
+        this.password = hashedPassword;
         next();
     }
     catch (err) {

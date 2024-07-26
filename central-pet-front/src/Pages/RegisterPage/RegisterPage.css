@@ -29,3 +29,7 @@
 .form-button {
     @apply w-[50%] ml-[25%] p-2 my-1 bg-blue-500 text-white rounded hover:bg-blue-600;
 }
+
+.error-label {
+    @apply mt-[0.5rem] text-red-600;
+}
