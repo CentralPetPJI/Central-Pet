@@ -17,7 +17,7 @@ router.post("/register", [
     (0, express_validator_1.check)("password", "Password precisa ter 6 ou mais caracteres").isLength({
         min: 6,
     }),
-    (0, express_validator_1.check)("passwordConfirm", "Passwords do not match").custom((value, { req }) => value === req.body.password),
+    (0, express_validator_1.check)("passwordConfirm", "As senhas não conferem").custom((value, { req }) => value === req.body.password),
     (0, express_validator_1.check)("role", 'Role is required and should be either "user" os "institution"').isIn(["user", "institution"]),
 ], async (req, res) => {
     const errors = (0, express_validator_1.validationResult)(req);
