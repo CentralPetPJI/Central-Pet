@@ -1,17 +1,23 @@
-/* eslint-disable no-debugger */
-import React from "react";
-import Carousel from "../Components/Carousel";
-import petsData from "../Models/Pet"; // Assuming petsData is exported from a separate file
-import "./MainPage.css";
+import React from 'react';
+import Carousel from '../Components/Carousel';
+import petsData from '../Models/Pet';
 
 const MainPage: React.FC = () => {
   return (
-    <div className="main-page">
-      <h1>Bem-vindo ao Central Pet!</h1>
-      <div className="carousel-area">
-        <Carousel petsData={petsData} />
-      </div>
-    </div>
+    <main
+      className="
+        pt-[11vh]
+        px-8
+        pb-12
+        max-w-7xl
+      "
+    >
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Pet Central!</h1>
+
+      <p className="text-gray-600 mb-8">Check out our latest pets:</p>
+
+      <Carousel petsData={petsData} />
+    </main>
   );
 };
 

@@ -9,7 +9,12 @@
       "eslint --fix"
     ]
   },
+  "workspaces": [
+    "central-pet-front"
+  ],
   "scripts": {
-    "prepare": "husky"
-  }
+    "prepare": "husky",
+    "dev:front": "npm run dev --workspace central-pet-front"
+  },
+  "packageManager": "pnpm@10.30.1"
 }
