@@ -1,8 +1,16 @@
 export interface Pet {
-    id: number;
-    name: string;
-    caracteristicasFisicas: string;
-    caracteristicasComportamentais: string;
-    observacoes: string;
-    photo: string;
+  id: number;
+  name: string;
+  species: string;
+  physicalCharacteristics: string;
+  behavioralCharacteristics: string;
+  notes: string;
+  photo: string;
+}
+
+export interface Photo {
+  id: number;
+  url: string;
+  petId: number;
+  note: string;
 }
