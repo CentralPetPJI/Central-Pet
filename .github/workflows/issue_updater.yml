@@ -53,7 +53,7 @@ jobs:
             ## Comportamento Atual (se for bug)
             (o que está acontecendo hoje)
 
-            ## Passos para Reproduzir (se aplicável)
+            ## Passos para Reproduzir (se aplicável e se for bug)
             1.
             2.
 
@@ -61,12 +61,17 @@ jobs:
             - [ ] Critério 1
             - [ ] Critério 2
 
+            Regras obrigatórias para a seção "Critérios de Aceitação":
+            - Deve conter pelo menos 2 critérios
+            - Deve usar exatamente o formato "- [ ] Texto do critério"
+            - Não alterar a sintaxe dos colchetes
+            - Não usar outros marcadores (*, -, números sem checkbox, etc.)
+            
             Regras adicionais obrigatórias:
             - Preserve integralmente (sem alterar) qualquer trecho do corpo original que contenha:
               - imagens em Markdown no formato ![...](...)
               - links para anexos (user-images.githubusercontent.com,
                 github.com/user-attachments, user-attachments/assets)
-
             - Use linguagem objetiva e direta em português
             - Remova emojis e informalidades
             - Mantenha detalhes técnicos importantes
