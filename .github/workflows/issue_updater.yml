@@ -27,8 +27,6 @@ jobs:
         id: ai-rewrite
         uses: actions/ai-inference@v1
         with:
-          model: openai/gpt-4o-mini
-
           system-prompt: |
             Você é um assistente que padroniza issues no GitHub.
             Sua tarefa é REESCREVER completamente a issue mantendo o significado original,
