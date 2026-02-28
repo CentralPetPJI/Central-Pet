@@ -138,4 +138,3 @@ jobs:
           # Comentário automático
           gh issue comment "$ISSUE_NUMBER" \
             --body "Issue formatada automaticamente por IA no padrão da equipe."
-````
