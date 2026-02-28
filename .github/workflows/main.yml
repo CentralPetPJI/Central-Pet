@@ -1,0 +1,82 @@
+name: Reescrever Issue com IA (formato padrão)
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write       # obrigatório para editar a issue
+  contents: read
+
+jobs:
+  format-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reescrever descrição com IA
+        id: ai-rewrite
+        uses: actions/ai-inference@v1   # ação oficial do GitHub Models (2025+)
+        with:
+          model: mistral-ai/ministral-3b-instruct-2410   # ou gemini-1.5-flash, claude-3.5-sonnet, etc
+          # model: openai/gpt-4o-mini   ← se preferir OpenAI (precisa de token)
+          system-prompt: |
+            Você é um assistente que padroniza issues no GitHub.
+            Sua tarefa é REESCREVER completamente a issue mantendo o significado original,
+            mas transformando em um formato de tarefa profissional e claro.
+
+            Regras obrigatórias:
+            - Título: deve ser reescrito para ficar curto, objetivo e começar com [Tipo]:
+              Tipos válidos: [Bug], [Feature], [Refactor], [Chore], [Doc], [Test]
+            - Descrição deve seguir ESTE template exato:
+
+            ## Descrição
+            (explicação clara do que precisa ser feito)
+
+            ## Motivação / Contexto
+            (por que isso é importante / qual problema resolve)
+
+            ## Comportamento Esperado
+            (o que deveria acontecer)
+
+            ## Comportamento Atual (se for bug)
+            (o que está acontecendo hoje)
+
+            ## Passos para Reproduzir (se aplicável)
+            1.
+            2.
+
+            ## Critérios de Aceitação
+            - [ ] Critério 1
+            - [ ] Critério 2
+
+            - Use linguagem objetiva, direta e em português
+            - Remova emojis desnecessários, gírias excessivas e texto informal
+            - Mantenha todos os detalhes técnicos importantes
+            - Se faltar informação crítica, adicione uma seção ## Informações Faltantes
+
+          prompt: |
+            Título original: ${{ github.event.issue.title }}
+
+            Corpo original:
+            ${{ github.event.issue.body }}
+
+            Responda APENAS com o texto final no formato Markdown (título na primeira linha, depois o corpo).
+            Não adicione nenhum texto extra, nem ```markdown
+
+      - name: Atualizar a issue com o texto reescrito
+        if: steps.ai-rewrite.outputs.response != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          NEW_TITLE: ${{ steps.ai-rewrite.outputs.response_title }}   # separe título e body se quiser
+          NEW_BODY: ${{ steps.ai-rewrite.outputs.response }}
+        run: |
+          # Extrai título e corpo da resposta da IA (supondo que a IA retorna "Título\n\nCorpo")
+          TITLE=$(echo "$NEW_BODY" | head -1)
+          BODY=$(echo "$NEW_BODY" | tail -n +3)
+
+          gh issue edit $ISSUE_NUMBER --title "$TITLE" --body "$BODY"
+          gh issue edit $ISSUE_NUMBER --add-label "formatado-por-ia" --remove-label "triage-pendente"
+          gh issue comment $ISSUE_NUMBER --body "Issue formatada automaticamente por IA no padrão da equipe."
