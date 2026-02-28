@@ -7,13 +7,16 @@ on:
 permissions:
   issues: write
   contents: read
+  models: read
 
 jobs:
   format-issue:
-    # Só executa quando a label triage-pendente é adicionada e ainda não foi formatada
+    # Só executa quando a label triagem-pendente é adicionada
+    # e ainda não foi formatada
     if: |
       github.event.label.name == 'triagem-pendente' &&
       !contains(github.event.issue.labels.*.name, 'formatado-por-ia')
+
     runs-on: ubuntu-latest
 
     steps:
@@ -25,17 +28,18 @@ jobs:
         uses: actions/ai-inference@v1
         with:
           model: openai/gpt-4o-mini
-          # alternativas:
-          # model: anthropic/claude-3.5-sonnet
-          # model: google/gemini-1.5-flash
+
           system-prompt: |
             Você é um assistente que padroniza issues no GitHub.
             Sua tarefa é REESCREVER completamente a issue mantendo o significado original,
             mas transformando em um formato de tarefa profissional e claro.
 
             Regras obrigatórias:
-            - Título: deve ser reescrito para ficar curto, objetivo e começar com [Tipo]:
-              Tipos válidos: [Bug], [Feature], [Refactor], [Chore], [Doc], [Test]
+
+            - Título: deve ser reescrito para ficar curto, objetivo
+              e começar com [Tipo]:
+              Tipos válidos:
+              [Bug], [Feature], [Refactor], [Chore], [Doc], [Test]
 
             - Descrição deve seguir ESTE template exato:
 
@@ -62,12 +66,14 @@ jobs:
             Regras adicionais obrigatórias:
             - Preserve integralmente (sem alterar) qualquer trecho do corpo original que contenha:
               - imagens em Markdown no formato ![...](...)
-              - links para anexos (ex.: user-images.githubusercontent.com, github.com/user-attachments, user-attachments/assets)
-            
-            - Use linguagem objetiva, direta e em português
-            - Remova emojis desnecessários, gírias excessivas e texto informal
-            - Mantenha todos os detalhes técnicos importantes
-            - Se faltar informação crítica, adicione uma seção ## Informações Faltantes
+              - links para anexos (user-images.githubusercontent.com,
+                github.com/user-attachments, user-attachments/assets)
+
+            - Use linguagem objetiva e direta em português
+            - Remova emojis e informalidades
+            - Mantenha detalhes técnicos importantes
+            - Se faltar informação crítica, adicione:
+              ## Informações Faltantes
 
           prompt: |
             Título original: ${{ github.event.issue.title }}
@@ -88,22 +94,23 @@ jobs:
           RESPONSE_FILE: ${{ steps.ai-rewrite.outputs.response-file }}
         run: |
           set -euo pipefail
-      
-          # Lê resposta da IA do arquivo (mais seguro para multiline/outputs grandes)
+
+          # Lê resposta da IA do arquivo (seguro para multiline)
           NEW_BODY="$(cat "$RESPONSE_FILE")"
-      
-          # Extrai anexos do corpo original (imagens markdown e links comuns de anexos)
+
+          # Extrai anexos do corpo original
           ATTACHMENTS="$(printf "%s\n" "$ORIGINAL_BODY" | \
             grep -E '!\[[^]]*\]\([^)]+\)|https?://(user-images\.githubusercontent\.com|github\.com/user-attachments|.*user-attachments.*)' \
             || true)"
-      
-          # Extrai título e corpo da resposta da IA
+
+          # Extrai título e corpo
           TITLE="$(printf "%s" "$NEW_BODY" | sed -n '1p')"
           BODY="$(printf "%s" "$NEW_BODY" | sed '1d')"
-      
-          # Se o corpo novo NÃO contém os anexos originais, reanexa no final
+
+          # Reanexa anexos se a IA removeu
           if [ -n "${ATTACHMENTS:-}" ]; then
             MISSING=false
+
             while IFS= read -r line; do
               [ -z "$line" ] && continue
               if ! printf "%s\n" "$BODY" | grep -Fq "$line"; then
@@ -111,7 +118,7 @@ jobs:
                 break
               fi
             done <<< "$ATTACHMENTS"
-      
+
             if [ "$MISSING" = true ]; then
               if ! printf "%s\n" "$BODY" | grep -qiE '^\s*##\s+Anexos\s*$'; then
                 BODY="$(printf "%s\n\n## Anexos\n%s\n" "$BODY" "$ATTACHMENTS")"
@@ -120,13 +127,15 @@ jobs:
               fi
             fi
           fi
-      
+
           # Atualiza issue
           gh issue edit "$ISSUE_NUMBER" --title "$TITLE" --body "$BODY"
-      
+
           # Labels
           gh issue edit "$ISSUE_NUMBER" --add-label "formatado-por-ia" || true
           gh issue edit "$ISSUE_NUMBER" --remove-label "triagem-pendente" || true
-  
-      # Comentário automático
-      gh issue comment "$ISSUE_NUMBER" --body "Issue formatada automaticamente por IA no padrão da equipe."          gh issue comment "$ISSUE_NUMBER" --body "Issue formatada automaticamente por IA no padrão da equipe."
+
+          # Comentário automático
+          gh issue comment "$ISSUE_NUMBER" \
+            --body "Issue formatada automaticamente por IA no padrão da equipe."
+````
