@@ -85,33 +85,48 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ORIGINAL_BODY: ${{ github.event.issue.body }}
-          NEW_BODY: ${{ steps.ai-rewrite.outputs.response }}
+          RESPONSE_FILE: ${{ steps.ai-rewrite.outputs.response-file }}
         run: |
           set -euo pipefail
-
+      
+          # Lê resposta da IA do arquivo (mais seguro para multiline/outputs grandes)
+          NEW_BODY="$(cat "$RESPONSE_FILE")"
+      
           # Extrai anexos do corpo original (imagens markdown e links comuns de anexos)
-          # ATTACHMENTS=$(printf "%s\n" "$ORIGINAL_BODY" | \
-          #   grep -E '!\[[^]]*\]\([^)]+\)|https?://(user-images\.githubusercontent\.com|github\.com/user-attachments|.*user-attachments.*)' \
-          #   || true)
-
+          ATTACHMENTS="$(printf "%s\n" "$ORIGINAL_BODY" | \
+            grep -E '!\[[^]]*\]\([^)]+\)|https?://(user-images\.githubusercontent\.com|github\.com/user-attachments|.*user-attachments.*)' \
+            || true)"
+      
           # Extrai título e corpo da resposta da IA
-          TITLE=$(printf "%s" "$NEW_BODY" | sed -n '1p')
-          BODY=$(printf "%s" "$NEW_BODY" | sed '1d')
-
-          # Garante que anexos não se percam (re-anexa no final)
-          # if [ -n "${ATTACHMENTS:-}" ]; then
-          #   # Só adiciona se ainda não existir seção Anexos no texto da IA
-          #   if ! printf "%s\n" "$BODY" | grep -qiE '^\s*##\s+Anexos\s*$'; then
-          #     BODY=$(printf "%s\n\n## Anexos\n%s\n" "$BODY" "$ATTACHMENTS")
-          #   fi
-          # fi
-
+          TITLE="$(printf "%s" "$NEW_BODY" | sed -n '1p')"
+          BODY="$(printf "%s" "$NEW_BODY" | sed '1d')"
+      
+          # Se o corpo novo NÃO contém os anexos originais, reanexa no final
+          if [ -n "${ATTACHMENTS:-}" ]; then
+            MISSING=false
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              if ! printf "%s\n" "$BODY" | grep -Fq "$line"; then
+                MISSING=true
+                break
+              fi
+            done <<< "$ATTACHMENTS"
+      
+            if [ "$MISSING" = true ]; then
+              if ! printf "%s\n" "$BODY" | grep -qiE '^\s*##\s+Anexos\s*$'; then
+                BODY="$(printf "%s\n\n## Anexos\n%s\n" "$BODY" "$ATTACHMENTS")"
+              else
+                BODY="$(printf "%s\n\n%s\n" "$BODY" "$ATTACHMENTS")"
+              fi
+            fi
+          fi
+      
           # Atualiza issue
           gh issue edit "$ISSUE_NUMBER" --title "$TITLE" --body "$BODY"
-
-          # Labels (não falha se não existirem)
+      
+          # Labels
           gh issue edit "$ISSUE_NUMBER" --add-label "formatado-por-ia" || true
           gh issue edit "$ISSUE_NUMBER" --remove-label "triagem-pendente" || true
-
-          # Comentário automático
-          gh issue comment "$ISSUE_NUMBER" --body "Issue formatada automaticamente por IA no padrão da equipe."
+  
+      # Comentário automático
+      gh issue comment "$ISSUE_NUMBER" --body "Issue formatada automaticamente por IA no padrão da equipe."          gh issue comment "$ISSUE_NUMBER" --body "Issue formatada automaticamente por IA no padrão da equipe."
