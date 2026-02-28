@@ -37,7 +37,7 @@ jobs:
             - Título: deve ser reescrito para ficar curto, objetivo
               e começar com [Tipo]:
               Tipos válidos:
-              [Bug], [Feature], [Refactor], [Chore], [Doc], [Test]
+              [Bug], [Feature], [Refactor], [Chore], [Doc], [Test], [Research]
 
             - Descrição deve seguir ESTE template exato:
 
