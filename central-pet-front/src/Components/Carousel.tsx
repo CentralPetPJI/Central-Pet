@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pet } from '../Models/Types';
+import PetModal from './petModal';
 
 type CarouselProps = {
   petsData: Pet[];
@@ -12,6 +13,7 @@ const ITEM_SIZE = CARD_WIDTH + GAP;
 const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   const items = [...petsData, ...petsData];
 
@@ -73,6 +75,15 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
     };
   }, [petsData.length]);
 
+  // Para garantir que o auto-scroll pare quando um modal estiver aberto e volte quando fechar
+  useEffect(() => {
+    if (selectedPet) {
+      stopAutoScroll();
+    } else {
+      startAutoScroll();
+    }
+  }, [selectedPet]);
+
   return (
     <section className="w-full overflow-hidden px-6 py-8">
       <h2 className="mb-6 text-2xl font-semibold text-gray-800">Latest Pets</h2>
@@ -90,6 +101,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         {items.map((pet) => (
           <div
             key={pet.id}
+            onClick={() => setSelectedPet(pet)}
             className="
               min-w-62.5
               max-w-62.5
@@ -101,6 +113,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
               hover:shadow-md
               transition
               shrink-0
+              cursor-pointer
             "
           >
             <img src={pet.photo} alt={pet.name} className="h-48 w-full object-cover rounded-t-lg" />
@@ -115,6 +128,8 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
           </div>
         ))}
       </div>
+
+      {selectedPet && <PetModal petData={selectedPet} onClick={() => setSelectedPet(null)} />}
     </section>
   );
 };
