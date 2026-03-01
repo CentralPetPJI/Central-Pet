@@ -10,10 +10,11 @@
     "eslint-plugin-react-refresh": "^0.5.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,css,md}": [
+    "*.{js,jsx,ts,tsx,css}": [
       "prettier --write",
       "eslint --fix"
-    ]
+    ],
+    "*.{json,md}": "prettier --write"
   },
   "scripts": {
     "prepare": "husky",
