@@ -1,0 +1,10 @@
+node_modules
+.git
+.github
+.idea
+.agents
+dist
+coverage
+*.log
+central-pet-front/node_modules
+central-pet-front/dist
