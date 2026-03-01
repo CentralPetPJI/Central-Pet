@@ -1,7 +1,13 @@
 {
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7"
+    "lint-staged": "^16.2.7",
+    "only-allow": "^1.2.2",
+    "prettier": "3.8.1",
+    "@eslint/js": "^9.39.2",
+    "eslint": "^10.0.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,md}": [
@@ -9,12 +15,10 @@
       "eslint --fix"
     ]
   },
-  "workspaces": [
-    "central-pet-front"
-  ],
   "scripts": {
     "prepare": "husky",
-    "dev:front": "npm run dev --workspace central-pet-front"
+    "dev:front": "pnpm --filter central-pet-front dev",
+    "dev": "pnpm -r dev"
   },
   "packageManager": "pnpm@10.30.1"
 }
