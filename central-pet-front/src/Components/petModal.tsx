@@ -9,7 +9,7 @@ interface PetModalProps {
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
   return (
     <div
-      className="fixed inset-0 bg-transparent backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
       onClick={onClick}
     >
       <div
