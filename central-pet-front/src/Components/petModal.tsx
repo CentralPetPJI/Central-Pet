@@ -1,4 +1,5 @@
 import { Pet } from '../Models/Types';
+import React from "react";
 
 interface PetModalProps {
   petData: Pet;
@@ -41,7 +42,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         </p>
 
         <button className="mt-6 w-full bg-[#1ed6ea] hover:bg-[#6de9f7] text-white py-3 rounded-xl transition font-semibold">
-          <a href="#"> Quero Adotar 🐾</a>{' '}
+          <a href="#"> Quero Adotar 🐾</a>
           {/* Deixar dessa forma por enquanto, depois implementa um router */}
         </button>
       </div>

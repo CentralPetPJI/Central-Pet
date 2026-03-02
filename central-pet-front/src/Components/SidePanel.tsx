@@ -1,5 +1,6 @@
 import { Dog, Cat, PawPrint } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import React from "react";
 
 // TODO: Acho que seria melhor passar um objeto com os counts ao invés de 3 props separadas, mas por enquanto tá ok assim
 interface SidePanelProps {
