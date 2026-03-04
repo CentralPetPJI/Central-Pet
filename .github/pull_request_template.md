@@ -41,6 +41,21 @@ Resultado esperado:
 
 ---
 
+## 📦 Novas Dependências
+
+Caso este PR adicione novas dependências, descreva abaixo:
+
+Dependência:
+Nome da biblioteca:
+
+Motivo da adição:
+Por que essa dependência foi necessária?
+
+Alternativas consideradas (opcional):
+Existe outra biblioteca ou solução que foi considerada?
+
+---
+
 ## 📷 Prints ou Vídeos (se aplicável)
 
 Adicione imagens ou gravações demonstrando a funcionalidade.
