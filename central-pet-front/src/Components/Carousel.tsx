@@ -5,6 +5,9 @@ type CarouselProps = {
   petsData: Pet[];
 };
 
+// Velocidade alvo do auto-scroll em pixels/segundo para manter consistencia entre diferentes taxas de refresh.
+const AUTO_SCROLL_PX_PER_SECOND = 60;
+
 const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
@@ -27,7 +30,9 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
     const halfWidth = container.scrollWidth / 2;
     if (halfWidth === 0) return;
 
-    // Normalize to the duplicated range even when a drag skips more than one width.
+    /* TODO(UX): Hoje o loop normaliza para [0, halfWidth), o que quebra a continuidade ao arrastar para a esquerda.
+     Intencao atual de produto: manter loop infinito apenas para a direita; revisar com UX se esse comportamento deve mudar.
+    */
     if (container.scrollLeft >= halfWidth || container.scrollLeft <= 0) {
       container.scrollLeft = ((container.scrollLeft % halfWidth) + halfWidth) % halfWidth;
     }
@@ -36,11 +41,17 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const startAutoScroll = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     isPaused.current = false;
+    let lastTimestamp: number | null = null;
 
-    const step = () => {
+    const step = (timestamp: number) => {
       if (isPaused.current || isDraggingRef.current) return;
       if (containerRef.current) {
-        containerRef.current.scrollLeft += 1;
+        if (lastTimestamp === null) {
+          lastTimestamp = timestamp;
+        }
+        const deltaMs = Math.min(timestamp - lastTimestamp, 64);
+        lastTimestamp = timestamp;
+        containerRef.current.scrollLeft += (AUTO_SCROLL_PX_PER_SECOND * deltaMs) / 1000;
         handleLoop();
       }
       animationRef.current = requestAnimationFrame(step);
@@ -50,7 +61,10 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
 
   const stopAutoScroll = useCallback(() => {
     isPaused.current = true;
-    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
   }, []);
 
   const handleDragMove = useCallback(
@@ -83,7 +97,10 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
       isDraggingRef.current = false;
       setIsDragging(false);
     }
-    startAutoScroll();
+    const isHovering = containerRef.current?.matches(':hover');
+    if (!isHovering) {
+      startAutoScroll();
+    }
   }, [startAutoScroll]);
 
   // Lógica de Mouse Drag
