@@ -1,49 +1,56 @@
-
 name: "❓ Dúvida / Pergunta / Discussão"
-about: Tire uma dúvida, pergunte algo ou inicie uma discussão sobre o projeto
-title: "[DÚVIDA]"
-labels: discussão, pergunta
+description: Tire uma dúvida, faça uma pergunta ou inicie uma discussão sobre o projeto
+title: "[DÚVIDA]: "
+labels:
+  - discussão
+  - pergunta
 assignees: []
 
 body:
   - type: markdown
     attributes:
       value: |
-        Obrigado por abrir uma dúvida/pergunta!  
-        Preencha os campos abaixo com o máximo de detalhes possível para recebermos respostas mais rápidas e precisas.  
-        🚀 Dúvidas bem descritas costumam ser respondidas em poucas horas!
+        Obrigado por abrir uma dúvida! 🙌  
+
+        Para que possamos ajudar da forma mais rápida possível, preencha os campos abaixo com **o máximo de detalhes possível**.
+
+        📌 Dúvidas bem descritas costumam receber respostas muito mais rápido.
 
   - type: textarea
     id: contexto
     attributes:
-      label: Qual é o contexto / o que você está tentando fazer?
-      description: Conte um pouco da sua história. O que você quer alcançar? Qual parte do projeto está usando?
+      label: 📌 Contexto
+      description: Explique o que você está tentando fazer e qual parte do projeto está utilizando.
       placeholder: |
-        Exemplo: Estou tentando criar um relatório customizado no dashboard, mas não estou conseguindo filtrar por data...
+        Exemplo:
+        Estou tentando criar um relatório customizado no dashboard,
+        mas não estou conseguindo aplicar filtro por data.
     validations:
       required: true
 
   - type: textarea
-    id: o-que-ja-tentou
+    id: tentativas
     attributes:
-      label: O que você já tentou fazer?
-      description: Liste os passos, códigos, configurações ou documentação que você já consultou.
+      label: 🔎 O que você já tentou?
+      description: Liste os passos, tentativas, códigos ou documentação consultada.
       placeholder: |
+        Exemplos:
         • Li a seção X.Y da documentação
-        • Tentei usar a função exemplo() com esses parâmetros: ...
+        • Tentei usar a função exemplo() com os parâmetros ...
         • Recebi o erro: "Invalid token"
-        • Pesquisei no Google por "..."
+        • Pesquisei por soluções relacionadas
     validations:
       required: true
 
   - type: textarea
-    id: codigo-exemplo
+    id: codigo
     attributes:
-      label: Código / Configuração mínima reproduzível (se aplicável)
-      description: Coloque o trecho de código mais simples possível que demonstra sua dúvida.
-      render: bash    # ou mude para python, javascript, yaml, etc conforme o projeto
+      label: 💻 Código ou configuração mínima reproduzível (se aplicável)
+      description: Forneça o menor trecho de código possível que demonstre o problema.
+      render: text
       placeholder: |
-        # Exemplo mínimo
+        Exemplo:
+
         const config = {
           apiKey: "xxxx",
           timeout: 5000
@@ -56,34 +63,37 @@ body:
   - type: textarea
     id: resultado-esperado
     attributes:
-      label: Qual resultado você esperava?
+      label: ✅ Resultado esperado
+      description: O que deveria acontecer?
       placeholder: |
-        Esperava ver a lista ordenada por data decrescente
+        Esperava ver a lista ordenada por data decrescente.
     validations:
       required: false
 
   - type: textarea
     id: resultado-atual
     attributes:
-      label: Qual resultado está obtendo atualmente?
+      label: ❌ Resultado atual
+      description: O que está acontecendo de fato?
       placeholder: |
-        A lista aparece ordenada por nome
+        A lista aparece ordenada por nome.
     validations:
       required: false
 
   - type: input
     id: versao
     attributes:
-      label: Versão do projeto / biblioteca / dependência
-      description: Qual versão você está usando? (package.json, requirements.txt, tag do release, etc)
-      placeholder: v2.1.3 / commit abc1234 / branch develop
+      label: 📦 Versão do projeto / biblioteca
+      description: Informe a versão usada (package.json, requirements.txt, tag, commit etc.)
+      placeholder: |
+        v2.1.3 / commit abc123 / branch develop
     validations:
       required: false
 
   - type: dropdown
     id: ambiente
     attributes:
-      label: Em qual ambiente você está rodando?
+      label: 🖥️ Ambiente de execução
       options:
         - Local (minha máquina)
         - Docker / Podman
@@ -95,26 +105,27 @@ body:
       required: false
 
   - type: textarea
-    id: ambiente-detalhes
+    id: ambiente_detalhes
     attributes:
-      label: Detalhes do ambiente (se aplicável)
-      description: SO, navegador, versão do Node/Python/Ruby/etc, variáveis de ambiente importantes...
+      label: ⚙️ Detalhes do ambiente (se aplicável)
+      description: Sistema operacional, navegador, versões de runtime etc.
       placeholder: |
-        • Windows 11 / macOS Ventura / Ubuntu 22.04
+        • Windows 11 / macOS / Linux
         • Node v18.12.1
+        • Python 3.11
         • Chrome 120
     validations:
       required: false
 
   - type: checkboxes
-    id: termos
+    id: confirmacoes
     attributes:
-      label: Confirmações finais
-      description: Marque para confirmar que leu as orientações
+      label: ✔️ Confirmações
+      description: Marque as opções abaixo antes de enviar
       options:
         - label: Li a documentação e não encontrei resposta para minha dúvida
           required: true
-        - label: Minha pergunta não é um bug nem uma sugestão de funcionalidade (para isso existem outros templates)
+        - label: Minha pergunta não é um bug nem uma solicitação de funcionalidade
           required: true
         - label: Concordo em seguir o Código de Conduta do projeto
           required: true
@@ -123,7 +134,6 @@ body:
     attributes:
       value: |
         ---
-        **Obrigado pela contribuição!**  
-        Alguém da comunidade ou mantenedor vai te responder em breve. 🚀
-        ```
-    
+        🚀 **Obrigado pela contribuição!**
+
+        Alguém da comunidade ou um mantenedor responderá em breve.
