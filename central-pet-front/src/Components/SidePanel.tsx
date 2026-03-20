@@ -1,41 +1,35 @@
 import React from 'react';
+import { petSpeciesOptions } from '@/Mocks/PetRegisterFormMock';
 
-// TODO: Acho que seria melhor passar um objeto com os counts ao invés de 3 props separadas, mas por enquanto tá ok assim
 interface SidePanelProps {
-  dogCount: number;
-  catCount: number;
-  otherCount: number;
+  speciesCounts: Record<string, number>;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ dogCount, catCount, otherCount }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ speciesCounts }) => {
+  const speciesCards = petSpeciesOptions.map((speciesOption) => ({
+    ...speciesOption,
+    count: speciesCounts[speciesOption.value] ?? 0,
+  }));
+
   return (
     <div
       className="
         sticky
-        top-[11vh]
+        top-4
         h-fit
-        p-8
+        p-6
         border-l
         border-gray-300
       "
     >
-      <div className="mb-12 bg-[#ddddff]">
-        <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {dogCount} Dogs registered in our databases.
-        </p>
-      </div>
-
-      <div className="mb-12 bg-[#ddddff]">
-        <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {catCount} Cats registered in our databases.
-        </p>
-      </div>
-
-      <div className="bg-[#ddddff]">
-        <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {otherCount} pets of other species registered in our databases.
-        </p>
-      </div>
+      {speciesCards.map((speciesCard) => (
+        <div key={speciesCard.value} className="mb-6 bg-[#ddddff] last:mb-0">
+          <p className="p-6 text-[1.2em] leading-[1.2]">
+            Temos {speciesCard.count} {speciesCard.label.toLowerCase()}
+            {speciesCard.count === 1 ? '' : 's'} cadastrados em nossa base.
+          </p>
+        </div>
+      ))}
     </div>
   );
 };
