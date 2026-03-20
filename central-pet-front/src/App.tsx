@@ -1,17 +1,17 @@
 import Footer from './Layout/Footer';
 import Header from './Layout/Header';
-import SidePanel from './Components/SidePanel';
+import { SidePanel } from './Components/SidePanel';
 import MainPage from './Pages/MainPage';
 import petsData from '@/Models/Pet.tsx';
 
 // TODO: Revisitar todos os css/tailwind e organizar melhor, tem muita coisa repetida e desnecessária talvez :)
 const App: React.FC = () => {
   // TODO: Acho que seria melhor calcular esses counts no backend e passar como props para o frontend
-  const dogCount = petsData.filter((pet) => pet.species === 'dog').length;
-  const catCount = petsData.filter((pet) => pet.species === 'cat').length;
-  const otherCount = petsData.filter(
-    (pet) => pet.species !== 'dog' && pet.species !== 'cat',
-  ).length;
+  const counts = {
+    dog: petsData.filter((pet) => pet.species === 'dog').length,
+    cat: petsData.filter((pet) => pet.species === 'cat').length,
+    other: petsData.filter((pet) => pet.species !== 'dog' && pet.species !== 'cat').length,
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -33,7 +33,7 @@ const App: React.FC = () => {
         {/* Sidebar */}
         <aside className="hidden xl:block">
           {/* SidePanel dinâmico */}
-          <SidePanel dogCount={dogCount} catCount={catCount} otherCount={otherCount} />
+          <SidePanel counts={counts} />
         </aside>
       </div>
 

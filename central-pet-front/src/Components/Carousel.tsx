@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Pet } from '../Models/Types';
+import PetModal from './petModal';
 
 type CarouselProps = {
   petsData: Pet[];
@@ -13,6 +14,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const animationRef = useRef<number | null>(null);
   const isPaused = useRef(false);
   const isDraggingRef = useRef(false);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   // Estados para controle de Drag (arrastar)
   const [isDragging, setIsDragging] = useState(false);
@@ -192,7 +194,8 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         {items.map((pet, idx) => (
           <div
             key={`${pet.id}-${idx}`}
-            className="min-w-[250px] max-w-[250px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0"
+            className="min-w-[250px] max-w-[250px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0 cursor-pointer"
+            onClick={() => setSelectedPet(pet)}
           >
             <img
               src={pet.photo}
@@ -209,6 +212,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
           </div>
         ))}
       </div>
+      {selectedPet && <PetModal petData={selectedPet} onClick={() => setSelectedPet(null)} />}
     </section>
   );
 };

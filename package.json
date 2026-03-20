@@ -21,5 +21,8 @@
     "dev:front": "pnpm --filter central-pet-front dev",
     "dev": "pnpm -r dev"
   },
-  "packageManager": "pnpm@10.30.1"
+  "packageManager": "pnpm@10.30.1",
+  "dependencies": {
+    "lucide-react": "^0.575.0"
+  }
 }
