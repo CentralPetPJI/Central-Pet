@@ -1,0 +1,139 @@
+name: "💬 Dúvida Técnica"
+description: Tire uma dúvida, faça uma pergunta ou inicie uma discussão sobre o projeto
+title: "[DÚVIDA]: "
+labels:
+  - discussão
+  - pergunta
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por abrir uma dúvida! 🙌  
+
+        Para que possamos ajudar da forma mais rápida possível, preencha os campos abaixo com **o máximo de detalhes possível**.
+
+        📌 Dúvidas bem descritas costumam receber respostas muito mais rápido.
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: 📌 Contexto
+      description: Explique o que você está tentando fazer e qual parte do projeto está utilizando.
+      placeholder: |
+        Exemplo:
+        Estou tentando criar um relatório customizado no dashboard,
+        mas não estou conseguindo aplicar filtro por data.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tentativas
+    attributes:
+      label: 🔎 O que você já tentou?
+      description: Liste os passos, tentativas, códigos ou documentação consultada.
+      placeholder: |
+        Exemplos:
+        • Li a seção X.Y da documentação
+        • Tentei usar a função exemplo() com os parâmetros ...
+        • Recebi o erro: "Invalid token"
+        • Pesquisei por soluções relacionadas
+    validations:
+      required: true
+
+  - type: textarea
+    id: codigo
+    attributes:
+      label: 💻 Código ou configuração mínima reproduzível (se aplicável)
+      description: Forneça o menor trecho de código possível que demonstre o problema.
+      render: text
+      placeholder: |
+        Exemplo:
+
+        const config = {
+          apiKey: "xxxx",
+          timeout: 5000
+        };
+
+        await fetchData(config);
+    validations:
+      required: false
+
+  - type: textarea
+    id: resultado-esperado
+    attributes:
+      label: ✅ Resultado esperado
+      description: O que deveria acontecer?
+      placeholder: |
+        Esperava ver a lista ordenada por data decrescente.
+    validations:
+      required: false
+
+  - type: textarea
+    id: resultado-atual
+    attributes:
+      label: ❌ Resultado atual
+      description: O que está acontecendo de fato?
+      placeholder: |
+        A lista aparece ordenada por nome.
+    validations:
+      required: false
+
+  - type: input
+    id: versao
+    attributes:
+      label: 📦 Versão do projeto / biblioteca
+      description: Informe a versão usada (package.json, requirements.txt, tag, commit etc.)
+      placeholder: |
+        v2.1.3 / commit abc123 / branch develop
+    validations:
+      required: false
+
+  - type: dropdown
+    id: ambiente
+    attributes:
+      label: 🖥️ Ambiente de execução
+      options:
+        - Local (minha máquina)
+        - Docker / Podman
+        - GitHub Actions / CI
+        - Produção / Staging
+        - Outro (descreva abaixo)
+      default: 0
+    validations:
+      required: false
+
+  - type: textarea
+    id: ambiente_detalhes
+    attributes:
+      label: ⚙️ Detalhes do ambiente (se aplicável)
+      description: Sistema operacional, navegador, versões de runtime etc.
+      placeholder: |
+        • Windows 11 / macOS / Linux
+        • Node v18.12.1
+        • Python 3.11
+        • Chrome 120
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmacoes
+    attributes:
+      label: ✔️ Confirmações
+      description: Marque as opções abaixo antes de enviar
+      options:
+        - label: Li a documentação e não encontrei resposta para minha dúvida
+          required: true
+        - label: Minha pergunta não é um bug nem uma solicitação de funcionalidade
+          required: true
+        - label: Concordo em seguir o Código de Conduta do projeto
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        🚀 **Obrigado pela contribuição!**
+
+        Alguém da comunidade ou um mantenedor responderá em breve.
