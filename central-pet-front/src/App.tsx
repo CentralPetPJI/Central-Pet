@@ -1,40 +1,37 @@
-import Footer from './Layout/Footer';
-import Header from './Layout/Header';
-import SidePanel from './Components/SidePanel';
-import MainPage from './Pages/MainPage';
-import petsData from '@/Models/Pet.tsx';
+import React from 'react';
+import { useLocation, useRoutes } from 'react-router-dom';
+import SidePanel from '@/Components/SidePanel';
+import { getStoredPets } from '@/Mocks/PetsStorage';
+import Footer from '@/Layout/Footer';
+import Header from '@/Layout/Header';
+import { appPaths, appRoutes } from '@/routes';
 
-// TODO: Revisitar todos os css/tailwind e organizar melhor, tem muita coisa repetida e desnecessária talvez :)
 const App: React.FC = () => {
-  // TODO: Acho que seria melhor calcular esses counts no backend e passar como props para o frontend
-  const dogCount = petsData.filter((pet) => pet.species === 'dog').length;
-  const catCount = petsData.filter((pet) => pet.species === 'cat').length;
-  const otherCount = petsData.filter(
-    (pet) => pet.species !== 'dog' && pet.species !== 'cat',
-  ).length;
+  const location = useLocation();
+  const petsData = getStoredPets();
+
+  const speciesCounts = petsData.reduce<Record<string, number>>((counts, pet) => {
+    counts[pet.species] = (counts[pet.species] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  const routedContent = useRoutes(appRoutes);
+  const showSidePanel = location.pathname === appPaths.home;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
-      {/* Layout principal */}
-      <div
-        className="
-              pt-[11vh]
-              grid
-              grid-cols-1
-              xl:grid-cols-[1fr_15%]
-            "
-      >
-        {/* Conteúdo */}
-        <main className="px-8 pb-12 overflow-hidden">
-          <MainPage />
-        </main>
+      <div className="flex-1">
+        <div className="grid h-full w-full grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <main className="overflow-hidden px-4 pb-10 lg:px-6">{routedContent}</main>
 
-        {/* Sidebar */}
-        <aside className="hidden xl:block">
-          {/* SidePanel dinâmico */}
-          <SidePanel dogCount={dogCount} catCount={catCount} otherCount={otherCount} />
-        </aside>
+          {showSidePanel ? (
+            <aside className="hidden xl:block">
+              <SidePanel speciesCounts={speciesCounts} />
+            </aside>
+          ) : null}
+        </div>
       </div>
 
       <Footer />
