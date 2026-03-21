@@ -21,19 +21,22 @@ const SidePanel: React.FC<SidePanelProps> = ({ dogCount, catCount, otherCount })
     >
       <div className="mb-12 bg-[#ddddff]">
         <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {dogCount} Dogs registered in our databases.
+          Temos {dogCount} Cães registrados em nossos banco de dados.
+          {/* We have {dogCount} Dogs registered in our databases. */}
         </p>
       </div>
 
       <div className="mb-12 bg-[#ddddff]">
         <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {catCount} Cats registered in our databases.
+          Temos {catCount} gatos registrados em nossos banco de dados.
+          {/* We have {catCount} Cats registered in our databases. */}
         </p>
       </div>
 
       <div className="bg-[#ddddff]">
         <p className="text-[1.2em] leading-[1.2] p-6">
-          We have {otherCount} pets of other species registered in our databases.
+          Temos {otherCount} Cães registrados em nossos banco de dados.
+          {/* We have {otherCount} pets of other species registered in our databases. */}
         </p>
       </div>
     </div>

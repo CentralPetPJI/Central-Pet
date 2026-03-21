@@ -12,9 +12,10 @@ const MainPage: React.FC = () => {
         max-w-7xl
       "
     >
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Pet Central!</h1>
-
-      <p className="text-gray-600 mb-8">Check out our latest pets:</p>
+      {/* <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Pet Central!</h1> */}
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem Vindo ao Pet Central</h1>
+      {/* <p className="text-gray-600 mb-8">Check out our latest pets:</p> */}
+      <p className="text-gray-600 mb-8">Confira nossos animais de estimação mais recentes:</p>
 
       <Carousel petsData={petsData} />
     </main>
