@@ -1,0 +1,143 @@
+name: Reescrever Issue com IA (formato padrão)
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: read
+  models: read
+
+jobs:
+  format-issue:
+    # Só executa quando a label triagem-pendente é adicionada
+    # e ainda não foi formatada
+    if: |
+      github.event.label.name == 'triagem-pendente' &&
+      !contains(github.event.issue.labels.*.name, 'formatado-por-ia')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reescrever descrição com IA
+        id: ai-rewrite
+        uses: actions/ai-inference@v1
+        with:
+          system-prompt: |
+            Você é um assistente que padroniza issues no GitHub.
+            Sua tarefa é REESCREVER completamente a issue mantendo o significado original,
+            mas transformando em um formato de tarefa profissional e claro.
+
+            Regras obrigatórias:
+
+            - Título: deve ser reescrito para ficar curto, objetivo
+              e começar com [Tipo]:
+              Tipos válidos:
+              [Bug], [Feature], [Refactor], [Chore], [Doc], [Test], [Research]
+
+            - Descrição deve seguir ESTE template exato:
+
+            ## Descrição
+            (explicação clara do que precisa ser feito)
+
+            ## Motivação / Contexto
+            (por que isso é importante / qual problema resolve)
+
+            ## Comportamento Esperado
+            (o que deveria acontecer)
+
+            ## Comportamento Atual (se for bug)
+            (o que está acontecendo hoje)
+
+            ## Passos para Reproduzir (se aplicável e se for bug)
+            1.
+            2.
+
+            ## Critérios de Aceitação
+            - [ ] Critério 1
+            - [ ] Critério 2
+
+            Regras obrigatórias para a seção "Critérios de Aceitação":
+            - Deve conter pelo menos 2 critérios
+            - Deve usar exatamente o formato "- [ ] Texto do critério"
+            - Não alterar a sintaxe dos colchetes
+            - Não usar outros marcadores (*, -, números sem checkbox, etc.)
+            
+            Regras adicionais obrigatórias:
+            - Preserve integralmente (sem alterar) qualquer trecho do corpo original que contenha:
+              - imagens em Markdown no formato ![...](...)
+              - links para anexos (user-images.githubusercontent.com,
+                github.com/user-attachments, user-attachments/assets)
+            - Use linguagem objetiva e direta em português
+            - Remova emojis e informalidades
+            - Mantenha detalhes técnicos importantes
+            - Se faltar informação crítica, adicione:
+              ## Informações Faltantes
+
+          prompt: |
+            Título original: ${{ github.event.issue.title }}
+
+            Corpo original:
+            ${{ github.event.issue.body }}
+
+            Responda APENAS com o texto final em Markdown.
+            A primeira linha deve ser o título.
+            Não use blocos ```markdown nem texto extra.
+
+      - name: Atualizar issue com texto reescrito (preservando anexos)
+        if: steps.ai-rewrite.outputs.response != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ORIGINAL_BODY: ${{ github.event.issue.body }}
+          RESPONSE_FILE: ${{ steps.ai-rewrite.outputs.response-file }}
+        run: |
+          set -euo pipefail
+
+          # Lê resposta da IA do arquivo (seguro para multiline)
+          NEW_BODY="$(cat "$RESPONSE_FILE")"
+
+          # Extrai anexos do corpo original
+          ATTACHMENTS="$(printf "%s\n" "$ORIGINAL_BODY" | \
+            grep -E '!\[[^]]*\]\([^)]+\)|https?://(user-images\.githubusercontent\.com|github\.com/user-attachments|.*user-attachments.*)' \
+            || true)"
+
+          # Extrai título e corpo
+          TITLE="$(printf "%s" "$NEW_BODY" | sed -n '1p')"
+          BODY="$(printf "%s" "$NEW_BODY" | sed '1d')"
+
+          # Reanexa anexos se a IA removeu
+          if [ -n "${ATTACHMENTS:-}" ]; then
+            MISSING=false
+
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              if ! printf "%s\n" "$BODY" | grep -Fq "$line"; then
+                MISSING=true
+                break
+              fi
+            done <<< "$ATTACHMENTS"
+
+            if [ "$MISSING" = true ]; then
+              if ! printf "%s\n" "$BODY" | grep -qiE '^\s*##\s+Anexos\s*$'; then
+                BODY="$(printf "%s\n\n## Anexos\n%s\n" "$BODY" "$ATTACHMENTS")"
+              else
+                BODY="$(printf "%s\n\n%s\n" "$BODY" "$ATTACHMENTS")"
+              fi
+            fi
+          fi
+
+          # Atualiza issue
+          gh issue edit "$ISSUE_NUMBER" --title "$TITLE" --body "$BODY"
+
+          # Labels
+          gh issue edit "$ISSUE_NUMBER" --add-label "formatado-por-ia" || true
+          gh issue edit "$ISSUE_NUMBER" --remove-label "triagem-pendente" || true
+
+          # Comentário automático
+          gh issue comment "$ISSUE_NUMBER" \
+            --body "Issue formatada automaticamente por IA no padrão da equipe."

@@ -1,0 +1,14 @@
+services:
+  front:
+    image: node:24.12.0-alpine
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/central-pet-front/node_modules
+    command: >
+      sh -c "corepack enable
+      && pnpm install --frozen-lockfile
+      && pnpm --filter central-pet-front dev --host 0.0.0.0 --port 5173"
