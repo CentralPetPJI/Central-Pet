@@ -6,6 +6,7 @@ import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes } from '@/routes';
 
+// TODO: Revisitar todos os css/tailwind e organizar melhor, tem muita coisa repetida e desnecessária talvez :)
 const App: React.FC = () => {
   const location = useLocation();
   const petsData = getStoredPets();

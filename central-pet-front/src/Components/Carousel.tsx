@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Pet } from '../Models/Types';
-import { routes } from '@/routes';
+import PetModal from './petModal';
 
 type CarouselProps = {
   petsData: Pet[];
@@ -15,6 +14,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const animationRef = useRef<number | null>(null);
   const isPaused = useRef(false);
   const isDraggingRef = useRef(false);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   // Estados para controle de Drag (arrastar)
   const [isDragging, setIsDragging] = useState(false);
@@ -180,8 +180,8 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   }, [handleDragMove, isDragging, stopDragging]);
 
   return (
-    <section className="w-full overflow-hidden py-6 select-none">
-      <h2 className="mb-5 text-2xl font-semibold text-gray-800">Pets em destaque</h2>
+    <section className="w-full overflow-hidden px-6 py-8 select-none">
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800">Latest Pets</h2>
 
       <div
         ref={containerRef}
@@ -189,29 +189,30 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         onTouchStart={onTouchStart}
         onMouseEnter={stopAutoScroll}
         onMouseLeave={onMouseLeave}
-        className={`flex gap-4 overflow-x-hidden pb-4 cursor-grab 2xl:gap-5 ${isDragging ? 'cursor-grabbing' : ''}`}
+        className={`flex gap-6 overflow-x-hidden pb-4 cursor-grab ${isDragging ? 'cursor-grabbing' : ''}`}
       >
         {items.map((pet, idx) => (
-          <Link
+          <div
             key={`${pet.id}-${idx}`}
-            to={routes.pets.detail.build(pet.id)}
-            className="w-[clamp(260px,18vw,360px)] min-w-[clamp(260px,18vw,360px)] shrink-0 rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
+            className="min-w-[250px] max-w-[250px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0 cursor-pointer"
+            onClick={() => setSelectedPet(pet)}
           >
             <img
               src={pet.photo}
               alt={pet.name}
               draggable={false}
-              className="h-52 w-full rounded-t-xl object-cover 2xl:h-60"
+              className="h-48 w-full object-cover rounded-t-lg"
             />
-            <div className="p-4 2xl:p-5">
-              <h3 className="text-lg font-semibold text-gray-800 2xl:text-xl">{pet.name}</h3>
-              <p className="mt-2 text-sm text-gray-600 line-clamp-3 2xl:text-base">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-800">{pet.name}</h3>
+              <p className="mt-2 text-sm text-gray-600 line-clamp-3">
                 {pet.physicalCharacteristics}
               </p>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
+      {selectedPet && <PetModal petData={selectedPet} onClick={() => setSelectedPet(null)} />}
     </section>
   );
 };
