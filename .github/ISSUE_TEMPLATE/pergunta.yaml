@@ -1,0 +1,76 @@
+name: "❓ Pergunta"
+description: Faça uma pergunta sobre o projeto ou peça ajuda para entender algo
+title: "[PERGUNTA]: "
+labels:
+  - pergunta
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por fazer uma pergunta! 🙌  
+
+        Antes de enviar:
+        - Verifique se sua pergunta já foi respondida em **Issues** ou na **documentação**.
+        - Tente explicar o máximo possível do contexto.
+
+  - type: textarea
+    id: pergunta
+    attributes:
+      label: ❓ Qual é a sua pergunta?
+      description: Descreva claramente o que você quer saber.
+      placeholder: |
+        Exemplo:
+        Como posso integrar este projeto com uma API externa?
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: 📌 Contexto
+      description: Explique o que você está tentando fazer ou alcançar.
+      placeholder: |
+        Exemplo:
+        Estou tentando usar o projeto para gerar relatórios automáticos
+        e preciso enviar os dados para outra API.
+    validations:
+      required: false
+
+  - type: textarea
+    id: tentativas
+    attributes:
+      label: 🔎 O que você já tentou?
+      description: Documentação consultada, exemplos usados ou tentativas feitas.
+      placeholder: |
+        • Li a documentação na seção X
+        • Testei o exemplo Y
+        • Procurei em outras issues
+    validations:
+      required: false
+
+  - type: textarea
+    id: referencias
+    attributes:
+      label: 🔗 Links ou referências (opcional)
+      description: Issues, documentação ou exemplos relacionados.
+      placeholder: |
+        https://github.com/.../issues/123
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmacao
+    attributes:
+      label: ✔️ Confirmação
+      options:
+        - label: Procurei na documentação e nas issues existentes antes de perguntar
+          required: true
+        - label: Concordo em seguir o Código de Conduta do projeto
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        💡 **Dica:** quanto mais contexto você fornecer, mais fácil será ajudar.
