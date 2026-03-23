@@ -4,7 +4,7 @@ import SidePanel from '@/Components/SidePanel';
 import { getStoredPets } from '@/Mocks/PetsStorage';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
-import { appPaths, appRoutes } from '@/routes';
+import { routes } from '@/routes';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -15,8 +15,13 @@ const App: React.FC = () => {
     return counts;
   }, {});
 
-  const routedContent = useRoutes(appRoutes);
-  const showSidePanel = location.pathname === appPaths.home;
+  const routedContent = useRoutes([
+    routes.home,
+    routes.pets.new,
+    routes.pets.edit,
+    routes.pets.detail,
+  ]);
+  const showSidePanel = location.pathname === routes.home.path;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">

@@ -2,7 +2,7 @@ import dog from '../assets/image/dog.png';
 import './Header.css';
 import DropdownMenu from '../Components/DropdownMenu';
 import { Link } from 'react-router-dom';
-import { appPaths } from '@/routes';
+import { routes } from '@/routes';
 
 const Header = () => {
   return (
@@ -10,7 +10,7 @@ const Header = () => {
       <div className="flex w-full flex-wrap items-center gap-3 px-3 py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:px-4">
         <div className="flex items-center gap-5 lg:gap-6 justify-self-start">
           <Link
-            to={appPaths.home}
+            to={routes.home.path}
             className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
           >
             <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
@@ -34,13 +34,13 @@ const Header = () => {
 
         <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
           <Link
-            to={appPaths.pets.new}
+            to={routes.pets.new.path}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
           >
             Cadastrar
           </Link>
           <a
-            href={appPaths.login}
+            href={routes.login.path}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
           >
             Entrar

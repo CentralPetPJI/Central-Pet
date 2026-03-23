@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Pet } from '../Models/Types';
-import { buildPetDetailPath } from '@/routes';
+import { routes } from '@/routes';
 
 type CarouselProps = {
   petsData: Pet[];
@@ -194,7 +194,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         {items.map((pet, idx) => (
           <Link
             key={`${pet.id}-${idx}`}
-            to={buildPetDetailPath(pet.id)}
+            to={routes.pets.detail.build(pet.id)}
             className="w-[clamp(260px,18vw,360px)] min-w-[clamp(260px,18vw,360px)] shrink-0 rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
           >
             <img

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
 import { getStoredPets } from '@/Mocks/PetsStorage';
-import { appPaths } from '@/routes';
+import { routes } from '@/routes';
 
 const MainPage: React.FC = () => {
   const petsData = getStoredPets();
@@ -22,7 +22,7 @@ const MainPage: React.FC = () => {
           </p>
         </div>
         <Link
-          to={appPaths.pets.new}
+          to={routes.pets.new.path}
           className="rounded-full bg-cyan-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-cyan-700"
         >
           Cadastrar pet
