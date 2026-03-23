@@ -1,0 +1,154 @@
+import defaultPetsData from '@/Mocks/Pet';
+import type { Pet } from '../Models/Types';
+import { initialPetRegisterFormData, type PetRegisterFormData } from './PetRegisterFormMock';
+import { petPersonalityOptions } from './PetPersonalityOptions';
+
+export const petsStorageKey = 'central-pet:pets';
+export const petProfilesStorageKey = 'central-pet:pet-profiles';
+const validSpecies = new Set(['dog', 'cat']);
+
+export interface PetProfileRecord {
+  id: number;
+  formData: PetRegisterFormData;
+  selectedPersonalities: string[];
+}
+
+const isPetLike = (value: unknown): value is Pet =>
+  typeof value === 'object' &&
+  value !== null &&
+  'id' in value &&
+  'name' in value &&
+  'species' in value &&
+  'photo' in value &&
+  'physicalCharacteristics' in value &&
+  'behavioralCharacteristics' in value &&
+  'notes' in value &&
+  validSpecies.has(String(value.species));
+
+export const getStoredPets = (): Pet[] => {
+  const rawPets = window.localStorage.getItem(petsStorageKey);
+
+  if (!rawPets) {
+    return defaultPetsData;
+  }
+
+  try {
+    const parsedPets = JSON.parse(rawPets) as unknown;
+
+    if (!Array.isArray(parsedPets)) {
+      window.localStorage.removeItem(petsStorageKey);
+      return defaultPetsData;
+    }
+
+    const validPets = parsedPets.filter(isPetLike);
+    return validPets.length > 0 ? validPets : defaultPetsData;
+  } catch {
+    window.localStorage.removeItem(petsStorageKey);
+    return defaultPetsData;
+  }
+};
+
+export const buildPetFromRegisterForm = (
+  formData: PetRegisterFormData,
+  selectedPersonalities: string[],
+  petId?: number,
+): Pet => {
+  const personalityLabels = petPersonalityOptions
+    .filter((option) => selectedPersonalities.includes(option.id))
+    .map((option) => option.title);
+
+  const currentPets = getStoredPets();
+  const nextId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
+  const resolvedPetId = petId ?? nextId;
+
+  return {
+    id: resolvedPetId,
+    name: formData.name,
+    species: formData.species,
+    photo: formData.profilePhoto,
+    physicalCharacteristics: `${formData.breed}, ${formData.age}, ${formData.sex}, porte ${formData.size}`,
+    behavioralCharacteristics:
+      personalityLabels.length > 0
+        ? personalityLabels.join(', ')
+        : 'Perfil comportamental nao informado',
+    notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
+  };
+};
+
+export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
+  const currentPets = getStoredPets();
+  const filteredPets = currentPets.filter((currentPet) => currentPet.id !== pet.id);
+  const updatedPets = [pet, ...filteredPets];
+  window.localStorage.setItem(petsStorageKey, JSON.stringify(updatedPets));
+
+  let filteredProfiles: PetProfileRecord[] = [];
+
+  try {
+    const rawProfiles = window.localStorage.getItem(petProfilesStorageKey);
+    const currentProfiles = rawProfiles
+      ? ((JSON.parse(rawProfiles) as PetProfileRecord[]) ?? [])
+      : [];
+    filteredProfiles = Array.isArray(currentProfiles)
+      ? currentProfiles.filter((profile) => profile?.id !== profileRecord.id)
+      : [];
+  } catch {
+    window.localStorage.removeItem(petProfilesStorageKey);
+  }
+
+  window.localStorage.setItem(
+    petProfilesStorageKey,
+    JSON.stringify([profileRecord, ...filteredProfiles]),
+  );
+
+  return updatedPets;
+};
+
+export const getPetById = (petId: number): Pet | undefined =>
+  getStoredPets().find((pet) => pet.id === petId);
+
+export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
+  const physicalParts = pet.physicalCharacteristics.split(',').map((part) => part.trim());
+  const [breed = 'SRD', age = '', sex = 'Macho', sizePart = 'porte Medio'] = physicalParts;
+  const normalizedSex = sex.toLowerCase().includes('femea') ? 'Femea' : 'Macho';
+  const normalizedSize = sizePart.toLowerCase().includes('pequeno')
+    ? 'Pequeno'
+    : sizePart.toLowerCase().includes('grande')
+      ? 'Grande'
+      : 'Medio';
+
+  return {
+    ...initialPetRegisterFormData,
+    name: pet.name,
+    species: pet.species,
+    breed,
+    age,
+    sex: normalizedSex,
+    size: normalizedSize,
+    profilePhoto: pet.photo,
+  };
+};
+
+export const getPetProfileById = (petId: number): PetProfileRecord | undefined => {
+  const rawProfiles = window.localStorage.getItem(petProfilesStorageKey);
+
+  if (!rawProfiles) {
+    return undefined;
+  }
+
+  try {
+    const parsedProfiles = JSON.parse(rawProfiles) as unknown;
+
+    if (!Array.isArray(parsedProfiles)) {
+      window.localStorage.removeItem(petProfilesStorageKey);
+      return undefined;
+    }
+
+    return parsedProfiles.find(
+      (profile): profile is PetProfileRecord =>
+        typeof profile === 'object' && profile !== null && 'id' in profile && profile.id === petId,
+    );
+  } catch {
+    window.localStorage.removeItem(petProfilesStorageKey);
+    return undefined;
+  }
+};
