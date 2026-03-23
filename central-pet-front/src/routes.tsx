@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
-import PetPersonalityProfilePage from '@/Pages/PetPersonalityProfilePage';
-import PetPersonalityRegisterPage from '@/Pages/PetPersonalityRegisterPage';
+import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
+import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
 
 type AppRoute = RouteObject & {
   element?: ReactNode;
