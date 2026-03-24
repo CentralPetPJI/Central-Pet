@@ -9,7 +9,7 @@ import {
   Min,
   IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class CreatePetDto {
   @IsString()
@@ -28,7 +28,13 @@ export class CreatePetDto {
   breed?: string;
 
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+
+    return Number(value);
+  })
   @IsInt()
   @Min(0)
   ageMonths?: number;
