@@ -90,6 +90,9 @@ export class PetsService {
     const updatedPet: PetRecord = {
       ...this.pets[index],
       ...updatePetDto,
+      id: this.pets[index].id,
+      createdAt: this.pets[index].createdAt,
+      responsibleUserId: this.pets[index].responsibleUserId,
       updatedAt: new Date().toISOString(),
     };
 

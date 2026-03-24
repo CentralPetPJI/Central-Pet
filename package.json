@@ -20,7 +20,7 @@
     "prepare": "husky",
     "dev:front": "pnpm --filter central-pet-front dev",
     "dev:back": "pnpm --filter central-pet-back start:dev",
-    "dev": "pnpm run dev:front & pnpm run dev:back",
+    "dev": "run-p dev:front dev:back",
     "build:front": "pnpm --filter central-pet-front build",
     "build:back": "pnpm --filter central-pet-back build"
   },
