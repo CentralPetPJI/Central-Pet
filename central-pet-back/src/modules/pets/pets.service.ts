@@ -63,8 +63,9 @@ export class PetsService {
   findAll() {
     return {
       message: 'Pets retrieved successfully',
-      data: [],
+      data: this.pets,
     };
+  }
   }
 
   findOne(id: string) {
