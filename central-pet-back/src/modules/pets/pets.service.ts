@@ -66,7 +66,6 @@ export class PetsService {
       data: this.pets,
     };
   }
-  }
 
   findOne(id: string) {
     const pet = this.pets.find((item) => item.id === id);
