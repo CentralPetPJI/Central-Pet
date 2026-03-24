@@ -57,6 +57,7 @@ const PetPersonalityProfilePage = () => {
   })();
 
   const { formData, selectedPersonalities } = profileState;
+  const editPath = Number.isFinite(numericPetId) ? routes.pets.edit.build(numericPetId) : undefined;
 
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
@@ -67,7 +68,7 @@ const PetPersonalityProfilePage = () => {
     { label: 'Vacinado', value: formData.vaccinated },
     { label: 'Castrado', value: formData.neutered },
     { label: 'Vermifugado', value: formData.dewormed },
-    { label: 'Neccessita de cuidados de saude', value: formData.needsHealthCare },
+    { label: 'Necessita de cuidados de saude', value: formData.needsHealthCare },
     { label: 'Limitacao fisica', value: formData.physicalLimitation },
     { label: 'Limitacao visual', value: formData.visualLimitation },
     { label: 'Limitacao auditiva', value: formData.hearingLimitation },
@@ -92,7 +93,7 @@ const PetPersonalityProfilePage = () => {
           <div className="space-y-4">
             <PetProfileOverview formData={formData} />
             <PetProfileGallery
-              editPath={routes.pets.edit.build(petId ?? '')}
+              editPath={editPath}
               name={formData.name}
               photos={formData.galleryPhotos}
             />

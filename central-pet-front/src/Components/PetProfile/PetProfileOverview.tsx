@@ -10,7 +10,7 @@ interface PetProfileOverviewProps {
 const PetProfileOverview = ({ formData }: PetProfileOverviewProps) => {
   // TODO: Isso deve vir do back, talvez ;)
   const overviewItems: PetProfileFact[] = [
-    { label: 'Microchip', value: formData.microchipped ? 'Sim' : 'Nao' },
+    { label: 'Microchip', value: formData.microchipped ? 'Sim' : 'Não' },
     { label: 'Tutor', value: formData.tutor },
     { label: 'Abrigo', value: formData.shelter },
     { label: 'Cidade', value: formData.city },

@@ -39,12 +39,12 @@ const Header = () => {
           >
             Cadastrar
           </Link>
-          <a
-            href={routes.login.path}
+          <Link
+            to={routes.login.path}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
           >
             Entrar
-          </a>
+          </Link>
         </div>
       </div>
     </header>

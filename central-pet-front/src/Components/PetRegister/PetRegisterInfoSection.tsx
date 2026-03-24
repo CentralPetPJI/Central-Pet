@@ -58,7 +58,7 @@ const PetRegisterInfoSection = ({
           ))}
         </FormSelect>
       </FormField>
-      <FormField label="Sexo">
+      <FormField label="Sexo" error={formErrors.sex}>
         <FormSelect
           value={formData.sex}
           onChange={(event) => onUpdateField('sex', event.target.value)}
@@ -70,7 +70,7 @@ const PetRegisterInfoSection = ({
           ))}
         </FormSelect>
       </FormField>
-      <FormField label="Porte">
+      <FormField label="Porte" error={formErrors.size}>
         <FormSelect
           value={formData.size}
           onChange={(event) => onUpdateField('size', event.target.value)}

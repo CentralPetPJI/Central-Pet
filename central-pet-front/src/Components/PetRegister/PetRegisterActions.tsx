@@ -27,12 +27,23 @@ const PetRegisterActions = ({
       >
         {isEditMode ? 'Salvar alteracoes' : 'Salvar pet'}
       </button>
-      <Link
-        to={latestPetPath}
-        className="rounded-full border border-cyan-300 bg-white px-5 py-3 text-sm font-semibold text-cyan-700 transition hover:border-cyan-500 hover:bg-cyan-50"
-      >
-        Visualizar como adotante
-      </Link>
+      {latestPetPath ? (
+        <Link
+          to={latestPetPath}
+          className="rounded-full border border-cyan-300 bg-white px-5 py-3 text-sm font-semibold text-cyan-700 transition hover:border-cyan-500 hover:bg-cyan-50"
+        >
+          Visualizar como adotante
+        </Link>
+      ) : (
+        <button
+          type="button"
+          aria-disabled="true"
+          disabled
+          className="rounded-full border border-cyan-300 bg-white px-5 py-3 text-sm font-semibold text-cyan-700 opacity-50"
+        >
+          Visualizar como adotante
+        </button>
+      )}
     </div>
 
     {saveMessage ? (

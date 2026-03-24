@@ -5,7 +5,7 @@ const PetPersonalityRegisterPage = () => {
   const { petId } = useParams();
   const numericPetId = Number(petId);
   const resolvedPetId = Number.isFinite(numericPetId) ? numericPetId : undefined;
-  const pageKey = resolvedPetId ? `edit-${resolvedPetId}` : 'new';
+  const pageKey = resolvedPetId != null ? `edit-${resolvedPetId}` : 'new';
 
   return <PetRegisterForm key={pageKey} petId={resolvedPetId} />;
 };

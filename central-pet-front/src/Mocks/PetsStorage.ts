@@ -1,6 +1,11 @@
 import defaultPetsData from '@/Mocks/Pet';
 import type { Pet } from '../Models/Types';
-import { initialPetRegisterFormData, type PetRegisterFormData } from './PetRegisterFormMock';
+import {
+  initialPetRegisterFormData,
+  isPetRegisterFormDataLike,
+  normalizePetRegisterFormData,
+  type PetRegisterFormData,
+} from './PetRegisterFormMock';
 import { petPersonalityOptions } from './PetPersonalityOptions';
 
 export const petsStorageKey = 'central-pet:pets';
@@ -12,6 +17,29 @@ export interface PetProfileRecord {
   formData: PetRegisterFormData;
   selectedPersonalities: string[];
 }
+
+const isPetProfileRecordLike = (
+  value: unknown,
+): value is { id: number; formData?: unknown; selectedPersonalities?: unknown } =>
+  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'number';
+
+const normalizePetProfileRecord = (value: unknown): PetProfileRecord | undefined => {
+  if (!isPetProfileRecordLike(value)) {
+    return undefined;
+  }
+
+  const formData = isPetRegisterFormDataLike(value.formData)
+    ? normalizePetRegisterFormData(value.formData)
+    : initialPetRegisterFormData;
+
+  return {
+    id: value.id,
+    formData,
+    selectedPersonalities: Array.isArray(value.selectedPersonalities)
+      ? value.selectedPersonalities.filter((item): item is string => typeof item === 'string')
+      : [],
+  };
+};
 
 const isPetLike = (value: unknown): value is Pet =>
   typeof value === 'object' &&
@@ -143,10 +171,11 @@ export const getPetProfileById = (petId: number): PetProfileRecord | undefined =
       return undefined;
     }
 
-    return parsedProfiles.find(
-      (profile): profile is PetProfileRecord =>
-        typeof profile === 'object' && profile !== null && 'id' in profile && profile.id === petId,
-    );
+    const normalizedProfiles = parsedProfiles
+      .map((profile) => normalizePetProfileRecord(profile))
+      .filter((profile): profile is PetProfileRecord => profile !== undefined);
+
+    return normalizedProfiles.find((profile) => profile.id === petId);
   } catch {
     window.localStorage.removeItem(petProfilesStorageKey);
     return undefined;
