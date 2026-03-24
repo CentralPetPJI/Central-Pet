@@ -19,7 +19,10 @@
   "scripts": {
     "prepare": "husky",
     "dev:front": "pnpm --filter central-pet-front dev",
-    "dev": "pnpm -r dev"
+    "dev:back": "pnpm --filter central-pet-back start:dev",
+    "dev": "pnpm -r dev",
+    "build:front": "pnpm --filter central-pet-front build",
+    "build:back": "pnpm --filter central-pet-back build"
   },
   "packageManager": "pnpm@10.30.1"
 }
