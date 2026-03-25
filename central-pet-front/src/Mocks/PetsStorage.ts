@@ -45,12 +45,19 @@ const isPetLike = (value: unknown): value is Pet =>
   typeof value === 'object' &&
   value !== null &&
   'id' in value &&
+  typeof value.id === 'number' &&
   'name' in value &&
+  typeof value.name === 'string' &&
   'species' in value &&
+  typeof value.species === 'string' &&
   'photo' in value &&
+  typeof value.photo === 'string' &&
   'physicalCharacteristics' in value &&
+  typeof value.physicalCharacteristics === 'string' &&
   'behavioralCharacteristics' in value &&
+  typeof value.behavioralCharacteristics === 'string' &&
   'notes' in value &&
+  typeof value.notes === 'string' &&
   validSpecies.has(String(value.species));
 
 export const getStoredPets = (): Pet[] => {
