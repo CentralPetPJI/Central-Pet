@@ -134,13 +134,21 @@ export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
 export const getPetById = (petId: number): Pet | undefined =>
   getStoredPets().find((pet) => pet.id === petId);
 
+const normalizeTextForComparison = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+
 export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
   const physicalParts = pet.physicalCharacteristics.split(',').map((part) => part.trim());
   const [breed = 'SRD', age = '', sex = 'Macho', sizePart = 'porte Medio'] = physicalParts;
-  const normalizedSex = sex.toLowerCase().includes('femea') ? 'Femea' : 'Macho';
-  const normalizedSize = sizePart.toLowerCase().includes('pequeno')
+  const normalizedSexSource = normalizeTextForComparison(sex);
+  const normalizedSizeSource = normalizeTextForComparison(sizePart);
+  const normalizedSex = normalizedSexSource.includes('femea') ? 'Femea' : 'Macho';
+  const normalizedSize = normalizedSizeSource.includes('pequeno')
     ? 'Pequeno'
-    : sizePart.toLowerCase().includes('grande')
+    : normalizedSizeSource.includes('grande')
       ? 'Grande'
       : 'Medio';
 

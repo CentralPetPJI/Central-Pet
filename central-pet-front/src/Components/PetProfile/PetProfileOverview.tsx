@@ -1,3 +1,4 @@
+import dogImage from '@/assets/image/dog.png';
 import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
 import PetProfileFactGrid, {
   type PetProfileFact,
@@ -15,14 +16,22 @@ const PetProfileOverview = ({ formData }: PetProfileOverviewProps) => {
     { label: 'Abrigo', value: formData.shelter },
     { label: 'Cidade', value: formData.city },
   ];
+  const profilePhotoSrc = formData.profilePhoto || dogImage;
 
   return (
     <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50">
         <img
-          src={formData.profilePhoto}
+          src={profilePhotoSrc}
           alt={`Foto de perfil de ${formData.name}`}
           className="h-full min-h-80 w-full object-cover"
+          onError={(event) => {
+            if (event.currentTarget.src.endsWith(dogImage)) {
+              return;
+            }
+
+            event.currentTarget.src = dogImage;
+          }}
         />
       </div>
 
