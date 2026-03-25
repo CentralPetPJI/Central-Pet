@@ -19,7 +19,7 @@
   "scripts": {
     "prepare": "husky",
     "dev:front": "pnpm --filter central-pet-front dev",
-    "dev:back": "pnpm --filter central-pet-back start:dev",
+    "dev:back": "pnpm --filter central-pet-back dev",
     "dev": "pnpm -r --parallel --if-present run dev",
     "build:front": "pnpm --filter central-pet-front build",
     "build:back": "pnpm --filter central-pet-back build"
