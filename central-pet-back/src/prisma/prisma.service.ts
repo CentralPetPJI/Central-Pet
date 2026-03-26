@@ -13,10 +13,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     const adapter: PrismaPg = new PrismaPg({ connectionString });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({ adapter });
   }
 
   async onModuleInit(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await this.$connect();
   }
 }

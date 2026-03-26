@@ -1,62 +1,77 @@
-import { Dog, Cat, PawPrint } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { Cat, Dog, PawPrint, type LucideIcon } from 'lucide-react';
+import { petSpeciesOptions } from '@/Mocks/PetRegisterFormMock';
 
-// TODO: Acho que seria melhor passar um objeto com os counts ao invés de 3 props separadas, mas por enquanto tá ok assim
 interface SidePanelProps {
-  counts: {
-    dog: number;
-    cat: number;
-    other: number;
-  };
+  speciesCounts: Record<string, number>;
 }
 
-export const SidePanel: React.FC<SidePanelProps> = ({ counts }) => {
-  const { dog, cat, other } = counts;
+const speciesIconByValue: Record<string, LucideIcon> = {
+  dog: Dog,
+  cat: Cat,
+};
+
+const SidePanel: React.FC<SidePanelProps> = ({ speciesCounts }) => {
+  const speciesCards = petSpeciesOptions.map((speciesOption) => ({
+    ...speciesOption,
+    count: speciesCounts[speciesOption.value] ?? 0,
+    icon: speciesIconByValue[speciesOption.value] ?? PawPrint,
+  }));
 
   return (
-    <div className="flex flex-col gap-12 px-10">
-      <StatCard icon={<Dog size={40} />} number={dog} label="Cachorros Registrados" />
-      <StatCard icon={<Cat size={40} />} number={cat} label="Gatos Registrados" />
-      <StatCard icon={<PawPrint size={40} />} number={other} label="Outros Animais Registrados" />
+    <div className="sticky top-4 flex h-fit flex-col gap-6 border-l border-gray-300 p-6">
+      {speciesCards.map((speciesCard) => (
+        <StatCard
+          key={speciesCard.value}
+          icon={speciesCard.icon}
+          label={speciesCard.label}
+          number={speciesCard.count}
+        />
+      ))}
     </div>
   );
 };
+
 interface StatCardProps {
-  icon: React.ReactNode;
-  number: number;
+  icon: LucideIcon;
   label: string;
+  number: number;
 }
-function StatCard({ number, label, icon }: StatCardProps) {
+
+function StatCard({ icon: Icon, label, number }: StatCardProps) {
   const [count, setCount] = useState(0);
+  const normalizedLabel =
+    number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
 
   useEffect(() => {
     let start = 0;
-    const duration = 800; // duração animação
-    const increment = number / (duration / 16); // frames da animação
+    const duration = 800;
+    const increment = number / (duration / 16 || 1);
 
-    const counter = setInterval(() => {
+    const counter = window.setInterval(() => {
       start += increment;
 
       if (start >= number) {
         setCount(number);
-        clearInterval(counter);
-      } else {
-        setCount(Math.floor(start));
+        window.clearInterval(counter);
+        return;
       }
+
+      setCount(Math.floor(start));
     }, 16);
 
-    return () => clearInterval(counter);
-  }, [number]); // atualiza automaticamente quando pets mudar
+    return () => window.clearInterval(counter);
+  }, [number]);
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center hover:scale-105 transition-transform duration-300">
-      <div className="text-purple-600 mb-3">{icon}</div>
-
+    <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-6 text-center shadow-xl transition-transform duration-300 hover:scale-105">
+      <div className="mb-3 text-cyan-600">
+        <Icon size={40} strokeWidth={1.8} />
+      </div>
       <h2 className="text-4xl font-bold text-gray-800">{count}</h2>
-
-      <p className="text-gray-500 mt-2 text-center">{label}</p>
+      <p className="mt-2 text-gray-500">{normalizedLabel}</p>
     </div>
   );
 }
+
 export default SidePanel;

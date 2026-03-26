@@ -1,23 +1,36 @@
 import React from 'react';
-import Carousel from '../Components/Carousel';
-import petsData from '../Models/Pet';
+import { Link } from 'react-router-dom';
+import Carousel from '@/Components/Carousel';
+import { getStoredPets } from '@/Mocks/PetsStorage';
+import { routes } from '@/routes';
 
 const MainPage: React.FC = () => {
-  return (
-    <main
-      className="
-        pt-[11vh]
-        px-8
-        pb-12
-        max-w-7xl
-      "
-    >
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Pet Central!</h1>
+  const petsData = getStoredPets();
 
-      <p className="text-gray-600 mb-8">Check out our latest pets:</p>
+  return (
+    <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao Pet Central!</h1>
+
+      <p className="text-gray-600 mb-8">Confira os pets cadastrados recentemente:</p>
+
+      <div className="mb-8 grid gap-4 rounded-3xl bg-linear-to-r from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 2xl:grid-cols-[minmax(0,1fr)_auto_auto] 2xl:items-center">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Fluxo de doacao e adocao</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            O doador cadastra o pet com todas as informacoes. O adotante visualiza o perfil completo
+            do animal antes de decidir.
+          </p>
+        </div>
+        <Link
+          to={routes.pets.new.path}
+          className="rounded-full bg-cyan-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-cyan-700"
+        >
+          Cadastrar pet
+        </Link>
+      </div>
 
       <Carousel petsData={petsData} />
-    </main>
+    </section>
   );
 };
 

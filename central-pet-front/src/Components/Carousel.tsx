@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Pet } from '../Models/Types';
-import PetModal from './petModal';
+import PetModal from './PetModal.tsx';
 
 type CarouselProps = {
   petsData: Pet[];
