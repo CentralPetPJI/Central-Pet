@@ -54,8 +54,8 @@ Recommended additions:
 
 Integration points:
 
-- Frontend: extend [`central-pet-front/src/Mocks/PetRegisterFormMock.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Mocks/PetRegisterFormMock.ts) to stop treating `tutor` and `contact` as the only responsible fields.
-- Frontend storage: replace string-packed `notes` composition in [`central-pet-front/src/Mocks/PetsStorage.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Mocks/PetsStorage.ts) with structured profile records plus a presentation mapper.
+- Frontend: extend [`central-pet-front/src/Mocks/PetRegisterFormMock.ts`](../../central-pet-front/src/Mocks/PetRegisterFormMock.ts) to stop treating `tutor` and `contact` as the only responsible fields.
+- Frontend storage: replace string-packed `notes` composition in [`central-pet-front/src/Mocks/PetsStorage.ts`](../../central-pet-front/src/Mocks/PetsStorage.ts) with structured profile records plus a presentation mapper.
 - Backend: mirror those fields into Nest DTOs and Prisma models only if the milestone actually migrates away from frontend-only persistence.
 
 ### 2. Trust/Profile Indicators
@@ -80,7 +80,7 @@ The app already has a mock/storage path and Playwright boots only the frontend. 
 Recommended additions:
 
 - Add shared test factories under `central-pet-front/tests/e2e/fixtures/` or `central-pet-front/src/test/factories/`.
-- Add a small seeding helper that writes deterministic arrays into the same storage keys used by [`central-pet-front/src/Mocks/PetsStorage.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Mocks/PetsStorage.ts).
+- Add a small seeding helper that writes deterministic arrays into the same storage keys used by [`central-pet-front/src/Mocks/PetsStorage.ts`](../../central-pet-front/src/Mocks/PetsStorage.ts).
 - Add Playwright custom fixtures for scenarios like `ongConfiavel`, `protetorBasico`, `tutorPessoaFisica`.
 - Use `@faker-js/faker` only in test code, with an explicit seed per suite or per fixture file.
 
@@ -135,14 +135,14 @@ pnpm --filter central-pet-front add -D @faker-js/faker
 ## Sources
 
 - Local codebase analysis (HIGH confidence):
-  - [`central-pet-front/package.json`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/package.json)
-  - [`central-pet-back/package.json`](/home/vard/repos/my_repos/Central-Pet/central-pet-back/package.json)
-  - [`central-pet-front/playwright.config.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/playwright.config.ts)
-  - [`central-pet-front/src/Components/PetRegister/PetRegisterForm.tsx`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Components/PetRegister/PetRegisterForm.tsx)
-  - [`central-pet-front/src/Mocks/PetRegisterFormMock.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Mocks/PetRegisterFormMock.ts)
-  - [`central-pet-front/src/Mocks/PetsStorage.ts`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/src/Mocks/PetsStorage.ts)
-  - [`central-pet-front/tests/e2e`](/home/vard/repos/my_repos/Central-Pet/central-pet-front/tests/e2e)
-  - [`.planning/PROJECT.md`](/home/vard/repos/my_repos/Central-Pet/.planning/PROJECT.md)
-  - [`.planning/REQUIREMENTS.md`](/home/vard/repos/my_repos/Central-Pet/.planning/REQUIREMENTS.md)
-  - [`.planning/codebase/STACK.md`](/home/vard/repos/my_repos/Central-Pet/.planning/codebase/STACK.md)
-  - [`.planning/codebase/TESTING.md`](/home/vard/repos/my_repos/Central-Pet/.planning/codebase/TESTING.md)
+  - [`central-pet-front/package.json`](../../central-pet-front/package.json)
+  - [`central-pet-back/package.json`](../../central-pet-back/package.json)
+  - [`central-pet-front/playwright.config.ts`](../../central-pet-front/playwright.config.ts)
+  - [`central-pet-front/src/Components/PetRegister/PetRegisterForm.tsx`](../../central-pet-front/src/Components/PetRegister/PetRegisterForm.tsx)
+  - [`central-pet-front/src/Mocks/PetRegisterFormMock.ts`](../../central-pet-front/src/Mocks/PetRegisterFormMock.ts)
+  - [`central-pet-front/src/Mocks/PetsStorage.ts`](../../central-pet-front/src/Mocks/PetsStorage.ts)
+  - [`central-pet-front/tests/e2e`](../../central-pet-front/tests/e2e)
+  - [`.planning/PROJECT.md`](../PROJECT.md)
+  - [`.planning/REQUIREMENTS.md`](../REQUIREMENTS.md)
+  - [`.planning/codebase/STACK.md`](../codebase/STACK.md)
+  - [`.planning/codebase/TESTING.md`](../codebase/TESTING.md)

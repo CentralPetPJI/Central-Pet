@@ -8,4 +8,7 @@ coverage
 *.log
 central-pet-front/node_modules
 central-pet-front/dist
+central-pet-back/node_modules
+central-pet-back/dist
+central-pet-back/coverage
 .pnpm-store

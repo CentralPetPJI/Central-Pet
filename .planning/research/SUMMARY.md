@@ -150,13 +150,13 @@ Phases with standard patterns (skip research-phase):
 
 ### Primary (HIGH confidence)
 
-- [STACK.md](/home/vard/repos/my_repos/Central-Pet/.planning/research/STACK.md) — existing stack fit, domain modeling recommendations, and E2E fixture strategy
-- [ARCHITECTURE.md](/home/vard/repos/my_repos/Central-Pet/.planning/research/ARCHITECTURE.md) — target component boundaries, backend/frontend ownership, and build order
-- [PITFALLS.md](/home/vard/repos/my_repos/Central-Pet/.planning/research/PITFALLS.md) — brownfield-specific failure modes and phase warnings grounded in the current codebase
+- [STACK.md](./STACK.md) — existing stack fit, domain modeling recommendations, and E2E fixture strategy
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — target component boundaries, backend/frontend ownership, and build order
+- [PITFALLS.md](./PITFALLS.md) — brownfield-specific failure modes and phase warnings grounded in the current codebase
 
 ### Secondary (MEDIUM confidence)
 
-- [FEATURES.md](/home/vard/repos/my_repos/Central-Pet/.planning/research/FEATURES.md) — market expectations and milestone scoping
+- [FEATURES.md](./FEATURES.md) — market expectations and milestone scoping
 - https://www.petfinder.com/ — responsible-entity clarity and adoption discovery expectations
 - https://rehome.adoptapet.com/auth/register — structured inquiry flow and hidden public contact pattern
 - https://support.petrescue.com.au/article/170-petrescues-pet-listing-rules — platform trust and listing-quality expectations

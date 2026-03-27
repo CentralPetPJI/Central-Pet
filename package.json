@@ -10,11 +10,11 @@
     "prettier": "3.8.1"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,css}": [
+    "*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix"
     ],
-    "*.{json,md}": "prettier --write"
+    "*.{css,json,md}": "prettier --write"
   },
   "scripts": {
     "prepare": "husky",
