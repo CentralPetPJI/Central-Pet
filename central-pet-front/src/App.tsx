@@ -1,44 +1,46 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './Layout/Header';
-import { SidePanel } from './Components/SidePanel';
-import MainPage from './Pages/MainPage';
-import petsData from '@/Models/Pet.tsx';
-import Login from './Pages/Login/Login';
-import Register from './Pages/Register/Register';
+import React from 'react';
+import { useLocation, useRoutes } from 'react-router-dom';
+import SidePanel from '@/Components/SidePanel';
+import { getStoredPets } from '@/Mocks/PetsStorage';
+import Footer from '@/Layout/Footer';
+import Header from '@/Layout/Header';
+import { routes } from '@/routes';
 
 const App: React.FC = () => {
-  const counts = {
-    dog: petsData.filter((pet) => pet.species === 'dog').length,
-    cat: petsData.filter((pet) => pet.species === 'cat').length,
-    other: petsData.filter((pet) => pet.species !== 'dog' && pet.species !== 'cat').length,
-  };
+  const location = useLocation();
+  const petsData = getStoredPets();
+
+  const speciesCounts = petsData.reduce<Record<string, number>>((counts, pet) => {
+    counts[pet.species] = (counts[pet.species] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  const routedContent = useRoutes([
+    routes.home,
+    routes.pets.new,
+    routes.pets.edit,
+    routes.pets.detail,
+  ]);
+  const showSidePanel = location.pathname === routes.home.path;
 
   return (
-    <Router>
-      <Routes>
-        {/* 1. Rotas "Limpas" (Sem Header/Sidebar) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <Header />
 
-        {/* 2. Rota Principal com o Layout Completo */}
-        <Route
-          path="/"
-          element={
-            <div className="min-h-screen bg-gray-50">
-              <Header />
-              <div className="pt-[11vh] grid grid-cols-1 xl:grid-cols-[1fr_15%]">
-                <main className="px-8 pb-12 overflow-hidden">
-                  <MainPage />
-                </main>
-                <aside className="hidden xl:block">
-                  <SidePanel counts={counts} />
-                </aside>
-              </div>
-            </div>
-          }
-        />
-      </Routes>
-    </Router>
+      <div className="flex-1">
+        <div className="grid h-full w-full grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <main className="overflow-hidden px-4 pb-10 lg:px-6">{routedContent}</main>
+
+          {showSidePanel ? (
+            <aside className="hidden xl:block">
+              <SidePanel speciesCounts={speciesCounts} />
+            </aside>
+          ) : null}
+        </div>
+      </div>
+
+      <Footer />
+    </div>
   );
 };
 

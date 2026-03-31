@@ -1,5 +1,7 @@
-import { Pet } from '../Models/Types';
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { routes } from '@/routes';
+import { Pet } from '../Models/Types';
 
 interface PetModalProps {
   petData: Pet;
@@ -41,10 +43,12 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
           <strong>Notas:</strong> {petData.notes}
         </p>
 
-        <button className="mt-6 w-full bg-[#1ed6ea] hover:bg-[#6de9f7] text-white py-3 rounded-xl transition font-semibold">
-          <a href="#"> Quero Adotar 🐾</a>
-          {/* Deixar dessa forma por enquanto, depois implementa um router */}
-        </button>
+        <Link
+          to={routes.pets.detail.build(petData.id)}
+          className="mt-6 block w-full rounded-xl bg-[#1ed6ea] py-3 text-center font-semibold text-white transition hover:bg-[#6de9f7]"
+        >
+          Quero adotar
+        </Link>
       </div>
     </div>
   );

@@ -399,3 +399,13 @@ FodyWeavers.xsd
 
 package-lock.json
 yarn.lock
+.pnpm-store
+
+/src/generated/prisma
+
+# Environment files
+# Never commit real environment files to this open source repository.
+# Only example templates such as `.env.example` may be versioned.
+.env
+.env.*
+!.env.example

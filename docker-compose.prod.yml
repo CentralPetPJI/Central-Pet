@@ -1,8 +1,91 @@
 services:
+  postgres:
+    image: docker.io/postgres:17-alpine
+    profiles:
+      - internal-db
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB?POSTGRES_DB is required}"
+      POSTGRES_USER: "${POSTGRES_USER?POSTGRES_USER is required}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD?POSTGRES_PASSWORD is required}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 512m
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER?POSTGRES_USER is required} -d ${POSTGRES_DB?POSTGRES_DB is required}",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  back:
+    build:
+      context: .
+      dockerfile: central-pet-back/Dockerfile
+      args:
+        DATABASE_URL: "${DATABASE_URL?DATABASE_URL is required}"
+    expose:
+      - "3000"
+    environment:
+      PORT: 3000
+      FRONTEND_URL: "${FRONTEND_URL?FRONTEND_URL is required}"
+      DATABASE_URL: "${DATABASE_URL?DATABASE_URL is required}"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 100
+    mem_limit: 256m
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   front:
     build:
       context: .
       dockerfile: central-pet-front/Dockerfile
     ports:
-      - "8080:80"
+      - "127.0.0.1:${FRONT_PORT?FRONT_PORT is required}:80"
+    depends_on:
+      back:
+        condition: service_healthy
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/log/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 256m
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:

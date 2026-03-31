@@ -1,33 +1,51 @@
-import { Link } from 'react-router-dom';
 import dog from '../assets/image/dog.png';
 import './Header.css';
 import DropdownMenu from '../Components/DropdownMenu';
+import { Link } from 'react-router-dom';
+import { routes } from '@/routes';
 
 const Header = () => {
   return (
-    <header className="fixed top-0 left-0 w-full h-[8vh] max-h-[10%] grid grid-cols-[auto_1fr_auto] items-center justify-between border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white px-4">
-      {/* Logo */}
-      <Link to="/" className="flex items-center space-x-2 no-underline text-inherit">
-        <img src={dog} className="w-8 h-auto" alt="Logo" />
-        <p className="m-0 text-base">Pet Central</p>
-      </Link>
+    <header className="sticky top-0 z-50 border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white">
+      <div className="flex w-full flex-wrap items-center gap-3 px-3 py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:px-4">
+        <div className="flex items-center gap-5 lg:gap-6 justify-self-start">
+          <Link
+            to={routes.home.path}
+            className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
+          >
+            <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
+            <p className="m-0 text-base font-medium">Pet Central</p>
+          </Link>
 
-      {/* Nav */}
-      <nav className="ml-12">
-        <ul className="flex space-x-6 list-none p-0 m-0">
-          <DropdownMenu title="Pets" items={['Procurar', 'Cadastrar']} />
-          <DropdownMenu title="Instituições" items={['Consultar', 'Cadastrar Nova']} />
-        </ul>
-      </nav>
+          <nav className="hidden lg:block">
+            <ul className="m-0 flex flex-wrap items-center gap-2 list-none p-0">
+              <DropdownMenu title="Pets" items={['Procurar', 'Cadastrar']} />
+              <DropdownMenu title="Instituições" items={['Consultar', 'Cadastrar Nova']} />
+            </ul>
+          </nav>
+        </div>
 
-      {/* Botões de Ação - Alterados de <a> para <Link> */}
-      <div className="flex items-center space-x-4 mr-2">
-        
-        {/* <a href="/register" className="px-2 py-1 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-100 transition">Register</a> */}
-        {/* <a href="/login" className="px-2 py-1 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-100 transition">Login</a> */}
+        <nav className="order-3 w-full lg:hidden">
+          <ul className="m-0 flex flex-wrap gap-2 list-none p-0">
+            <DropdownMenu title="Pets" items={['Procurar', 'Cadastrar']} />
+            <DropdownMenu title="Instituições" items={['Consultar', 'Cadastrar Nova']} />
+          </ul>
+        </nav>
 
-        <Link to="/register" className="px-2 py-1 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-100 transition no-underline">Register</Link>
-        <Link to="/login" className="px-2 py-1 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-100 transition no-underline">Login</Link>
+        <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
+          <Link
+            to={routes.pets.new.path}
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+          >
+            Cadastrar
+          </Link>
+          <Link
+            to={routes.login.path}
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+          >
+            Entrar
+          </Link>
+        </div>
       </div>
     </header>
   );

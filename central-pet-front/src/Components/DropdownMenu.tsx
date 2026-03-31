@@ -24,12 +24,12 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ title, items }) => {
 
   return (
     <li ref={dropdownRef} className="relative" onClick={toggleDropdown}>
-      <button className="px-2 py-1 text-gray-800 hover:bg-gray-100 rounded-md transition">
+      <button className="rounded-md px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100">
         {title}
       </button>
 
       {isOpen && (
-        <ul className="absolute top-full left-0 mt-1 w-max bg-white border border-gray-300 rounded-md shadow-lg list-none p-0">
+        <ul className="absolute left-0 top-full z-20 mt-1 w-max rounded-md border border-gray-300 bg-white p-0 shadow-lg list-none">
           {items.map((item, index) => (
             <li key={index} className="px-4 py-2 hover:bg-green-200 whitespace-nowrap">
               <a href="#" className="text-gray-800">
