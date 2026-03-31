@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
@@ -47,18 +51,22 @@ describe('PetsService', () => {
     selectedPersonalities: ['playful', 'friendly'],
   });
 
-  const validateCreateDto = async (dto: any): Promise<CreatePetDto> => {
-    return await validationPipe.transform(dto, {
+  const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {
+    const transformed: unknown = await validationPipe.transform(dto, {
       type: 'body',
       metatype: CreatePetDto,
     });
+
+    return transformed as CreatePetDto;
   };
 
-  const validateUpdateDto = async (dto: any): Promise<UpdatePetDto> => {
-    return await validationPipe.transform(dto, {
+  const validateUpdateDto = async (dto: unknown): Promise<UpdatePetDto> => {
+    const transformed: unknown = await validationPipe.transform(dto, {
       type: 'body',
       metatype: UpdatePetDto,
     });
+
+    return transformed as UpdatePetDto;
   };
 
   it('should create a pet successfully', async () => {
@@ -181,6 +189,16 @@ describe('PetsService', () => {
     );
   });
 
+  it('should clear selectedPersonalities when update payload sends an empty array', () => {
+    const created = service.create(makeCreateDto());
+
+    const updated = service.update(created.data.id, {
+      selectedPersonalities: [],
+    });
+
+    expect(updated.data.selectedPersonalities).toEqual([]);
+  });
+
   // New tests for DTO validation decorators
   describe('CreatePetDto validation', () => {
     it('should reject when galleryPhotos exceeds @ArrayMaxSize(10)', async () => {
@@ -199,7 +217,7 @@ describe('PetsService', () => {
       };
 
       const validated = await validateCreateDto(dto);
-      expect(validated.galleryPhotos.length).toBe(10);
+      expect(validated.galleryPhotos?.length).toBe(10);
     });
 
     it('should reject when selectedPersonalities has duplicate values (@ArrayUnique)', async () => {
@@ -218,7 +236,11 @@ describe('PetsService', () => {
       };
 
       const validated = await validateCreateDto(dto);
-      expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
+      expect(validated.selectedPersonalities).toEqual([
+        'playful',
+        'friendly',
+        'calm',
+      ]);
     });
 
     it('should reject when name exceeds @MaxLength(100)', async () => {
@@ -264,7 +286,7 @@ describe('PetsService', () => {
       };
 
       const validated = await validateUpdateDto(dto);
-      expect(validated.galleryPhotos.length).toBe(10);
+      expect(validated.galleryPhotos?.length).toBe(10);
     });
 
     it('should reject when selectedPersonalities has duplicate values (@ArrayUnique)', async () => {
@@ -281,7 +303,11 @@ describe('PetsService', () => {
       };
 
       const validated = await validateUpdateDto(dto);
-      expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
+      expect(validated.selectedPersonalities).toEqual([
+        'playful',
+        'friendly',
+        'calm',
+      ]);
     });
 
     it('should reject when name exceeds @MaxLength(100)', async () => {
