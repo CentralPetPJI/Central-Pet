@@ -1,17 +1,29 @@
-import { Transform } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
   IsBoolean,
   IsIn,
-  IsInt,
   IsNotEmpty,
   IsString,
-  IsUUID,
   MaxLength,
-  Min,
   ValidateIf,
 } from 'class-validator';
 
 export class UpdatePetDto {
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  profilePhoto?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(5000, { each: true })
+  galleryPhotos?: string[];
+
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
@@ -21,49 +33,52 @@ export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
-  @IsIn(['DOG', 'CAT'])
+  age?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsIn(['dog', 'cat'])
   species?: string;
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
   breed?: string;
 
   @ValidateIf((_, value) => value !== undefined)
-  @Transform(({ value }) => {
-    if (value === '') {
-      return '__INVALID_EMPTY__';
-    }
-
-    if (value === undefined) {
-      return undefined;
-    }
-
-    return Number(value);
-  })
-  @IsInt()
-  @Min(0)
-  ageMonths?: number;
-
-  @ValidateIf((_, value) => value !== undefined)
   @IsString()
-  @IsIn(['SMALL', 'MEDIUM', 'LARGE'])
-  size?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsIn(['MALE', 'FEMALE'])
+  @IsIn(['Femea', 'Macho'])
   sex?: string;
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
-  @MaxLength(50)
-  color?: string;
+  @IsIn(['Pequeno', 'Medio', 'Grande'])
+  size?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsBoolean()
+  microchipped?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
-  @MaxLength(1000)
-  description?: string;
+  @IsNotEmpty()
+  tutor?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  shelter?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  city?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
+  contact?: string;
 
   @ValidateIf((_, value) => value !== undefined)
   @IsBoolean()
@@ -78,21 +93,25 @@ export class UpdatePetDto {
   dewormed?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsIn(['AVAILABLE', 'IN_PROCESS', 'ADOPTED', 'UNAVAILABLE'])
-  adoptionStatus?: string;
+  @IsBoolean()
+  needsHealthCare?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @MaxLength(100)
-  city?: string;
+  @IsBoolean()
+  physicalLimitation?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @MaxLength(2)
-  state?: string;
+  @IsBoolean()
+  visualLimitation?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
-  @IsUUID()
-  responsibleUserId?: string;
+  @IsBoolean()
+  hearingLimitation?: boolean;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  selectedPersonalities?: string[];
 }
