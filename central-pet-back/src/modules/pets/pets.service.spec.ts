@@ -135,4 +135,19 @@ describe('PetsService', () => {
       NotFoundException,
     );
   });
+
+  it('should preserve selectedPersonalities when update payload omits the field', () => {
+    const created = service.create(makeCreateDto());
+
+    const dto: UpdatePetDto = {
+      name: 'Luna Renomeada',
+    };
+
+    const updated = service.update(created.data.id, dto);
+
+    expect(updated.data.name).toBe('Luna Renomeada');
+    expect(updated.data.selectedPersonalities).toEqual(
+      created.data.selectedPersonalities,
+    );
+  });
 });

@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsBoolean,
@@ -17,7 +18,10 @@ export class UpdatePetDto {
 
   @ValidateIf((_, value) => value !== undefined)
   @IsArray()
+  @ArrayMaxSize(10)
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(5000, { each: true })
   galleryPhotos?: string[];
 
   @ValidateIf((_, value) => value !== undefined)
@@ -108,5 +112,6 @@ export class UpdatePetDto {
   @IsArray()
   @ArrayUnique()
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   selectedPersonalities?: string[];
 }

@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-
-export interface PersonalityTrait {
-  id: string;
-  title: string;
-  description: string;
-  conflictsWith: string[];
-}
+import { PersonalityTrait } from './interfaces/personality-trait.interface';
 
 @Injectable()
 export class PersonalityTraitsService {

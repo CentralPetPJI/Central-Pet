@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsBoolean,
@@ -14,8 +15,12 @@ export class CreatePetDto {
   @IsNotEmpty()
   profilePhoto: string;
 
+  @IsOptional()
   @IsArray()
+  @ArrayMaxSize(10)
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(5000, { each: true })
   galleryPhotos: string[];
 
   @IsString()
@@ -88,5 +93,6 @@ export class CreatePetDto {
   @IsArray()
   @ArrayUnique()
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   selectedPersonalities?: string[];
 }
