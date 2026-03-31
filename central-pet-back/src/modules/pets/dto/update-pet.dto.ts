@@ -1,4 +1,3 @@
-import { Transform } from 'class-transformer';
 import {
   ArrayUnique,
   IsArray,
@@ -109,10 +108,5 @@ export class UpdatePetDto {
   @IsArray()
   @ArrayUnique()
   @IsString({ each: true })
-  @Transform(({ value }: { value: unknown }) =>
-    Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === 'string')
-      : [],
-  )
   selectedPersonalities?: string[];
 }
