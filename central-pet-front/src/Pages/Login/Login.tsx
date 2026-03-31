@@ -1,37 +1,73 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { routes } from '@/routes';
 
+type LoginLocationState = {
+  registered?: boolean;
+  email?: string;
+};
 
 const Login = () => {
-
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as LoginLocationState | null;
+  const { refreshAuth } = useAuth();
   const [email, setEmail] = useState('');
-  const [senha, setPassword] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(
+    locationState?.registered
+      ? `Cadastro concluído para ${locationState.email}. Faça login para continuar.`
+      : null,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-        const response = await axios.post('http://127.0.0.1:3001/login', { email: email, senha: senha });
-        alert(response.data.message);
-;
-        // Selecionar o roteamento da pagina que iremos usar apos o Login
+    setIsSubmitting(true);
+    setFeedback(null);
 
-        
-      } catch (error: any) {
-        const mensagemErro = error.response?.data?.message || error.message || "Erro desconhecido";
-        alert("Erro: " + mensagemErro);
-        console.error("Detalhes do erro:", error);
-        // if (error.response) {
-        //   alert(error.response.data.message);
-        // } else {
-        //   alert("Erro ao conectar com o servidor.");
-        // }
+    try {
+      await api.post('/auth/login', {
+        email,
+        password,
+      });
+
+      await refreshAuth();
+      navigate(routes.home.path);
+    } catch (error: unknown) {
+      let message = 'Erro desconhecido';
+
+      if (error instanceof Error) {
+        message = error.message;
       }
+
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const err = error as {
+          response?: {
+            data?: {
+              message?: string | string[];
+            };
+          };
+        };
+
+        const apiMessage = err.response?.data?.message;
+
+        if (apiMessage) {
+          message = Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
+        }
+      }
+
+      setFeedback(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="flex items-center justify-center w-full min-h-[50vh] mt-10">
       <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-[450px] border border-gray-100">
-        
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-gray-800">Bem-vindo! 🐾</h2>
           <p className="text-gray-500 mt-2">Acesse sua conta no Pet Central</p>
@@ -54,7 +90,7 @@ const Login = () => {
             <label className="text-sm font-semibold text-gray-600 ml-1">Senha</label>
             <input
               type="password"
-              value={senha}
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#6fe2f1] focus:ring-2 focus:ring-[#6fe2f1] outline-none transition-all"
               placeholder="••••••••"
@@ -62,20 +98,31 @@ const Login = () => {
             />
           </div>
 
+          {feedback ? (
+            <p
+              className={`text-sm ${
+                locationState?.registered ? 'text-emerald-700' : 'text-red-600'
+              }`}
+            >
+              {feedback}
+            </p>
+          ) : null}
+
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full py-4 mt-2 bg-[#6fe2f1] hover:bg-[#5bc8d6] text-gray-800 font-bold rounded-xl shadow-lg transform active:scale-95 transition-all"
           >
-            Entrar
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
         <div className="mt-8 text-center border-t border-gray-100 pt-6">
           <p className="text-gray-600">
             Ainda não tem conta?{' '}
-            <a href="/register" className="text-[#5bc8d6] font-bold hover:underline">
+            <Link to={routes.register.path} className="text-[#5bc8d6] font-bold hover:underline">
               Cadastre-se
-            </a>
+            </Link>
           </p>
         </div>
       </div>

@@ -17,6 +17,8 @@ const App: React.FC = () => {
 
   const routedContent = useRoutes([
     routes.home,
+    routes.login,
+    routes.register,
     routes.pets.new,
     routes.pets.edit,
     routes.pets.detail,

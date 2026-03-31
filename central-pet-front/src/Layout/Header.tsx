@@ -3,8 +3,12 @@ import './Header.css';
 import DropdownMenu from '../Components/DropdownMenu';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 const Header = () => {
+  const { currentUser, clearAuth } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white">
       <div className="flex w-full flex-wrap items-center gap-3 px-3 py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:px-4">
@@ -39,12 +43,40 @@ const Header = () => {
           >
             Cadastrar
           </Link>
-          <Link
-            to={routes.login.path}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
-          >
-            Entrar
-          </Link>
+          {currentUser ? (
+            <>
+              <span className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800">
+                {currentUser.fullName}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  void api.post('/auth/logout').finally(() => {
+                    clearAuth();
+                    window.location.assign(routes.home.path);
+                  });
+                }}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to={routes.register.path}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Criar conta
+              </Link>
+              <Link
+                to={routes.login.path}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Entrar
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
