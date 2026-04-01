@@ -54,23 +54,29 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white">
-      <div className="flex w-full items-center justify-between gap-3 px-3 py-3 lg:px-4">
-        {/* Logo e Nome */}
-        <Link
-          to={routes.home.path}
-          className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
-        >
-          <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
-          <p className="m-0 text-base font-medium">Pet Central</p>
-        </Link>
+      <div className="flex w-full items-center gap-3 px-3 py-3 lg:px-4">
+        {/* Lado Esquerdo: Logo + Navegação */}
+        <div className="flex items-center gap-4">
+          {/* Logo e Nome */}
+          <Link
+            to={routes.home.path}
+            className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
+          >
+            <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
+            <p className="m-0 text-base font-medium">Pet Central</p>
+          </Link>
 
-        {/* Navegação Desktop */}
-        <nav className="hidden lg:flex items-center gap-2">
-          <ul className="m-0 flex items-center gap-2 list-none p-0">
-            <DropdownMenu title="Pets" items={petsMenuItems} />
-            <DropdownMenu title="Instituições" items={institutionsMenuItems} />
-          </ul>
-        </nav>
+          {/* Navegação Desktop */}
+          <nav className="hidden lg:block">
+            <ul className="m-0 flex items-center gap-2 list-none p-0">
+              <DropdownMenu title="Pets" items={petsMenuItems} />
+              <DropdownMenu title="Instituições" items={institutionsMenuItems} />
+            </ul>
+          </nav>
+        </div>
+
+        {/* Espaço flexível no meio */}
+        <div className="hidden lg:flex flex-1" />
 
         {/* Ações do Usuário - Desktop */}
         <div className="hidden lg:flex items-center gap-2">
@@ -126,7 +132,7 @@ const Header = () => {
 
         {/* Botão de Menu Mobile */}
         <button
-          className="lg:hidden rounded-md p-2 text-gray-800 hover:bg-gray-100"
+          className="ml-auto lg:hidden rounded-md p-2 text-gray-800 hover:bg-gray-100"
           onClick={toggleMobileMenu}
           aria-label="Menu"
           aria-expanded={isMobileMenuOpen}
