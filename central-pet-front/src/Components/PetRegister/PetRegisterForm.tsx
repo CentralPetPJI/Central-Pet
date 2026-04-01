@@ -208,6 +208,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
     setFormErrors({});
     let savedPetId: number | undefined;
+    let savedOnBackend = false;
 
     try {
       const backendPayload = {
@@ -242,14 +243,9 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
         setSaveMessage('Nao foi possivel identificar o pet salvo no servidor.');
         return;
       }
+      savedOnBackend = true;
     } catch {
-      setSaveMessage('Nao foi possivel salvar o pet no servidor.');
-      return;
-    }
-
-    if (savedPetId === undefined) {
-      setSaveMessage('Nao foi possivel identificar o pet salvo no servidor.');
-      return;
+      savedPetId = undefined;
     }
 
     const petToSave = buildPetFromRegisterForm(
@@ -267,8 +263,14 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     setFormData(validationResult.data);
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
-    setSaveMessage(isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.');
-    navigate(routes.pets.detail.build(savedPetId));
+    setSaveMessage(
+      isEditMode
+        ? 'Pet atualizado com sucesso.'
+        : savedOnBackend
+          ? 'Pet salvo com sucesso.'
+          : 'Pet salvo localmente com sucesso.',
+    );
+    navigate(routes.pets.detail.build(petToSave.id));
   };
 
   return (
