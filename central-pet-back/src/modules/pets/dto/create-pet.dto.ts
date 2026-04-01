@@ -1,17 +1,28 @@
 import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
   IsBoolean,
-  IsInt,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
-  Min,
-  IsIn,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class CreatePetDto {
+  @IsString()
+  @IsNotEmpty()
+  profilePhoto: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @MaxLength(5000, { each: true })
+  galleryPhotos?: string[];
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
@@ -19,73 +30,69 @@ export class CreatePetDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsIn(['DOG', 'CAT'])
+  age: string;
+
+  @IsString()
+  @IsIn(['dog', 'cat'])
   species: string;
 
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
-  breed?: string;
+  breed: string;
 
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (value === '' || value === null || value === undefined) {
-      return undefined;
-    }
-
-    return Number(value);
-  })
-  @IsInt()
-  @Min(0)
-  ageMonths?: number;
-
-  @IsOptional()
   @IsString()
-  @IsIn(['SMALL', 'MEDIUM', 'LARGE'])
-  size?: string;
+  @IsIn(['Femea', 'Macho'])
+  sex: string;
 
-  @IsOptional()
   @IsString()
-  @IsIn(['MALE', 'FEMALE'])
-  sex?: string;
+  @IsIn(['Pequeno', 'Medio', 'Grande'])
+  size: string;
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  color?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  description?: string;
-
-  @IsOptional()
   @IsBoolean()
-  vaccinated?: boolean;
+  microchipped: boolean;
 
-  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  tutor: string;
+
+  @IsString()
+  @IsNotEmpty()
+  shelter: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  contact: string;
+
   @IsBoolean()
-  neutered?: boolean;
+  vaccinated: boolean;
 
-  @IsOptional()
   @IsBoolean()
-  dewormed?: boolean;
+  neutered: boolean;
+
+  @IsBoolean()
+  dewormed: boolean;
+
+  @IsBoolean()
+  needsHealthCare: boolean;
+
+  @IsBoolean()
+  physicalLimitation: boolean;
+
+  @IsBoolean()
+  visualLimitation: boolean;
+
+  @IsBoolean()
+  hearingLimitation: boolean;
 
   @IsOptional()
-  @IsString()
-  @IsIn(['AVAILABLE', 'IN_PROCESS', 'ADOPTED', 'UNAVAILABLE'])
-  adoptionStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(2)
-  state?: string;
-
-  @IsUUID()
-  responsibleUserId: string;
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  selectedPersonalities?: string[];
 }

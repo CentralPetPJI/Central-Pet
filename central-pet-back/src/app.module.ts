@@ -8,6 +8,7 @@ import { PetsModule } from './modules/pets/pets.module';
 import { PetHistoryModule } from './modules/pet-history/pet-history.module';
 import { AdoptionRequestsModule } from './modules/adoption-requests/adoption-requests.module';
 import { MockAuthModule } from './modules/mock-auth/mock-auth.module';
+import { PersonalityTraitsModule } from './modules/personality-traits/personality-traits.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { MockAuthModule } from './modules/mock-auth/mock-auth.module';
     PetHistoryModule,
     AdoptionRequestsModule,
     MockAuthModule,
+    PersonalityTraitsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

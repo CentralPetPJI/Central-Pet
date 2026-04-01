@@ -1,58 +1,82 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { mockPets, type MockPet } from '../../mocks/pets.mock';
 
-const normalizeSpecies = (species: string): MockPet['species'] =>
-  species === 'CAT' ? 'CAT' : 'DOG';
-
-const normalizeSize = (size?: string): MockPet['size'] => {
-  if (size === 'SMALL' || size === 'MEDIUM' || size === 'LARGE') {
-    return size;
-  }
-
-  return undefined;
+type PetRecord = {
+  id: string;
+  profilePhoto: string;
+  galleryPhotos: string[];
+  name: string;
+  age: string;
+  species: string;
+  breed: string;
+  sex: string;
+  size: string;
+  microchipped: boolean;
+  tutor: string;
+  shelter: string;
+  city: string;
+  contact: string;
+  vaccinated: boolean;
+  neutered: boolean;
+  dewormed: boolean;
+  needsHealthCare: boolean;
+  physicalLimitation: boolean;
+  visualLimitation: boolean;
+  hearingLimitation: boolean;
+  selectedPersonalities: string[];
+  createdAt: string;
+  updatedAt: string;
 };
-
-const normalizeSex = (sex?: string): MockPet['sex'] => {
-  if (sex === 'MALE' || sex === 'FEMALE') {
-    return sex;
-  }
-
-  return undefined;
-};
-
-const normalizeAdoptionStatus = (status?: string): MockPet['adoptionStatus'] =>
-  status === 'IN_PROCESS' || status === 'ADOPTED' || status === 'UNAVAILABLE'
-    ? status
-    : 'AVAILABLE';
 
 @Injectable()
 export class PetsService {
-  private readonly pets: MockPet[] = [...mockPets];
+  private readonly pets: PetRecord[] = [];
+
+  constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
+
+  private validateSelectedPersonalities(selectedPersonalities: string[]) {
+    const validTraitIds = this.personalityTraitsService.getTraitIds();
+    const invalidTraits = selectedPersonalities.filter(
+      (traitId) => !validTraitIds.includes(traitId),
+    );
+
+    if (invalidTraits.length > 0) {
+      throw new BadRequestException(`Invalid personality traits: ${invalidTraits.join(', ')}`);
+    }
+  }
 
   create(createPetDto: CreatePetDto) {
     const now = new Date().toISOString();
-    const nextId =
-      this.pets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
+    const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
 
-    const pet: MockPet = {
-      id: nextId,
+    this.validateSelectedPersonalities(selectedPersonalities);
+
+    const pet: PetRecord = {
+      id: randomUUID(),
+      profilePhoto: createPetDto.profilePhoto,
+      galleryPhotos: createPetDto.galleryPhotos ?? [],
       name: createPetDto.name,
-      species: normalizeSpecies(createPetDto.species),
+      age: createPetDto.age,
+      species: createPetDto.species,
       breed: createPetDto.breed,
-      ageMonths: createPetDto.ageMonths,
-      size: normalizeSize(createPetDto.size),
-      sex: normalizeSex(createPetDto.sex),
-      color: createPetDto.color,
-      description: createPetDto.description,
-      vaccinated: createPetDto.vaccinated ?? false,
-      neutered: createPetDto.neutered ?? false,
-      dewormed: createPetDto.dewormed ?? false,
-      adoptionStatus: normalizeAdoptionStatus(createPetDto.adoptionStatus),
+      sex: createPetDto.sex,
+      size: createPetDto.size,
+      microchipped: createPetDto.microchipped,
+      tutor: createPetDto.tutor,
+      shelter: createPetDto.shelter,
       city: createPetDto.city,
-      state: createPetDto.state,
-      responsibleUserId: createPetDto.responsibleUserId ?? '',
+      contact: createPetDto.contact,
+      vaccinated: createPetDto.vaccinated,
+      neutered: createPetDto.neutered,
+      dewormed: createPetDto.dewormed,
+      needsHealthCare: createPetDto.needsHealthCare,
+      physicalLimitation: createPetDto.physicalLimitation,
+      visualLimitation: createPetDto.visualLimitation,
+      hearingLimitation: createPetDto.hearingLimitation,
+      selectedPersonalities,
       createdAt: now,
       updatedAt: now,
     };
@@ -65,26 +89,15 @@ export class PetsService {
     };
   }
 
-  findAll(userId?: string) {
-    // Se userId for fornecido, filtra pets desse usuário
-    const filteredPets = userId
-      ? this.pets.filter((pet) => pet.responsibleUserId === userId)
-      : this.pets;
-
+  findAll() {
     return {
       message: 'Pets retrieved successfully',
-      data: filteredPets,
+      data: this.pets,
     };
   }
 
   findOne(id: string | number) {
-    const petId = Number(id);
-
-    if (!Number.isFinite(petId)) {
-      throw new NotFoundException(`Pet with id "${id}" not found`);
-    }
-
-    const pet = this.pets.find((item) => item.id === petId);
+    const pet = this.pets.find((item) => item.id === String(id));
 
     if (!pet) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
@@ -97,46 +110,24 @@ export class PetsService {
   }
 
   update(id: string | number, updatePetDto: UpdatePetDto) {
-    const petId = Number(id);
-
-    if (!Number.isFinite(petId)) {
-      throw new NotFoundException(`Pet with id "${id}" not found`);
-    }
-
-    const index = this.pets.findIndex((item) => item.id === petId);
+    const index = this.pets.findIndex((item) => item.id === String(id));
 
     if (index === -1) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
-    const updatedPet: MockPet = {
+    if (updatePetDto.selectedPersonalities !== undefined) {
+      this.validateSelectedPersonalities(updatePetDto.selectedPersonalities);
+    }
+
+    const definedUpdates = Object.fromEntries(
+      Object.entries(updatePetDto).filter(([, value]) => value !== undefined),
+    ) as Partial<PetRecord>;
+
+    const updatedPet: PetRecord = {
       ...this.pets[index],
-      id: this.pets[index].id,
-      createdAt: this.pets[index].createdAt,
-      responsibleUserId: this.pets[index].responsibleUserId,
+      ...definedUpdates,
       updatedAt: new Date().toISOString(),
-      name: updatePetDto.name ?? this.pets[index].name,
-      species: updatePetDto.species
-        ? normalizeSpecies(updatePetDto.species)
-        : this.pets[index].species,
-      breed: updatePetDto.breed ?? this.pets[index].breed,
-      ageMonths: updatePetDto.ageMonths ?? this.pets[index].ageMonths,
-      size: updatePetDto.size
-        ? normalizeSize(updatePetDto.size)
-        : this.pets[index].size,
-      sex: updatePetDto.sex
-        ? normalizeSex(updatePetDto.sex)
-        : this.pets[index].sex,
-      color: updatePetDto.color ?? this.pets[index].color,
-      description: updatePetDto.description ?? this.pets[index].description,
-      vaccinated: updatePetDto.vaccinated ?? this.pets[index].vaccinated,
-      neutered: updatePetDto.neutered ?? this.pets[index].neutered,
-      dewormed: updatePetDto.dewormed ?? this.pets[index].dewormed,
-      adoptionStatus: updatePetDto.adoptionStatus
-        ? normalizeAdoptionStatus(updatePetDto.adoptionStatus)
-        : this.pets[index].adoptionStatus,
-      city: updatePetDto.city ?? this.pets[index].city,
-      state: updatePetDto.state ?? this.pets[index].state,
     };
 
     this.pets[index] = updatedPet;
