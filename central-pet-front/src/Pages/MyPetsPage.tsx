@@ -59,7 +59,7 @@ export default function MyPetsPage() {
       try {
         const response = await api.get<{ data: MyPetItem[] }>('/pets', {
           params: {
-            createdByUserId: currentUser.id,
+            responsibleUserId: currentUser.id,
           },
         });
 
@@ -96,10 +96,6 @@ export default function MyPetsPage() {
             Gestao de pets
           </p>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">Meus pets cadastrados</h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Veja rapidamente quais pets foram cadastrados por este usuario e acompanhe o status de
-            cada perfil.
-          </p>
         </div>
 
         <Link

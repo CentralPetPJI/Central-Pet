@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bell, Building2, ClipboardList, Compass, Plus, Search, PawPrint } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import dog from '../assets/image/dog.png';
 import DropdownMenu from '../Components/DropdownMenu';
@@ -10,9 +11,8 @@ import { isDevelopment } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/Types';
 
 const roleLabelMap = {
-  ADOTANTE: 'Adotante',
+  PESSOA_FISICA: 'Pessoa física',
   ONG: 'ONG',
-  DOADOR_INDEPENDENTE: 'Doador independente',
 } as const;
 
 const Header = () => {
@@ -26,12 +26,12 @@ const Header = () => {
     {
       label: 'Procurar',
       path: routes.home.path,
-      icon: '🔍',
+      icon: <Search className="h-4 w-4 text-cyan-700" />,
     },
     {
       label: 'Cadastrar',
       path: routes.pets.new.path,
-      icon: '➕',
+      icon: <Plus className="h-4 w-4 text-emerald-600" />,
       requiresAuth: true,
     },
   ];
@@ -42,13 +42,13 @@ const Header = () => {
       label: 'Consultar',
       disabled: true,
       tooltip: 'Em breve',
-      icon: '🏢',
+      icon: <Compass className="h-4 w-4 text-amber-600" />,
     },
     {
       label: 'Cadastrar Nova',
       disabled: true,
       tooltip: 'Em breve',
-      icon: '➕',
+      icon: <Building2 className="h-4 w-4 text-amber-600" />,
     },
   ];
 
@@ -69,8 +69,16 @@ const Header = () => {
           {/* Navegação Desktop */}
           <nav className="hidden lg:block">
             <ul className="m-0 flex items-center gap-2 list-none p-0">
-              <DropdownMenu title="Pets" items={petsMenuItems} />
-              <DropdownMenu title="Instituições" items={institutionsMenuItems} />
+              <DropdownMenu
+                title="Pets"
+                items={petsMenuItems}
+                icon={<PawPrint className="h-4 w-4 text-cyan-700" />}
+              />
+              <DropdownMenu
+                title="Instituições"
+                items={institutionsMenuItems}
+                icon={<Building2 className="h-4 w-4 text-amber-600" />}
+              />
             </ul>
           </nav>
         </div>
@@ -92,6 +100,9 @@ const Header = () => {
                   void selectMockUser(event.target.value);
                 }}
               >
+                <option value="" disabled>
+                  Selecionar perfil
+                </option>
                 {mockUsers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.fullName} • {roleLabelMap[user.role]}
@@ -109,7 +120,7 @@ const Header = () => {
               disabled
               title="Em breve"
             >
-              🔔
+              <Bell className="h-5 w-5 text-amber-500" />
               {/* Badge de contador (exemplo) */}
               {/* <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                 3
@@ -164,15 +175,28 @@ const Header = () => {
             {/* Links de navegação */}
             <div className="space-y-2">
               <NavLink to={routes.home.path} end>
-                🔍 Explorar Pets
+                <span className="inline-flex items-center gap-2">
+                  <Search className="h-4 w-4 text-cyan-700" />
+                  <span>Explorar Pets</span>
+                </span>
               </NavLink>
-              {currentUser && <NavLink to={routes.pets.new.path}>➕ Cadastrar Pet</NavLink>}
+              {currentUser && (
+                <NavLink to={routes.pets.new.path}>
+                  <span className="inline-flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-emerald-600" />
+                    <span>Cadastrar Pet</span>
+                  </span>
+                </NavLink>
+              )}
               <button
                 className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 opacity-50 cursor-not-allowed"
                 disabled
                 title="Em breve"
               >
-                🏢 Instituições
+                <span className="inline-flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-amber-600" />
+                  <span>Instituições</span>
+                </span>
               </button>
             </div>
 
@@ -183,7 +207,12 @@ const Header = () => {
             {currentUser ? (
               <div className="space-y-2">
                 <NavLink to={routes.pets.mine.path}>🐾 Meus Pets</NavLink>
-                <NavLink to={routes.adoptionRequests.received.path}>📋 Solicitações</NavLink>
+                <NavLink to={routes.adoptionRequests.received.path}>
+                  <span className="inline-flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-cyan-700" />
+                    <span>Solicitações</span>
+                  </span>
+                </NavLink>
                 <button
                   className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
                   onClick={() => {
@@ -217,6 +246,9 @@ const Header = () => {
                       void selectMockUser(event.target.value);
                     }}
                   >
+                    <option value="" disabled>
+                      Selecionar perfil
+                    </option>
                     {mockUsers.map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.fullName} • {roleLabelMap[user.role]}

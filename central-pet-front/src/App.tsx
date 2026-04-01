@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import SidePanel from '@/Components/SidePanel';
+import { MockUserChoiceGate } from '@/Components/Auth/MockUserChoiceGate';
 import { getStoredPets } from '@/Mocks/PetsStorage';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
@@ -29,6 +30,7 @@ const App: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
+      <MockUserChoiceGate />
 
       <div className="flex-1">
         <div className="grid h-full w-full grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">

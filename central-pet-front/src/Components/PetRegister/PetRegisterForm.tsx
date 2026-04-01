@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import PetRegisterActions from '@/Components/PetRegister/PetRegisterActions';
 import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBehaviorSection';
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
@@ -71,6 +73,7 @@ interface PetRegisterFormProps {
 
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
   const initialState = getInitialRegisterPageState(petId);
   const [formData, setFormData] = useState<PetRegisterFormData>(initialState.formData);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>(
@@ -174,7 +177,17 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return errors;
     }, {});
 
-  const handleSavePet = () => {
+  const handleSavePet = async () => {
+    if (isAuthLoading) {
+      setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
+      return;
+    }
+
+    if (!currentUser?.id) {
+      setSaveMessage('Nao foi possivel identificar o usuario atual.');
+      return;
+    }
+
     const normalizedFormData = {
       ...formData,
       name: formData.name.trim(),
@@ -194,10 +207,56 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     }
 
     setFormErrors({});
+    let savedPetId: number | undefined;
+
+    try {
+      const backendPayload = {
+        name: validationResult.data.name,
+        species: validationResult.data.species === 'dog' ? 'DOG' : 'CAT',
+        breed: validationResult.data.breed,
+        ageMonths: Number.parseInt(validationResult.data.age, 10) || undefined,
+        size:
+          validationResult.data.size === 'Pequeno'
+            ? 'SMALL'
+            : validationResult.data.size === 'Grande'
+              ? 'LARGE'
+              : 'MEDIUM',
+        sex: validationResult.data.sex === 'Femea' ? 'FEMALE' : 'MALE',
+        description: `Tutor: ${validationResult.data.tutor}. Abrigo: ${validationResult.data.shelter}. Cidade: ${validationResult.data.city}. Contato: ${validationResult.data.contact}.`,
+        vaccinated: validationResult.data.vaccinated,
+        neutered: validationResult.data.neutered,
+        dewormed: validationResult.data.dewormed,
+        city: validationResult.data.city,
+        responsibleUserId: currentUser.id,
+      };
+
+      const response = await api.post<{ message: string; data: { id: number } }>(
+        '/pets',
+        backendPayload,
+      );
+
+      savedPetId = response.data.data.id;
+      const isSavedPetIdValid = Number.isFinite(savedPetId);
+
+      if (!isSavedPetIdValid) {
+        setSaveMessage('Nao foi possivel identificar o pet salvo no servidor.');
+        return;
+      }
+    } catch {
+      setSaveMessage('Nao foi possivel salvar o pet no servidor.');
+      return;
+    }
+
+    if (savedPetId === undefined) {
+      setSaveMessage('Nao foi possivel identificar o pet salvo no servidor.');
+      return;
+    }
+
     const petToSave = buildPetFromRegisterForm(
       validationResult.data,
       selectedPersonalities,
-      isEditMode ? petId : undefined,
+      savedPetId,
+      currentUser.id,
     );
     savePet(petToSave, {
       id: petToSave.id,
@@ -209,7 +268,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
     setSaveMessage(isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.');
-    navigate(routes.pets.detail.build(petToSave.id));
+    navigate(routes.pets.detail.build(savedPetId));
   };
 
   return (

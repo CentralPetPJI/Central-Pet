@@ -87,6 +87,7 @@ export const buildPetFromRegisterForm = (
   formData: PetRegisterFormData,
   selectedPersonalities: string[],
   petId?: number,
+  responsibleUserId?: string,
 ): Pet => {
   const personalityLabels = petPersonalityOptions
     .filter((option) => selectedPersonalities.includes(option.id))
@@ -107,6 +108,7 @@ export const buildPetFromRegisterForm = (
         ? personalityLabels.join(', ')
         : 'Perfil comportamental nao informado',
     notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
+    responsibleUserId,
   };
 };
 

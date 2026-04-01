@@ -34,7 +34,7 @@ describe('AdoptionRequestsReceivedPage', () => {
           {
             id: 'request-1',
             pet: {
-              id: 'pet-1',
+              id: 1,
               name: 'Nina',
               species: 'CAT',
               city: 'Sao Paulo',
@@ -72,6 +72,11 @@ describe('AdoptionRequestsReceivedPage', () => {
     expect(screen.getByText('Rafael Lima')).toBeInTheDocument();
     expect(screen.getByText('Tenho uma casa segura e ja convivo com gatos.')).toBeInTheDocument();
     expect(screen.getByText('Pendente')).toBeInTheDocument();
+    expect(screen.getByText('Osasco/SP')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver perfil do pet' })).toHaveAttribute(
+      'href',
+      '/pets/1',
+    );
     expect(getMock).toHaveBeenCalledWith('/adoption-requests/received', {
       params: {
         responsibleUserId: '11111111-1111-1111-1111-111111111111',

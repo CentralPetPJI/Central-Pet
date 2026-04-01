@@ -17,7 +17,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   title,
   items,
   icon,
-  buttonClassName = 'rounded-md px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100',
+  buttonClassName = 'rounded-md px-4 py-2 text-base font-medium text-gray-800 transition hover:bg-gray-100',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLLIElement>(null);
@@ -57,7 +57,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
       {isOpen && (
         <ul
-          className="absolute left-0 top-full z-20 mt-1 w-max rounded-md border border-gray-300 bg-white p-0 shadow-lg list-none"
+          className="absolute left-0 top-full z-20 mt-1 w-max min-w-56 rounded-md border border-gray-300 bg-white p-0 shadow-lg list-none"
           role="menu"
         >
           {items.map((item, index) => {
@@ -78,7 +78,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
               </>
             );
 
-            const itemClassName = `block px-4 py-2 hover:bg-green-200 whitespace-nowrap ${
+            const itemClassName = `block px-4 py-3 text-base leading-6 hover:bg-green-200 whitespace-nowrap ${
               item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
             }`;
 

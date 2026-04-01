@@ -1,12 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from './api';
-import { getStoredMockUserId, setStoredMockUserId, type MockUsersResponse } from './mock-auth';
+import {
+  clearStoredMockUserId,
+  getStoredMockUserId,
+  setStoredMockUserId,
+  type MockUsersResponse,
+} from './mock-auth';
 
 export type AuthUser = {
   id: string;
   fullName: string;
   email: string;
-  role: 'ADOTANTE' | 'ONG' | 'DOADOR_INDEPENDENTE';
+  role: 'PESSOA_FISICA' | 'ONG';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
@@ -33,16 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMockUsers = async () => {
     const response = await api.get<MockUsersResponse>('/auth/mock-users');
-    const { users, defaultUserId } = response.data.data;
+    const { users } = response.data.data;
     const storedMockUserId = getStoredMockUserId();
     const hasStoredUser = storedMockUserId
-      ? users.some((user) => user.id === storedMockUserId)
+      ? users.some((user: AuthUser) => user.id === storedMockUserId)
       : false;
 
     setMockUsers(users);
 
-    if (!hasStoredUser) {
-      setStoredMockUserId(defaultUserId);
+    if (!hasStoredUser && storedMockUserId) {
+      clearStoredMockUserId();
     }
   };
 
@@ -80,7 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mockUsers,
       isLoading,
       refreshAuth,
-      clearAuth: () => setCurrentUser(null),
+      clearAuth: () => {
+        clearStoredMockUserId();
+        setCurrentUser(null);
+      },
       selectMockUser,
     }),
     [currentUser, isLoading, mockUsers, selectMockUser],

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MapPin, MessageSquareText, PawPrint, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -15,7 +16,7 @@ type AdoptionRequestItem = {
     city: string;
     state: string;
     responsibleUserId: string;
-    sourceType: 'ONG' | 'DOADOR_INDEPENDENTE';
+    sourceType: 'ONG' | 'PESSOA_FISICA';
     sourceName: string;
   };
   adopter: {
@@ -60,6 +61,22 @@ function formatRequestDate(date: string) {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(new Date(date));
+}
+
+function normalizePetRouteId(petId: string) {
+  const numericId = Number(petId);
+
+  if (Number.isFinite(numericId)) {
+    return numericId;
+  }
+
+  const matchedDigits = petId.match(/(\d+)$/);
+
+  if (!matchedDigits) {
+    return petId;
+  }
+
+  return Number(matchedDigits[1]);
 }
 
 export default function AdoptionRequestsReceivedPage() {
@@ -116,15 +133,13 @@ export default function AdoptionRequestsReceivedPage() {
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
       <div className="mb-6 flex flex-col gap-3 rounded-3xl bg-linear-to-r from-amber-50 via-white to-cyan-50 p-5 shadow-sm ring-1 ring-slate-200 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Painel de responsaveis pela adocao
-          </p>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
-            Solicitacoes de adocao recebidas
+            Solicitacões de adoção recebidas
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Acompanhe os interessados em pets publicados por ONG ou doador independente, com status
-            atual, mensagem enviada e contexto de cada solicitacao.
+            Acompanhe os interessados em pets que voce cadastrou para adoção. Aqui voce pode revisar
+            as mensagens das pessoas físicas e acessar os perfis dos pets para tomar a melhor
+            decisão.
           </p>
         </div>
 
@@ -154,7 +169,7 @@ export default function AdoptionRequestsReceivedPage() {
             Nenhuma solicitacao recebida ate agora
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Assim que um adotante demonstrar interesse, os detalhes aparecerao aqui.
+            Assim que uma pessoa física demonstrar interesse, os detalhes aparecerão aqui.
           </p>
         </div>
       ) : null}
@@ -181,25 +196,40 @@ export default function AdoptionRequestsReceivedPage() {
 
                   <div>
                     <h2 className="text-xl font-bold text-slate-900">{request.pet.name}</h2>
-                    <p className="text-sm text-slate-600">
-                      {formatPetSpecies(request.pet.species)} • {request.pet.city}/
-                      {request.pet.state}
-                    </p>
+                    <div className="mt-1 space-y-1 text-sm text-slate-600">
+                      <p className="flex items-center gap-2">
+                        <PawPrint className="h-4 w-4 text-cyan-700" />
+                        <span>{formatPetSpecies(request.pet.species)}</span>
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-cyan-700" />
+                        <span>
+                          {request.pet.city}/{request.pet.state}
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
-                  <p className="font-semibold text-slate-900">{request.adopter.name}</p>
-                  <p>
-                    {request.adopter.city}/{request.adopter.state}
+                  <p className="flex items-center gap-2 font-semibold text-slate-900">
+                    <UserRound className="h-4 w-4 text-cyan-700" />
+                    <span>{request.adopter.name}</span>
+                  </p>
+                  <p className="mt-1 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-cyan-700" />
+                    <span>
+                      {request.adopter.city}/{request.adopter.state}
+                    </span>
                   </p>
                 </div>
               </div>
 
               <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Mensagem do adotante
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <MessageSquareText className="h-4 w-4 text-cyan-700" />
+                    <span>Mensagem da pessoa física</span>
                   </p>
                   <p className="mt-2 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
                     {request.message}
@@ -207,9 +237,10 @@ export default function AdoptionRequestsReceivedPage() {
                 </div>
 
                 <Link
-                  to={routes.pets.detail.build(request.pet.id)}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                  to={routes.pets.detail.build(normalizePetRouteId(request.pet.id))}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
                 >
+                  <PawPrint className="h-4 w-4 text-cyan-700" />
                   Ver perfil do pet
                 </Link>
               </div>

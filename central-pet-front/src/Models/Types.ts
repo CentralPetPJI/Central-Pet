@@ -9,7 +9,7 @@ export interface Pet {
   notes: string;
   photo: string;
   responsibleUserId?: string;
-  sourceType?: 'ONG' | 'DOADOR_INDEPENDENTE';
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName?: string;
 }
 

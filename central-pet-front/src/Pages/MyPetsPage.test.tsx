@@ -56,7 +56,7 @@ describe('MyPetsPage', () => {
 
     expect(getMock).toHaveBeenCalledWith('/pets', {
       params: {
-        createdByUserId: '33333333-3333-3333-3333-333333333333',
+        responsibleUserId: '33333333-3333-3333-3333-333333333333',
       },
     });
     expect(screen.getByText('Em processo')).toBeInTheDocument();

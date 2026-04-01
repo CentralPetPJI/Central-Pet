@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ClipboardList, DoorOpen, PawPrint, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
@@ -44,12 +45,12 @@ export function UserMenu() {
     {
       label: 'Meus Pets',
       path: routes.pets.mine.path,
-      icon: '🐾',
+      icon: <PawPrint className="h-4 w-4 text-cyan-700" />,
     },
     {
       label: 'Solicitações',
       path: routes.adoptionRequests.received.path,
-      icon: '📋',
+      icon: <ClipboardList className="h-4 w-4 text-cyan-700" />,
       // TODO: Conectar com API para pegar contador real
       // badge: pendingRequestsCount,
     },
@@ -58,7 +59,7 @@ export function UserMenu() {
       // TODO: Criar rota de perfil
       disabled: true,
       tooltip: 'Em breve',
-      icon: '👤',
+      icon: <UserRound className="h-4 w-4 text-slate-500" />,
     },
     {
       divider: true,
@@ -69,7 +70,7 @@ export function UserMenu() {
         clearAuth();
         setIsOpen(false);
       },
-      icon: '🚪',
+      icon: <DoorOpen className="h-4 w-4 text-rose-500" />,
     },
   ];
 
@@ -130,7 +131,7 @@ export function UserMenu() {
 
             const itemContent = (
               <>
-                {item.icon && <span className="mr-2 inline-block">{item.icon}</span>}
+                {item.icon && <span className="mr-2 inline-flex">{item.icon}</span>}
                 {item.label}
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">

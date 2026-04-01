@@ -24,3 +24,11 @@ export function setStoredMockUserId(userId: string) {
 
   window.localStorage.setItem(mockUserStorageKey, userId);
 }
+
+export function clearStoredMockUserId() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(mockUserStorageKey);
+}
