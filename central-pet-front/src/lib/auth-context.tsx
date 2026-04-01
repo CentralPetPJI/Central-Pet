@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from './api';
+import { isDevelopment } from './dev-mode';
 import {
   clearStoredMockUserId,
   getStoredMockUserId,
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMockUsers = async () => {
     const response = await api.get<MockUsersResponse>('/auth/mock-users');
-    const { users } = response.data.data;
+    const { defaultUserId, users } = response.data.data;
     const storedMockUserId = getStoredMockUserId();
     const hasStoredUser = storedMockUserId
       ? users.some((user: AuthUser) => user.id === storedMockUserId)
@@ -48,6 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!hasStoredUser && storedMockUserId) {
       clearStoredMockUserId();
+    }
+
+    if (!hasStoredUser && !storedMockUserId && isDevelopment()) {
+      setStoredMockUserId(defaultUserId);
     }
   };
 

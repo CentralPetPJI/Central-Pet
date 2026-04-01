@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { isDevelopment } from '@/lib/dev-mode';
 import PetRegisterActions from '@/Components/PetRegister/PetRegisterActions';
 import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBehaviorSection';
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
@@ -183,7 +184,9 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    if (!currentUser?.id) {
+    const resolvedUserId = currentUser?.id ?? (isDevelopment() ? 'dev-user' : undefined);
+
+    if (!resolvedUserId) {
       setSaveMessage('Nao foi possivel identificar o usuario atual.');
       return;
     }
@@ -228,7 +231,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
         neutered: validationResult.data.neutered,
         dewormed: validationResult.data.dewormed,
         city: validationResult.data.city,
-        responsibleUserId: currentUser.id,
+        responsibleUserId: resolvedUserId,
       };
 
       const response = await api.post<{ message: string; data: { id: number } }>(
@@ -252,7 +255,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       validationResult.data,
       selectedPersonalities,
       savedPetId,
-      currentUser.id,
+      resolvedUserId,
     );
     savePet(petToSave, {
       id: petToSave.id,
