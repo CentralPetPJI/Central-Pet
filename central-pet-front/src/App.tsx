@@ -19,8 +19,10 @@ const App: React.FC = () => {
   const routedContent = useRoutes([
     routes.home,
     routes.pets.new,
+    routes.pets.mine,
     routes.pets.edit,
     routes.pets.detail,
+    routes.adoptionRequests.received,
   ]);
   const showSidePanel = location.pathname === routes.home.path;
 

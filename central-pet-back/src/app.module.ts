@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { PetsModule } from './modules/pets/pets.module';
 import { PetHistoryModule } from './modules/pet-history/pet-history.module';
 import { AdoptionRequestsModule } from './modules/adoption-requests/adoption-requests.module';
+import { MockAuthModule } from './modules/mock-auth/mock-auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdoptionRequestsModule } from './modules/adoption-requests/adoption-req
     PetsModule,
     PetHistoryModule,
     AdoptionRequestsModule,
+    MockAuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
