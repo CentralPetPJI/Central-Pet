@@ -1,25 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 
 type PetRecord = {
   id: string;
+  profilePhoto: string;
+  galleryPhotos: string[];
   name: string;
+  age: string;
   species: string;
-  breed?: string;
-  ageMonths?: number;
-  size?: string;
-  sex?: string;
-  color?: string;
-  description?: string;
+  breed: string;
+  sex: string;
+  size: string;
+  microchipped: boolean;
+  tutor: string;
+  shelter: string;
+  city: string;
+  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
-  adoptionStatus: string;
-  city?: string;
-  state?: string;
-  responsibleUserId: string;
+  needsHealthCare: boolean;
+  physicalLimitation: boolean;
+  visualLimitation: boolean;
+  hearingLimitation: boolean;
+  selectedPersonalities: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -28,26 +35,49 @@ type PetRecord = {
 export class PetsService {
   private readonly pets: PetRecord[] = [];
 
+  constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
+
+  private validateSelectedPersonalities(selectedPersonalities: string[]) {
+    const validTraitIds = this.personalityTraitsService.getTraitIds();
+
+    const invalidTraits = selectedPersonalities.filter(
+      (traitId) => !validTraitIds.includes(traitId),
+    );
+
+    if (invalidTraits.length > 0) {
+      throw new BadRequestException(`Invalid personality traits: ${invalidTraits.join(', ')}`);
+    }
+  }
+
   create(createPetDto: CreatePetDto) {
     const now = new Date().toISOString();
+    const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
+
+    this.validateSelectedPersonalities(selectedPersonalities);
 
     const pet: PetRecord = {
       id: randomUUID(),
+      profilePhoto: createPetDto.profilePhoto,
+      galleryPhotos: createPetDto.galleryPhotos,
       name: createPetDto.name,
+      age: createPetDto.age,
       species: createPetDto.species,
       breed: createPetDto.breed,
-      ageMonths: createPetDto.ageMonths,
-      size: createPetDto.size,
       sex: createPetDto.sex,
-      color: createPetDto.color,
-      description: createPetDto.description,
-      vaccinated: createPetDto.vaccinated ?? false,
-      neutered: createPetDto.neutered ?? false,
-      dewormed: createPetDto.dewormed ?? false,
-      adoptionStatus: createPetDto.adoptionStatus ?? 'AVAILABLE',
+      size: createPetDto.size,
+      microchipped: createPetDto.microchipped,
+      tutor: createPetDto.tutor,
+      shelter: createPetDto.shelter,
       city: createPetDto.city,
-      state: createPetDto.state,
-      responsibleUserId: createPetDto.responsibleUserId,
+      contact: createPetDto.contact,
+      vaccinated: createPetDto.vaccinated,
+      neutered: createPetDto.neutered,
+      dewormed: createPetDto.dewormed,
+      needsHealthCare: createPetDto.needsHealthCare,
+      physicalLimitation: createPetDto.physicalLimitation,
+      visualLimitation: createPetDto.visualLimitation,
+      hearingLimitation: createPetDto.hearingLimitation,
+      selectedPersonalities,
       createdAt: now,
       updatedAt: now,
     };
@@ -87,12 +117,17 @@ export class PetsService {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
+    if (updatePetDto.selectedPersonalities !== undefined) {
+      this.validateSelectedPersonalities(updatePetDto.selectedPersonalities);
+    }
+
+    const definedUpdates = Object.fromEntries(
+      Object.entries(updatePetDto).filter(([, value]) => value !== undefined),
+    ) as Partial<PetRecord>;
+
     const updatedPet: PetRecord = {
       ...this.pets[index],
-      ...updatePetDto,
-      id: this.pets[index].id,
-      createdAt: this.pets[index].createdAt,
-      responsibleUserId: this.pets[index].responsibleUserId,
+      ...definedUpdates,
       updatedAt: new Date().toISOString(),
     };
 

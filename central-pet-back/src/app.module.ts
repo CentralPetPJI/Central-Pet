@@ -9,6 +9,7 @@ import { PetHistoryModule } from './modules/pet-history/pet-history.module';
 import { AdoptionRequestsModule } from './modules/adoption-requests/adoption-requests.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { PersonalityTraitsModule } from './modules/personality-traits/personality-traits.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AdoptionRequestsModule,
     UsersModule,
     AuthModule,
+    PersonalityTraitsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
