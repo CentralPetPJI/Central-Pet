@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { NotFoundException } from '@nestjs/common';
+import { defaultMockUserId, mockUserIds } from '../../mocks/users.mock';
 import { MockAuthService } from './mock-auth.service';
 
 describe('MockAuthService', () => {
@@ -9,39 +10,31 @@ describe('MockAuthService', () => {
     service = new MockAuthService();
   });
 
-  it('should return the default mock user when no header is provided', () => {
-    const result = service.getCurrentUser();
-
-    expect(result.data.user.id).toBe('11111111-1111-1111-1111-111111111111');
-    expect(result.data.user.role).toBe('ONG');
+  it('should throw when no mock user header is provided', () => {
+    expect(() => service.getCurrentUser()).toThrow(NotFoundException);
   });
 
   it('should return a mock user by id', () => {
-    const result = service.getCurrentUser(
-      'c6d69776-cfdc-497a-a7c6-c89e42f2a002',
-    );
+    const result = service.getCurrentUser(mockUserIds.RAFAEL_LIMA);
 
     expect(result.data.user.fullName).toBe('Rafael Lima');
-    expect(result.data.user.role).toBe('ADOTANTE');
+    expect(result.data.user.role).toBe('PESSOA_FISICA');
   });
 
   it('should list available mock users', () => {
     const result = service.listUsers();
 
     expect(result.data.users).toHaveLength(5);
-    expect(result.data.defaultUserId).toBe(
-      '11111111-1111-1111-1111-111111111111',
-    );
+    expect(result.data.defaultUserId).toBe(defaultMockUserId);
   });
 
   it('should expose independent donor users in the mock list', () => {
     const result = service.listUsers();
 
     expect(
-      result.data.users.find(
-        (user) => user.id === '33333333-3333-3333-3333-333333333333',
-      )?.role,
-    ).toBe('DOADOR_INDEPENDENTE');
+      result.data.users.find((user) => user.id === mockUserIds.JULIANA_MARTINS)
+        ?.role,
+    ).toBe('PESSOA_FISICA');
   });
 
   it('should throw when the mock user id does not exist', () => {

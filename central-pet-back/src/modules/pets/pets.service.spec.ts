@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { NotFoundException } from '@nestjs/common';
+import { mockUserIds } from '../../mocks/users.mock';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -26,7 +27,7 @@ describe('PetsService', () => {
     adoptionStatus: 'AVAILABLE',
     city: 'Campinas',
     state: 'SP',
-    responsibleUserId: '11111111-1111-1111-1111-111111111111',
+    responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
   });
 
   it('should create a pet with provided values', () => {
@@ -48,7 +49,7 @@ describe('PetsService', () => {
     const dto: CreatePetDto = {
       name: 'Luna',
       species: 'CAT',
-      responsibleUserId: '11111111-1111-1111-1111-111111111111',
+      responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
     };
 
     const result = service.create(dto);
