@@ -22,7 +22,10 @@
     "dev:back": "pnpm --filter central-pet-back dev",
     "dev": "pnpm -r --parallel --if-present run dev",
     "build:front": "pnpm --filter central-pet-front build",
-    "build:back": "pnpm --filter central-pet-back build"
+    "build:back": "pnpm --filter central-pet-back build",
+    "test:front": "pnpm --filter central-pet-front test:run && pnpm --filter central-pet-front test:e2e",
+    "test:back": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
+    "test:all": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e && pnpm --filter central-pet-front test:run && pnpm --filter central-pet-front test:e2e"
   },
   "packageManager": "pnpm@10.30.1"
 }
