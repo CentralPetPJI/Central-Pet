@@ -3,8 +3,6 @@
  * Usado pelo sistema de autenticação mock
  */
 
-import { randomUUID } from 'crypto';
-
 export type MockUser = {
   id: string;
   fullName: string;
@@ -21,11 +19,11 @@ export type MockUser = {
 };
 
 export const mockUserIds = {
-  ONG_PATAS_DO_CENTRO: randomUUID(),
-  LAR_TEMPORARIO_QUATRO_PATAS: randomUUID(),
-  JULIANA_MARTINS: randomUUID(),
-  RAFAEL_LIMA: randomUUID(),
-  ANA_SOUZA: randomUUID(),
+  ONG_PATAS_DO_CENTRO: '550e8400-e29b-41d4-a716-446655440000',
+  LAR_TEMPORARIO_QUATRO_PATAS: '550e8400-e29b-41d4-a716-446655440001',
+  JULIANA_MARTINS: '550e8400-e29b-41d4-a716-446655440002',
+  RAFAEL_LIMA: '550e8400-e29b-41d4-a716-446655440003',
+  ANA_SOUZA: '550e8400-e29b-41d4-a716-446655440004',
 } as const;
 
 export const mockUsers: MockUser[] = [

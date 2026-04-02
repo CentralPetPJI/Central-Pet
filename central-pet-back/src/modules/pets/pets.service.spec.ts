@@ -72,7 +72,7 @@ describe('PetsService', () => {
     expect(result.message).toBe('Pet created successfully');
     expect(result.data.id).toBeDefined();
     expect(result.data.name).toBe('Luna');
-    expect(result.data.species).toBe('dog');
+    expect(result.data.species).toBe('DOG');
     expect(result.data.selectedPersonalities).toEqual(['playful', 'friendly']);
     expect(result.data.createdAt).toBeDefined();
     expect(result.data.updatedAt).toBeDefined();

@@ -1,9 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  mockUsers,
-  defaultMockUserId,
-  type MockUser,
-} from '../../mocks/users.mock';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { mockUsers, defaultMockUserId, type MockUser } from '../../mocks/users.mock';
 
 @Injectable()
 export class MockAuthService {
@@ -22,14 +18,14 @@ export class MockAuthService {
 
   getCurrentUser(mockUserId?: string) {
     if (!mockUserId) {
-      throw new NotFoundException('Mock user not selected');
+      throw new UnauthorizedException('Invalid or missing mock credentials');
     }
 
     const userId = mockUserId;
     const user = this.mockUsers.find((item) => item.id === userId);
 
     if (!user) {
-      throw new NotFoundException(`Mock user with id "${userId}" not found`);
+      throw new UnauthorizedException('Invalid or missing mock credentials');
     }
 
     return {

@@ -3,6 +3,7 @@ import { MapPin, MessageSquareText, PawPrint, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { formatPetSpecies } from '@/lib/formatters';
 import { routes } from '@/routes';
 
 type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
@@ -44,18 +45,6 @@ const statusClassNameMap: Record<AdoptionRequestStatus, string> = {
   REJECTED: 'bg-rose-100 text-rose-800',
 };
 
-function formatPetSpecies(species: string) {
-  if (species === 'DOG') {
-    return 'Cão';
-  }
-
-  if (species === 'CAT') {
-    return 'Gato';
-  }
-
-  return species;
-}
-
 function formatRequestDate(date: string) {
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
@@ -64,6 +53,11 @@ function formatRequestDate(date: string) {
 }
 
 function normalizePetRouteId(petId: string) {
+  // Expected formats:
+  // - Plain numeric string: '123' -> 123
+  // - Route string with trailing digits: 'pet-123' -> 123
+  // - Backend UUID: 'abc123...' -> 'abc123...'
+
   const numericId = Number(petId);
 
   if (Number.isFinite(numericId)) {

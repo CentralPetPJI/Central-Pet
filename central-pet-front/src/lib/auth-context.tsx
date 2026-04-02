@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { api } from './api';
 import { isDevelopment } from './dev-mode';
 import {
@@ -56,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     try {
       const response = await api.get<{ data: { user: AuthUser } }>('/auth/me');
       setCurrentUser(response.data.data.user);
@@ -65,12 +73,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const selectMockUser = async (userId: string) => {
-    setStoredMockUserId(userId);
-    await refreshAuth();
-  };
+  const selectMockUser = useCallback(
+    async (userId: string) => {
+      setStoredMockUserId(userId);
+      await refreshAuth();
+    },
+    [refreshAuth],
+  );
+
+  const clearAuth = useCallback(() => {
+    clearStoredMockUserId();
+    setCurrentUser(null);
+  }, []);
 
   useEffect(() => {
     const bootstrapAuth = async () => {
@@ -82,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     void bootstrapAuth();
-  }, []);
+  }, [refreshAuth]);
 
   const value = useMemo(
     () => ({
@@ -90,13 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mockUsers,
       isLoading,
       refreshAuth,
-      clearAuth: () => {
-        clearStoredMockUserId();
-        setCurrentUser(null);
-      },
+      clearAuth,
       selectMockUser,
     }),
-    [currentUser, isLoading, mockUsers, selectMockUser],
+    [currentUser, isLoading, mockUsers, refreshAuth, clearAuth, selectMockUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

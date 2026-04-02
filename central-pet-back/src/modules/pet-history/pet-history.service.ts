@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { mockPets, mockUsers } from '../../mocks';
+import { mockPets, mockUsers, mockUserIds } from '../../mocks';
 
 type PetHistoryRecord = {
   id: string;
@@ -16,7 +16,7 @@ type PetHistoryRecord = {
 };
 
 const trackedPetId = 'b2b5c4b8-c6f7-4b63-82c1-5cbb5bfeb001';
-const trackedUserId = '11111111-1111-1111-1111-111111111111';
+const trackedUserId = mockUserIds.ONG_PATAS_DO_CENTRO;
 
 const buddy = mockPets.find((pet) => pet.id === 1);
 const luna = mockPets.find((pet) => pet.id === 2);
@@ -85,9 +85,7 @@ export class PetHistoryService {
       .filter((record) => (userId ? record.user.id === userId : true))
       .filter((record) => (petId ? record.pet.id === petId : true))
       .sort(
-        (left, right) =>
-          new Date(left.createdAt).getTime() -
-          new Date(right.createdAt).getTime(),
+        (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
       );
 
     return {

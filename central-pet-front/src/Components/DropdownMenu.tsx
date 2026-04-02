@@ -20,13 +20,79 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   buttonClassName = 'rounded-md px-4 py-2 text-base font-medium text-gray-800 transition hover:bg-gray-100',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLLIElement>(null);
+  const menuItemRefs = useRef<(HTMLElement | null)[]>([]);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setIsOpen(false);
+    }
+  };
+
+  const closeMenu = () => {
+    setIsOpen(false);
+    setFocusedIndex(-1);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (!isOpen) return;
+
+    const nonDividerItems = items.filter((item) => !item.divider);
+
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev + 1 >= nonDividerItems.length ? 0 : prev + 1;
+          menuItemRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev <= 0 ? nonDividerItems.length - 1 : prev - 1;
+          menuItemRefs.current[next]?.focus();
+          return next;
+        });
+        break;
+      }
+      case 'Home': {
+        event.preventDefault();
+        setFocusedIndex(0);
+        menuItemRefs.current[0]?.focus();
+        break;
+      }
+      case 'End': {
+        event.preventDefault();
+        const lastIndex = nonDividerItems.length - 1;
+        setFocusedIndex(lastIndex);
+        menuItemRefs.current[lastIndex]?.focus();
+        break;
+      }
+      case 'Enter':
+      case ' ': {
+        event.preventDefault();
+        if (focusedIndex >= 0 && menuItemRefs.current[focusedIndex]) {
+          const item = nonDividerItems[focusedIndex];
+          if (item && !item.disabled) {
+            if (item.onClick) {
+              item.onClick();
+            }
+            closeMenu();
+          }
+        }
+        break;
+      }
+      case 'Escape': {
+        event.preventDefault();
+        closeMenu();
+        break;
+      }
     }
   };
 
@@ -40,7 +106,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
     if (item.onClick) {
       item.onClick();
     }
-    setIsOpen(false);
+    closeMenu();
   };
 
   return (
@@ -59,6 +125,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
         <ul
           className="absolute left-0 top-full z-20 mt-1 w-max min-w-56 rounded-md border border-gray-300 bg-white p-0 shadow-lg list-none"
           role="menu"
+          onKeyDown={handleKeyDown}
         >
           {items.map((item, index) => {
             // Divider (separador visual)
@@ -88,9 +155,14 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
                 role="menuitem"
                 title={item.tooltip}
                 className={item.disabled ? 'cursor-not-allowed' : ''}
+                ref={(el) => {
+                  if (!item.divider) {
+                    menuItemRefs.current[index] = el;
+                  }
+                }}
               >
                 {item.path && !item.disabled ? (
-                  <Link to={item.path} className={itemClassName} onClick={() => setIsOpen(false)}>
+                  <Link to={item.path} className={itemClassName} onClick={() => closeMenu()}>
                     {itemContent}
                   </Link>
                 ) : (

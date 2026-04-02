@@ -12,16 +12,14 @@ describe('AdoptionRequestsService', () => {
   it('should return all received adoption requests sorted by most recent date', () => {
     const result = service.findReceived();
 
-    expect(result.message).toBe(
-      'Received adoption requests retrieved successfully',
-    );
+    expect(result.message).toBe('Received adoption requests retrieved successfully');
     expect(result.data).toHaveLength(4);
-    expect(result.data.map((request) => request.pet.name)).toEqual([
-      'Max',
-      'Mel',
-      'Luna',
-      'Buddy',
-    ]);
+
+    // Verify list is sorted by date in descending order (most recent first)
+    const timestamps = result.data.map((request) => new Date(request.requestedAt).getTime());
+    for (let i = 1; i < timestamps.length; i++) {
+      expect(timestamps[i]).toBeLessThanOrEqual(timestamps[i - 1]);
+    }
   });
 
   it('should filter adoption requests by responsible user id', () => {
@@ -30,8 +28,7 @@ describe('AdoptionRequestsService', () => {
     expect(result.data).toHaveLength(2);
     expect(
       result.data.every(
-        (request) =>
-          request.pet.responsibleUserId === mockUserIds.ONG_PATAS_DO_CENTRO,
+        (request) => request.pet.responsibleUserId === mockUserIds.ONG_PATAS_DO_CENTRO,
       ),
     ).toBe(true);
   });

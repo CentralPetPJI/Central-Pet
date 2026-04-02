@@ -148,7 +148,11 @@ export function UserMenu() {
             return (
               <li key={index} role="menuitem" title={item.tooltip}>
                 {item.path && !item.disabled ? (
-                  <Link to={item.path} className={itemClassName}>
+                  <Link
+                    to={item.path}
+                    className={itemClassName}
+                    onClick={() => handleItemClick(item)}
+                  >
                     {itemContent}
                   </Link>
                 ) : (

@@ -225,7 +225,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             : validationResult.data.size === 'Grande'
               ? 'LARGE'
               : 'MEDIUM',
-        sex: validationResult.data.sex === 'Femea' ? 'FEMALE' : 'MALE',
+        sex: mapSex(validationResult.data.sex),
         description: `Tutor: ${validationResult.data.tutor}. Abrigo: ${validationResult.data.shelter}. Cidade: ${validationResult.data.city}. Contato: ${validationResult.data.contact}.`,
         vaccinated: validationResult.data.vaccinated,
         neutered: validationResult.data.neutered,

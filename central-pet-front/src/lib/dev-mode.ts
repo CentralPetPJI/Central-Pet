@@ -24,5 +24,12 @@ export function isProduction(): boolean {
  * @returns 'development' | 'production'
  */
 export function getMode(): 'development' | 'production' {
-  return import.meta.env.MODE as 'development' | 'production';
+  const mode = import.meta.env.MODE;
+
+  if (mode === 'development' || mode === 'production') {
+    return mode;
+  }
+
+  // Silently default to production for unknown modes
+  return 'production';
 }

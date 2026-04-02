@@ -21,9 +21,10 @@ const roleCardCopy = {
  */
 export function MockUserChoiceGate() {
   const { currentUser, isLoading, mockUsers, selectMockUser } = useAuth();
+  const dev = isDevelopment();
 
   useEffect(() => {
-    if (isDevelopment() || currentUser) {
+    if (dev || currentUser) {
       return;
     }
 
@@ -33,9 +34,9 @@ export function MockUserChoiceGate() {
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [currentUser]);
+  }, [currentUser, dev]);
 
-  if (isDevelopment() || isLoading || currentUser) {
+  if (dev || isLoading || currentUser) {
     return null;
   }
 

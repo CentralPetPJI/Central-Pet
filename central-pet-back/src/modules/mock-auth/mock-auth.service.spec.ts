@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { NotFoundException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { defaultMockUserId, mockUserIds } from '../../mocks/users.mock';
 import { MockAuthService } from './mock-auth.service';
 
@@ -11,7 +11,7 @@ describe('MockAuthService', () => {
   });
 
   it('should throw when no mock user header is provided', () => {
-    expect(() => service.getCurrentUser()).toThrow(NotFoundException);
+    expect(() => service.getCurrentUser()).toThrow(UnauthorizedException);
   });
 
   it('should return a mock user by id', () => {
@@ -31,15 +31,12 @@ describe('MockAuthService', () => {
   it('should expose independent donor users in the mock list', () => {
     const result = service.listUsers();
 
-    expect(
-      result.data.users.find((user) => user.id === mockUserIds.JULIANA_MARTINS)
-        ?.role,
-    ).toBe('PESSOA_FISICA');
+    expect(result.data.users.find((user) => user.id === mockUserIds.JULIANA_MARTINS)?.role).toBe(
+      'PESSOA_FISICA',
+    );
   });
 
   it('should throw when the mock user id does not exist', () => {
-    expect(() => service.getCurrentUser('missing-user')).toThrow(
-      NotFoundException,
-    );
+    expect(() => service.getCurrentUser('missing-user')).toThrow(UnauthorizedException);
   });
 });

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { formatPetSpecies } from '@/lib/formatters';
 import { routes } from '@/routes';
 
 type MyPetItem = {
@@ -20,18 +21,6 @@ const statusLabelMap: Record<string, string> = {
   ADOPTED: 'Adotado',
   UNAVAILABLE: 'Indisponivel',
 };
-
-function formatSpecies(species: string) {
-  if (species === 'DOG') {
-    return 'Cao';
-  }
-
-  if (species === 'CAT') {
-    return 'Gato';
-  }
-
-  return species;
-}
 
 export default function MyPetsPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
@@ -138,7 +127,7 @@ export default function MyPetsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">{pet.name}</h2>
                   <p className="mt-1 text-sm text-slate-600">
-                    {formatSpecies(pet.species)}
+                    {formatPetSpecies(pet.species)}
                     {pet.breed ? ` • ${pet.breed}` : ''}
                   </p>
                 </div>

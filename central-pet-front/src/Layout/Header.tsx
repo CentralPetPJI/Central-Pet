@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { Bell, Building2, ClipboardList, Compass, Plus, Search, PawPrint } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import dog from '../assets/image/dog.png';
 import DropdownMenu from '../Components/DropdownMenu';
 import { NavLink } from '../Components/NavLink';
@@ -16,10 +16,24 @@ const roleLabelMap = {
 } as const;
 
 const Header = () => {
-  const { currentUser, mockUsers, selectMockUser } = useAuth();
+  const { currentUser, mockUsers, selectMockUser, clearAuth } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  // Close mobile menu when route changes
+  // Using a ref to track location and conditionally update state
+  const locationRef = useRef(location);
+
+  useLayoutEffect(() => {
+    if (locationRef.current.pathname !== location.pathname) {
+      // This is a legitimate use case: closing UI when navigating
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsMobileMenuOpen(false);
+      locationRef.current = location;
+    }
+  }, [location]);
 
   // Define itens do menu "Pets"
   const petsMenuItems: MenuItem[] = [
@@ -216,7 +230,7 @@ const Header = () => {
                 <button
                   className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
                   onClick={() => {
-                    // TODO: Implementar logout
+                    clearAuth();
                     setIsMobileMenuOpen(false);
                   }}
                 >

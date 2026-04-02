@@ -33,9 +33,7 @@ type ReceivedAdoptionRequest = {
 
 @Injectable()
 export class AdoptionRequestsService {
-  private readonly adoptionRequests: MockAdoptionRequest[] = [
-    ...mockAdoptionRequests,
-  ];
+  private readonly adoptionRequests: MockAdoptionRequest[] = [...mockAdoptionRequests];
   private readonly pets: MockPet[] = [...mockPets];
   private readonly users: MockUser[] = [...mockUsers];
 
@@ -43,9 +41,7 @@ export class AdoptionRequestsService {
     const data = this.adoptionRequests
       .map((request) => {
         const pet = this.pets.find((item) => item.id === request.petId);
-        const adopter = this.users.find(
-          (item) => item.id === request.adopterId,
-        );
+        const adopter = this.users.find((item) => item.id === request.adopterId);
 
         if (!pet || !adopter) {
           return null;
@@ -57,17 +53,17 @@ export class AdoptionRequestsService {
             id: pet.id,
             name: pet.name,
             species: pet.species,
-            city: pet.city ?? '',
-            state: pet.state ?? '',
+            city: pet.city ?? 'UNKNOWN_CITY',
+            state: pet.state ?? 'UNKNOWN_STATE',
             responsibleUserId: pet.responsibleUserId,
             sourceType: pet.sourceType ?? 'ONG',
-            sourceName: pet.sourceName ?? '',
+            sourceName: pet.sourceName ?? 'UNKNOWN_SOURCE',
           },
           adopter: {
             id: adopter.id,
             name: adopter.fullName,
-            city: adopter.city ?? '',
-            state: adopter.state ?? '',
+            city: adopter.city ?? 'UNKNOWN_CITY',
+            state: adopter.state ?? 'UNKNOWN_STATE',
           },
           message: request.message,
           status: request.status,
@@ -78,14 +74,11 @@ export class AdoptionRequestsService {
       })
       .filter((request): request is ReceivedAdoptionRequest => request !== null)
       .filter((request) =>
-        responsibleUserId
-          ? request.pet.responsibleUserId === responsibleUserId
-          : true,
+        responsibleUserId ? request.pet.responsibleUserId === responsibleUserId : true,
       )
       .sort(
         (left, right) =>
-          new Date(right.requestedAt).getTime() -
-          new Date(left.requestedAt).getTime(),
+          new Date(right.requestedAt).getTime() - new Date(left.requestedAt).getTime(),
       );
 
     return {

@@ -37,6 +37,84 @@ export class PetsService {
 
   constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
+  private normalizeSpecies(species: string): string {
+    const speciesMap: Record<string, string> = {
+      dog: 'DOG',
+      Dog: 'DOG',
+      DOG: 'DOG',
+      cachorro: 'DOG',
+      Cachorro: 'DOG',
+      CACHORRO: 'DOG',
+      cat: 'CAT',
+      Cat: 'CAT',
+      CAT: 'CAT',
+      gato: 'CAT',
+      Gato: 'CAT',
+      GATO: 'CAT',
+    };
+    return speciesMap[species] || species;
+  }
+
+  private normalizeSize(size: string): string {
+    const sizeMap: Record<string, string> = {
+      pequeno: 'SMALL',
+      Pequeno: 'SMALL',
+      PEQUENO: 'SMALL',
+      small: 'SMALL',
+      Small: 'SMALL',
+      SMALL: 'SMALL',
+      medio: 'MEDIUM',
+      Medio: 'MEDIUM',
+      MEDIO: 'MEDIUM',
+      medium: 'MEDIUM',
+      Medium: 'MEDIUM',
+      MEDIUM: 'MEDIUM',
+      grande: 'LARGE',
+      Grande: 'LARGE',
+      GRANDE: 'LARGE',
+      large: 'LARGE',
+      Large: 'LARGE',
+      LARGE: 'LARGE',
+    };
+    return sizeMap[size] || size;
+  }
+
+  private normalizeSex(sex: string): string {
+    const sexMap: Record<string, string> = {
+      macho: 'MALE',
+      Macho: 'MALE',
+      MACHO: 'MALE',
+      male: 'MALE',
+      Male: 'MALE',
+      MALE: 'MALE',
+      femea: 'FEMALE',
+      Femea: 'FEMALE',
+      FEMEA: 'FEMALE',
+      female: 'FEMALE',
+      Female: 'FEMALE',
+      FEMALE: 'FEMALE',
+    };
+    return sexMap[sex] || sex;
+  }
+
+  private normalizeAdoptionStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      available: 'AVAILABLE',
+      Available: 'AVAILABLE',
+      AVAILABLE: 'AVAILABLE',
+      in_process: 'IN_PROCESS',
+      In_process: 'IN_PROCESS',
+      IN_PROCESS: 'IN_PROCESS',
+      adopted: 'ADOPTED',
+      Adopted: 'ADOPTED',
+      ADOPTED: 'ADOPTED',
+      unavailable: 'UNAVAILABLE',
+      Unavailable: 'UNAVAILABLE',
+      UNAVAILABLE: 'UNAVAILABLE',
+    };
+    return statusMap[status] || 'AVAILABLE';
+  }
+
   private validateSelectedPersonalities(selectedPersonalities: string[]) {
     const validTraitIds = this.personalityTraitsService.getTraitIds();
     const invalidTraits = selectedPersonalities.filter(
@@ -60,10 +138,10 @@ export class PetsService {
       galleryPhotos: createPetDto.galleryPhotos ?? [],
       name: createPetDto.name,
       age: createPetDto.age,
-      species: createPetDto.species,
+      species: this.normalizeSpecies(createPetDto.species),
       breed: createPetDto.breed,
-      sex: createPetDto.sex,
-      size: createPetDto.size,
+      sex: this.normalizeSex(createPetDto.sex),
+      size: this.normalizeSize(createPetDto.size),
       microchipped: createPetDto.microchipped,
       tutor: createPetDto.tutor,
       shelter: createPetDto.shelter,
@@ -122,11 +200,45 @@ export class PetsService {
 
     const definedUpdates = Object.fromEntries(
       Object.entries(updatePetDto).filter(([, value]) => value !== undefined),
-    ) as Partial<PetRecord>;
+    ) as Partial<UpdatePetDto>;
+
+    const normalizedUpdates: Partial<PetRecord> = {};
+
+    if (definedUpdates.species) {
+      normalizedUpdates.species = this.normalizeSpecies(definedUpdates.species);
+    }
+    if (definedUpdates.size) {
+      normalizedUpdates.size = this.normalizeSize(definedUpdates.size);
+    }
+    if (definedUpdates.sex) {
+      normalizedUpdates.sex = this.normalizeSex(definedUpdates.sex);
+    }
 
     const updatedPet: PetRecord = {
-      ...this.pets[index],
-      ...definedUpdates,
+      id: this.pets[index].id,
+      profilePhoto: definedUpdates.profilePhoto ?? this.pets[index].profilePhoto,
+      galleryPhotos: definedUpdates.galleryPhotos ?? this.pets[index].galleryPhotos,
+      name: definedUpdates.name ?? this.pets[index].name,
+      age: definedUpdates.age ?? this.pets[index].age,
+      species: normalizedUpdates.species ?? this.pets[index].species,
+      breed: definedUpdates.breed ?? this.pets[index].breed,
+      sex: normalizedUpdates.sex ?? this.pets[index].sex,
+      size: normalizedUpdates.size ?? this.pets[index].size,
+      microchipped: definedUpdates.microchipped ?? this.pets[index].microchipped,
+      tutor: definedUpdates.tutor ?? this.pets[index].tutor,
+      shelter: definedUpdates.shelter ?? this.pets[index].shelter,
+      city: definedUpdates.city ?? this.pets[index].city,
+      contact: definedUpdates.contact ?? this.pets[index].contact,
+      vaccinated: definedUpdates.vaccinated ?? this.pets[index].vaccinated,
+      neutered: definedUpdates.neutered ?? this.pets[index].neutered,
+      dewormed: definedUpdates.dewormed ?? this.pets[index].dewormed,
+      needsHealthCare: definedUpdates.needsHealthCare ?? this.pets[index].needsHealthCare,
+      physicalLimitation: definedUpdates.physicalLimitation ?? this.pets[index].physicalLimitation,
+      visualLimitation: definedUpdates.visualLimitation ?? this.pets[index].visualLimitation,
+      hearingLimitation: definedUpdates.hearingLimitation ?? this.pets[index].hearingLimitation,
+      selectedPersonalities:
+        definedUpdates.selectedPersonalities ?? this.pets[index].selectedPersonalities,
+      createdAt: this.pets[index].createdAt,
       updatedAt: new Date().toISOString(),
     };
 
