@@ -69,19 +69,6 @@ docker compose -f docker-compose.prod.yml up --build
 
 Aplicacao disponivel em `http://localhost:8080`.
 
-Se quiser buildar tudo localmente e levar apenas as imagens prontas para o droplet, use o fluxo abaixo:
-
-```zsh
-REMOTE_HOST=root@seu-droplet ./scripts/build-prod-images.sh
-docker compose -f docker-compose.prod.prebuilt.yml --env-file .env.prod --profile internal-db up -d
-```
-
-Os arquivos `docker-compose` ficam na raiz para orquestrar o monolito, mas cada aplicacao deve manter seu proprio `Dockerfile`. Os arquivos `Dockerfile.prod` e `docker-compose.prod.prebuilt.yml` sao os mais indicados quando voce quer compilar localmente e somente executar os containers no droplet.
-
-Se voce quiser mudar os nomes das imagens, defina `FRONT_IMAGE` e `BACK_IMAGE` antes de rodar o script e o compose. Quando `REMOTE_HOST` estiver definido, o script faz `docker save` local e envia o stream direto para `docker load` no droplet via SSH, sem gzip intermediario.
-
-O frontend usa [central-pet-front/Dockerfile.prod](./central-pet-front/Dockerfile.prod) para compilar o app e servir os assets estaticos via Nginx com proxy para `/api`, enquanto o backend usa [central-pet-back/Dockerfile.prod](./central-pet-back/Dockerfile.prod) para compilar o NestJS e executar apenas o runtime em producao.
-
 ## Contribuicao
 
 As diretrizes de contribuicao, padroes de codigo e estilo de commits estao no arquivo [CONTRIBUTING.md](./CONTRIBUTING.md). Consulte esse arquivo antes de abrir issues ou enviar Pull Requests.
