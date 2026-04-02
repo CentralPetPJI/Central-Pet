@@ -77,8 +77,9 @@ describe('AdoptionRequestsReceivedPage', () => {
       'href',
       '/pets/1',
     );
-    expect(getMock).toHaveBeenCalledWith('/adoption-requests/received', {
+    expect(getMock).toHaveBeenCalledWith('/adoption-requests', {
       params: {
+        type: 'received',
         responsibleUserId: '11111111-1111-1111-1111-111111111111',
       },
     });

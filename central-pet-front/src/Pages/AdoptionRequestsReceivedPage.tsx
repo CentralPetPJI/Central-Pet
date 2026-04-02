@@ -91,12 +91,12 @@ export default function AdoptionRequestsReceivedPage() {
       setErrorMessage(null);
 
       try {
-        const response = await api.get<{ data: AdoptionRequestItem[] }>(
-          '/adoption-requests/received',
-          {
-            params: currentUser?.id ? { responsibleUserId: currentUser.id } : undefined,
+        const response = await api.get<{ data: AdoptionRequestItem[] }>('/adoption-requests', {
+          params: {
+            type: 'received',
+            ...(currentUser?.id ? { responsibleUserId: currentUser.id } : {}),
           },
-        );
+        });
 
         if (!isMounted) {
           return;
