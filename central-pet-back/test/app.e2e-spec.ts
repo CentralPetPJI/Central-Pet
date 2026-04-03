@@ -10,8 +10,7 @@ describe('Health (e2e)', () => {
 
   beforeAll(async () => {
     process.env.DATABASE_URL =
-      process.env.DATABASE_URL ??
-      'postgresql://test:test@localhost:5432/testdb?schema=public';
+      process.env.DATABASE_URL ?? 'postgresql://test:test@localhost:5432/testdb?schema=public';
 
     const prismaMock: Pick<PrismaService, '$connect'> = {
       $connect: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
@@ -36,9 +35,7 @@ describe('Health (e2e)', () => {
   it('/api/health (GET)', async () => {
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
 
-    const response: Response = await request(httpServer)
-      .get('/api/health')
-      .expect(200);
+    const response: Response = await request(httpServer).get('/api/health').expect(200);
 
     const body = response.body as {
       status: string;

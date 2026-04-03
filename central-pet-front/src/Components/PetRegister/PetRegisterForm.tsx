@@ -254,7 +254,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       saveIdMapping(savedPetId, backendId);
 
       savedOnBackend = true;
-    } catch {
+    } catch (_error) {
       // Erro ao salvar no backend - continua com salvamento local
       savedPetId = undefined;
     }

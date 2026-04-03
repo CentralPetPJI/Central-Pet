@@ -8,16 +8,17 @@
  * @returns Espécie formatada em português
  */
 export function formatPetSpecies(species: string): string {
+  const normalized = species?.trim();
   const speciesMap: Record<string, string> = {
-    DOG: 'Cão',
-    dog: 'Cão',
-    Cachorro: 'Cão',
-    cachorro: 'Cão',
+    DOG: 'Cachorro',
+    dog: 'Cachorro',
+    Cachorro: 'Cachorro',
+    cachorro: 'Cachorro',
     CAT: 'Gato',
     cat: 'Gato',
     Gato: 'Gato',
     gato: 'Gato',
   };
 
-  return speciesMap[species] ?? species;
+  return speciesMap[normalized] ?? species;
 }

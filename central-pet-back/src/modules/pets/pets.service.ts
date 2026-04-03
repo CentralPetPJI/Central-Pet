@@ -207,7 +207,7 @@ export class PetsService {
 
     return {
       message: 'Pet created successfully',
-      data: pet,
+      data: this.petRecordToDto(pet),
     };
   }
 
@@ -320,7 +320,7 @@ export class PetsService {
 
     return {
       message: 'Pet updated successfully',
-      data: updatedPet,
+      data: this.petRecordToDto(updatedPet),
     };
   }
 }

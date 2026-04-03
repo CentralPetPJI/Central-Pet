@@ -52,25 +52,14 @@ function formatRequestDate(date: string) {
   }).format(new Date(date));
 }
 
-function normalizePetRouteId(petId: string) {
-  // Expected formats:
-  // - Plain numeric string: '123' -> 123
-  // - Route string with trailing digits: 'pet-123' -> 123
-  // - Backend UUID: 'abc123...' -> 'abc123...'
-
+function normalizePetRouteId(petId: string): string | number {
   const numericId = Number(petId);
 
   if (Number.isFinite(numericId)) {
     return numericId;
   }
 
-  const matchedDigits = petId.match(/(\d+)$/);
-
-  if (!matchedDigits) {
-    return petId;
-  }
-
-  return Number(matchedDigits[1]);
+  return petId;
 }
 
 export default function AdoptionRequestsReceivedPage() {
@@ -87,6 +76,12 @@ export default function AdoptionRequestsReceivedPage() {
         return;
       }
 
+      if (!currentUser) {
+        setIsLoading(false);
+        setErrorMessage(null);
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage(null);
 
@@ -94,7 +89,7 @@ export default function AdoptionRequestsReceivedPage() {
         const response = await api.get<{ data: AdoptionRequestItem[] }>('/adoption-requests', {
           params: {
             type: 'received',
-            ...(currentUser?.id ? { responsibleUserId: currentUser.id } : {}),
+            ...(currentUser.id ? { responsibleUserId: currentUser.id } : {}),
           },
         });
 
@@ -121,14 +116,14 @@ export default function AdoptionRequestsReceivedPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser?.id, isAuthLoading]);
+  }, [currentUser, isAuthLoading]);
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
       <div className="mb-6 flex flex-col gap-3 rounded-3xl bg-linear-to-r from-amber-50 via-white to-cyan-50 p-5 shadow-sm ring-1 ring-slate-200 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
-            Solicitacões de adoção recebidas
+            Solicitações de adoção recebidas
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-600">
             Acompanhe os interessados em pets que voce cadastrou para adoção. Aqui voce pode revisar

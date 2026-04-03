@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PetProfileFactGrid, {
   type PetProfileFact,
 } from '@/Components/PetProfile/PetProfileFactGrid';
@@ -16,15 +16,20 @@ import { routes } from '@/routes';
 const PetPersonalityProfilePage = () => {
   const { petId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
 
   // Limpar a mensagem após 3 segundos
   useEffect(() => {
     if (displayMessage) {
-      const timer = setTimeout(() => setDisplayMessage(''), 3000);
+      const timer = setTimeout(() => {
+        setDisplayMessage('');
+        // Remove successMessage from location.state to prevent reappearing on remount
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [displayMessage]);
+  }, [displayMessage, location.pathname, navigate]);
   const numericPetId = Number(petId);
 
   const profileState: {
@@ -98,7 +103,12 @@ const PetPersonalityProfilePage = () => {
   return (
     <section className="mx-auto w-full max-w-[1320px] px-1 pb-16 pt-4">
       {displayMessage && (
-        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <div
+          className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <p className="text-sm font-medium text-emerald-700">{displayMessage}</p>
         </div>
       )}

@@ -40,6 +40,7 @@ export const petRegisterFormSchema = z.object({
   tutor: z.string().trim().min(1, 'Informe o tutor responsavel.'),
   shelter: z.string().trim().min(1, 'Informe o abrigo ou origem do pet.'),
   city: z.string().trim().min(1, 'Informe a cidade do pet.'),
+  state: z.string().trim().min(1, 'Informe o estado (UF) do pet.'),
   contact: z.string().trim().min(1, 'Informe um contato para adocao.'),
   vaccinated: z.boolean(),
   neutered: z.boolean(),

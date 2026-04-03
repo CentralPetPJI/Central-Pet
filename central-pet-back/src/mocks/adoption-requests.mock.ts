@@ -5,11 +5,7 @@
 
 import { mockUserIds } from './users.mock';
 
-export type AdoptionRequestStatus =
-  | 'PENDING'
-  | 'UNDER_REVIEW'
-  | 'APPROVED'
-  | 'REJECTED';
+export type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
 
 export type MockAdoptionRequest = {
   id: string;

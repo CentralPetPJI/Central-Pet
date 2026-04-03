@@ -120,8 +120,9 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await menuButton.click();
 
     // Aguardar menu abrir e clicar em Meus Pets
-    await page.waitForTimeout(500); // pequeno delay para menu aparecer
-    await page.getByRole("link", { name: "Meus Pets" }).click();
+    const myPetsLink = page.getByRole("link", { name: "Meus Pets" });
+    await myPetsLink.waitFor({ state: "visible" });
+    await myPetsLink.click();
 
     // Aguardar página "Meus Pets" carregar
     await page.waitForURL("/pets/mine", { timeout: 10000 });

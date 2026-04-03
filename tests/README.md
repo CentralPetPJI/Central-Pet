@@ -50,7 +50,7 @@ pnpm test:codegen
 
 ## 📁 Estrutura
 
-```
+```text
 tests/
 ├── e2e/                       # Arquivos de teste
 │   ├── home.spec.ts          # Testes da página inicial

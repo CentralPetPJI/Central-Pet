@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { MenuItem } from '@/Models/Types';
 
@@ -23,6 +23,18 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLLIElement>(null);
   const menuItemRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Compute stable mapping from item indices to non-divider positions
+  const nonDividerIndices = useMemo(() => {
+    const mapping = new Map<number, number>();
+    let nonDividerCounter = 0;
+    items.forEach((item, index) => {
+      if (!item.divider) {
+        mapping.set(index, nonDividerCounter++);
+      }
+    });
+    return mapping;
+  }, [items]);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
@@ -80,7 +92,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
         if (focusedIndex >= 0 && menuItemRefs.current[focusedIndex]) {
           const item = nonDividerItems[focusedIndex];
           if (item && !item.disabled) {
-            if (item.onClick) {
+            const element = menuItemRefs.current[focusedIndex];
+            if (element) {
+              element.click();
+            } else if (item.onClick) {
               item.onClick();
             }
             closeMenu();
@@ -127,64 +142,67 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
           role="menu"
           onKeyDown={handleKeyDown}
         >
-          {/* Ensure refs align with non-divider items: reset and populate in-order */}
-          {(() => {
-            menuItemRefs.current = [];
-            let nonDividerCounter = 0;
+          {items.map((item, index) => {
+            // Divider (separador visual)
+            if (item.divider) {
+              return <li key={index} className="my-1 border-t border-gray-200" role="separator" />;
+            }
 
-            return items.map((item, index) => {
-              // Divider (separador visual)
-              if (item.divider) {
-                return (
-                  <li key={index} className="my-1 border-t border-gray-200" role="separator" />
-                );
-              }
+            const nonDividerIndex = nonDividerIndices.get(index);
 
-              const currentNonDividerIndex = nonDividerCounter++;
+            const itemContent = (
+              <>
+                {item.icon && <span className="mr-2 inline-block">{item.icon}</span>}
+                {item.label}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+                    {item.badge}
+                  </span>
+                )}
+              </>
+            );
 
-              const itemContent = (
-                <>
-                  {item.icon && <span className="mr-2 inline-block">{item.icon}</span>}
-                  {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              );
+            const itemClassName = `block px-4 py-3 text-base leading-6 hover:bg-green-200 whitespace-nowrap ${
+              item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+            }`;
 
-              const itemClassName = `block px-4 py-3 text-base leading-6 hover:bg-green-200 whitespace-nowrap ${
-                item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-              }`;
-
-              return (
-                <li
-                  key={index}
-                  role="menuitem"
-                  title={item.tooltip}
-                  className={item.disabled ? 'cursor-not-allowed' : ''}
-                  ref={(el) => {
-                    menuItemRefs.current[currentNonDividerIndex] = el;
-                  }}
-                >
-                  {item.path && !item.disabled ? (
-                    <Link to={item.path} className={itemClassName} onClick={() => closeMenu()}>
-                      {itemContent}
-                    </Link>
-                  ) : (
-                    <button
-                      className={`${itemClassName} w-full text-left text-gray-800`}
-                      onClick={() => handleItemClick(item)}
-                      disabled={item.disabled}
-                    >
-                      {itemContent}
-                    </button>
-                  )}
-                </li>
-              );
-            });
-          })()}
+            return (
+              <li
+                key={index}
+                role="menuitem"
+                title={item.tooltip}
+                className={item.disabled ? 'cursor-not-allowed' : ''}
+              >
+                {item.path && !item.disabled ? (
+                  <Link
+                    to={item.path}
+                    className={itemClassName}
+                    onClick={() => closeMenu()}
+                    ref={(el) => {
+                      if (nonDividerIndex !== undefined) {
+                        menuItemRefs.current[nonDividerIndex] = el;
+                      }
+                    }}
+                  >
+                    {itemContent}
+                  </Link>
+                ) : (
+                  <button
+                    className={`${itemClassName} w-full text-left text-gray-800`}
+                    onClick={() => handleItemClick(item)}
+                    disabled={item.disabled}
+                    ref={(el) => {
+                      if (nonDividerIndex !== undefined) {
+                        menuItemRefs.current[nonDividerIndex] = el;
+                      }
+                    }}
+                  >
+                    {itemContent}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </li>
