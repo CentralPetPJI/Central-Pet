@@ -14,6 +14,7 @@ export type MockPet = {
   size?: string;
   sex?: string;
   color?: string;
+  photo?: string;
   description?: string;
   vaccinated: boolean;
   neutered: boolean;
