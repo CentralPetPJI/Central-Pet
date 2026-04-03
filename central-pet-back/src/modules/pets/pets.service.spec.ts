@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { mockUserIds } from '../../mocks/users.mock';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
 
@@ -45,6 +46,7 @@ describe('PetsService', () => {
     visualLimitation: false,
     hearingLimitation: false,
     selectedPersonalities: ['playful', 'friendly'],
+    responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
   });
 
   const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {

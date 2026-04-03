@@ -1,3 +1,4 @@
 packages:
   - "central-pet-front"
   - "central-pet-back"
+  - "tests"

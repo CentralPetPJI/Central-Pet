@@ -18,11 +18,9 @@ export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
   @Post()
-  create(
-    @Body() createPetDto: CreatePetDto,
-    @Headers('x-mock-user-id') mockUserId?: string,
-  ) {
-    const responsibleUserId = createPetDto.responsibleUserId ?? mockUserId;
+  create(@Body() createPetDto: CreatePetDto, @Headers('x-mock-user-id') mockUserId?: string) {
+    // Prefer mockUserId from header over body-provided responsibleUserId
+    const responsibleUserId = mockUserId ?? createPetDto.responsibleUserId;
 
     if (!responsibleUserId) {
       throw new BadRequestException('responsibleUserId is required');

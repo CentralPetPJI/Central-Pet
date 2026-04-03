@@ -10,6 +10,8 @@ import {
   MaxLength,
 } from 'class-validator';
 
+import { SpeciesValues, SexValues, SizeValues } from '../constants';
+
 export class CreatePetDto {
   @IsString()
   @IsNotEmpty()
@@ -33,7 +35,7 @@ export class CreatePetDto {
   age: string;
 
   @IsString()
-  @IsIn(['dog', 'cat'])
+  @IsIn([...SpeciesValues])
   species: string;
 
   @IsString()
@@ -42,11 +44,11 @@ export class CreatePetDto {
   breed: string;
 
   @IsString()
-  @IsIn(['Femea', 'Macho'])
+  @IsIn([...SexValues])
   sex: string;
 
   @IsString()
-  @IsIn(['Pequeno', 'Medio', 'Grande'])
+  @IsIn([...SizeValues])
   size: string;
 
   @IsBoolean()
@@ -88,6 +90,10 @@ export class CreatePetDto {
 
   @IsBoolean()
   hearingLimitation: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  responsibleUserId: string;
 
   @IsOptional()
   @IsArray()

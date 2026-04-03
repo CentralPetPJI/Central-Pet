@@ -127,56 +127,64 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
           role="menu"
           onKeyDown={handleKeyDown}
         >
-          {items.map((item, index) => {
-            // Divider (separador visual)
-            if (item.divider) {
-              return <li key={index} className="my-1 border-t border-gray-200" role="separator" />;
-            }
+          {/* Ensure refs align with non-divider items: reset and populate in-order */}
+          {(() => {
+            menuItemRefs.current = [];
+            let nonDividerCounter = 0;
 
-            const itemContent = (
-              <>
-                {item.icon && <span className="mr-2 inline-block">{item.icon}</span>}
-                {item.label}
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-                    {item.badge}
-                  </span>
-                )}
-              </>
-            );
+            return items.map((item, index) => {
+              // Divider (separador visual)
+              if (item.divider) {
+                return (
+                  <li key={index} className="my-1 border-t border-gray-200" role="separator" />
+                );
+              }
 
-            const itemClassName = `block px-4 py-3 text-base leading-6 hover:bg-green-200 whitespace-nowrap ${
-              item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
-            }`;
+              const currentNonDividerIndex = nonDividerCounter++;
 
-            return (
-              <li
-                key={index}
-                role="menuitem"
-                title={item.tooltip}
-                className={item.disabled ? 'cursor-not-allowed' : ''}
-                ref={(el) => {
-                  if (!item.divider) {
-                    menuItemRefs.current[index] = el;
-                  }
-                }}
-              >
-                {item.path && !item.disabled ? (
-                  <Link to={item.path} className={itemClassName} onClick={() => closeMenu()}>
-                    {itemContent}
-                  </Link>
-                ) : (
-                  <button
-                    className={`${itemClassName} w-full text-left text-gray-800`}
-                    onClick={() => handleItemClick(item)}
-                    disabled={item.disabled}
-                  >
-                    {itemContent}
-                  </button>
-                )}
-              </li>
-            );
-          })}
+              const itemContent = (
+                <>
+                  {item.icon && <span className="mr-2 inline-block">{item.icon}</span>}
+                  {item.label}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </>
+              );
+
+              const itemClassName = `block px-4 py-3 text-base leading-6 hover:bg-green-200 whitespace-nowrap ${
+                item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+              }`;
+
+              return (
+                <li
+                  key={index}
+                  role="menuitem"
+                  title={item.tooltip}
+                  className={item.disabled ? 'cursor-not-allowed' : ''}
+                  ref={(el) => {
+                    menuItemRefs.current[currentNonDividerIndex] = el;
+                  }}
+                >
+                  {item.path && !item.disabled ? (
+                    <Link to={item.path} className={itemClassName} onClick={() => closeMenu()}>
+                      {itemContent}
+                    </Link>
+                  ) : (
+                    <button
+                      className={`${itemClassName} w-full text-left text-gray-800`}
+                      onClick={() => handleItemClick(item)}
+                      disabled={item.disabled}
+                    >
+                      {itemContent}
+                    </button>
+                  )}
+                </li>
+              );
+            });
+          })()}
         </ul>
       )}
     </li>

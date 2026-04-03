@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { mockPets } from '../../mocks';
 
 type PetRecord = {
   id: string;
@@ -27,13 +28,45 @@ type PetRecord = {
   visualLimitation: boolean;
   hearingLimitation: boolean;
   selectedPersonalities: string[];
+  responsibleUserId: string;
   createdAt: string;
   updatedAt: string;
 };
 
 @Injectable()
 export class PetsService {
-  private readonly pets: PetRecord[] = [];
+  // Seed in-memory store with mockPets so per-user filtering works out-of-the-box
+  // Skip seeding during tests to keep test expectations deterministic
+  private readonly pets: PetRecord[] =
+    process.env.NODE_ENV === 'test'
+      ? []
+      : mockPets.map((p) => ({
+          id: String(p.id),
+          profilePhoto: p.photo ?? '',
+          galleryPhotos: [],
+          name: p.name,
+          age: p.ageMonths ? `${p.ageMonths} meses` : '',
+          species: this.normalizeSpecies(p.species ?? ''),
+          breed: p.breed ?? '',
+          sex: this.normalizeSex(p.sex ?? ''),
+          size: this.normalizeSize(p.size ?? ''),
+          microchipped: false,
+          tutor: p.sourceName ?? '',
+          shelter: p.sourceName ?? '',
+          city: p.city ?? '',
+          contact: '',
+          vaccinated: p.vaccinated,
+          neutered: p.neutered,
+          dewormed: p.dewormed,
+          needsHealthCare: false,
+          physicalLimitation: false,
+          visualLimitation: false,
+          hearingLimitation: false,
+          selectedPersonalities: [],
+          responsibleUserId: p.responsibleUserId,
+          createdAt: p.createdAt ?? new Date().toISOString(),
+          updatedAt: p.updatedAt ?? new Date().toISOString(),
+        }));
 
   constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
@@ -112,7 +145,13 @@ export class PetsService {
       Unavailable: 'UNAVAILABLE',
       UNAVAILABLE: 'UNAVAILABLE',
     };
-    return statusMap[status] || 'AVAILABLE';
+
+    const mapped = statusMap[status];
+    if (!mapped) {
+      throw new BadRequestException(`Invalid adoption status: ${status}`);
+    }
+
+    return mapped;
   }
 
   private validateSelectedPersonalities(selectedPersonalities: string[]) {
@@ -131,6 +170,10 @@ export class PetsService {
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
 
     this.validateSelectedPersonalities(selectedPersonalities);
+
+    if (!createPetDto.responsibleUserId) {
+      throw new BadRequestException('responsibleUserId is required');
+    }
 
     const pet: PetRecord = {
       id: randomUUID(),
@@ -155,6 +198,7 @@ export class PetsService {
       visualLimitation: createPetDto.visualLimitation,
       hearingLimitation: createPetDto.hearingLimitation,
       selectedPersonalities,
+      responsibleUserId: createPetDto.responsibleUserId,
       createdAt: now,
       updatedAt: now,
     };
@@ -167,10 +211,39 @@ export class PetsService {
     };
   }
 
-  findAll() {
+  private petRecordToDto(pet: PetRecord) {
+    const speciesOutMap: Record<string, string> = {
+      DOG: 'dog',
+      CAT: 'cat',
+    };
+
+    const sexOutMap: Record<string, string> = {
+      MALE: 'Macho',
+      FEMALE: 'Femea',
+    };
+
+    const sizeOutMap: Record<string, string> = {
+      SMALL: 'Pequeno',
+      MEDIUM: 'Medio',
+      LARGE: 'Grande',
+    };
+
+    return {
+      ...pet,
+      species: speciesOutMap[pet.species] ?? pet.species,
+      sex: sexOutMap[pet.sex] ?? pet.sex,
+      size: sizeOutMap[pet.size] ?? pet.size,
+    };
+  }
+
+  findAll(responsibleUserId?: string) {
+    const list = responsibleUserId
+      ? this.pets.filter((p) => p.responsibleUserId === responsibleUserId)
+      : this.pets;
+
     return {
       message: 'Pets retrieved successfully',
-      data: this.pets,
+      data: list.map((p) => this.petRecordToDto(p)),
     };
   }
 
@@ -183,7 +256,7 @@ export class PetsService {
 
     return {
       message: 'Pet retrieved successfully',
-      data: pet,
+      data: this.petRecordToDto(pet),
     };
   }
 
@@ -238,6 +311,7 @@ export class PetsService {
       hearingLimitation: definedUpdates.hearingLimitation ?? this.pets[index].hearingLimitation,
       selectedPersonalities:
         definedUpdates.selectedPersonalities ?? this.pets[index].selectedPersonalities,
+      responsibleUserId: this.pets[index].responsibleUserId,
       createdAt: this.pets[index].createdAt,
       updatedAt: new Date().toISOString(),
     };

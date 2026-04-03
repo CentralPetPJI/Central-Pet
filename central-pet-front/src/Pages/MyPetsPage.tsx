@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
+import { getLocalId } from '@/Mocks/PetIdMapping';
+import { getPetProfileById, getStoredPets } from '@/Mocks/PetsStorage';
 import { routes } from '@/routes';
 
 type MyPetItem = {
@@ -22,6 +24,15 @@ const statusLabelMap: Record<string, string> = {
   UNAVAILABLE: 'Indisponivel',
 };
 
+/**
+ * Converte ID do backend (UUID) para ID local (number) usando PetIdMapping
+ * Se não houver mapeamento, retorna o próprio UUID como string
+ */
+function normalizeBackendPetId(backendId: string): string | number {
+  const localId = getLocalId(backendId);
+  return localId ?? backendId;
+}
+
 export default function MyPetsPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
   const [pets, setPets] = useState<MyPetItem[]>([]);
@@ -39,6 +50,7 @@ export default function MyPetsPage() {
       if (!currentUser?.id) {
         setPets([]);
         setIsLoading(false);
+        setErrorMessage(null);
         return;
       }
 
@@ -56,13 +68,45 @@ export default function MyPetsPage() {
           return;
         }
 
-        setPets(response.data.data);
+        // Converte IDs do backend (UUID) para IDs locais quando possível
+        const normalizedPets = response.data.data.map((pet) => ({
+          ...pet,
+          id: String(normalizeBackendPetId(pet.id)),
+        }));
+
+        setPets(normalizedPets);
       } catch {
         if (!isMounted) {
           return;
         }
 
-        setErrorMessage('Nao foi possivel carregar os pets cadastrados.');
+        // Fallback: usar localStorage quando backend não estiver disponível
+        try {
+          const localPets = getStoredPets().filter(
+            (pet) => pet.responsibleUserId === currentUser.id,
+          );
+
+          // Converter Pet[] do localStorage para MyPetItem[] esperado
+          const formattedPets: MyPetItem[] = localPets.map((pet) => {
+            // Busca o perfil completo para pegar dados adicionais
+            const profile = getPetProfileById(pet.id);
+
+            return {
+              id: String(pet.id),
+              name: pet.name,
+              species: pet.species,
+              breed: profile?.formData.breed,
+              city: profile?.formData.city,
+              state: profile?.formData.state,
+              adoptionStatus: 'AVAILABLE', // Default para pets locais
+            };
+          });
+
+          setPets(formattedPets);
+          setErrorMessage(null); // Limpa mensagem de erro se localStorage funcionar
+        } catch {
+          setErrorMessage('Nao foi possivel carregar os pets cadastrados.');
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -111,7 +155,7 @@ export default function MyPetsPage() {
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">Nenhum pet cadastrado</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Quando este usuario cadastrar um pet, ele aparecera aqui.
+            Quando você cadastrar um pet, ele aparecerá aqui.
           </p>
         </div>
       ) : null}

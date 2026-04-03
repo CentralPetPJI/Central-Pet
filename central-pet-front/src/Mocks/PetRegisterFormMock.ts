@@ -16,6 +16,7 @@ export interface PetRegisterFormData {
   tutor: string;
   shelter: string;
   city: string;
+  state: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -73,7 +74,8 @@ export const initialPetRegisterFormData: PetRegisterFormData = {
   microchipped: true,
   tutor: 'ONG Patas do Centro',
   shelter: 'Abrigo Reencontro',
-  city: 'Sao Paulo - SP',
+  city: 'Sao Paulo',
+  state: 'SP',
   contact: '(11) 99999-0000',
   vaccinated: true,
   neutered: true,

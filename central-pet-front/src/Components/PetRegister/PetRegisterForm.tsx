@@ -10,6 +10,7 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
+import { saveIdMapping } from '@/Mocks/PetIdMapping';
 import { petPersonalityStorageKey } from '@/Mocks/PetPersonalityOptions';
 import {
   initialPetRegisterFormData,
@@ -185,7 +186,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     }
 
     const resolvedUserId = currentUser?.id ?? (isDevelopment() ? 'dev-user' : undefined);
-
     if (!resolvedUserId) {
       setSaveMessage('Nao foi possivel identificar o usuario atual.');
       return;
@@ -215,39 +215,47 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
     try {
       const backendPayload = {
+        profilePhoto: validationResult.data.profilePhoto,
+        galleryPhotos: validationResult.data.galleryPhotos ?? [],
         name: validationResult.data.name,
-        species: validationResult.data.species === 'dog' ? 'DOG' : 'CAT',
+        age: validationResult.data.age,
+        species: validationResult.data.species, // 'dog' | 'cat'
         breed: validationResult.data.breed,
-        ageMonths: Number.parseInt(validationResult.data.age, 10) || undefined,
-        size:
-          validationResult.data.size === 'Pequeno'
-            ? 'SMALL'
-            : validationResult.data.size === 'Grande'
-              ? 'LARGE'
-              : 'MEDIUM',
-        sex: mapSex(validationResult.data.sex),
-        description: `Tutor: ${validationResult.data.tutor}. Abrigo: ${validationResult.data.shelter}. Cidade: ${validationResult.data.city}. Contato: ${validationResult.data.contact}.`,
+        sex: validationResult.data.sex, // 'Macho' | 'Femea'
+        size: validationResult.data.size, // 'Pequeno' | 'Medio' | 'Grande'
+        microchipped: validationResult.data.microchipped,
+        tutor: validationResult.data.tutor,
+        shelter: validationResult.data.shelter,
+        city: validationResult.data.city,
+        contact: validationResult.data.contact,
         vaccinated: validationResult.data.vaccinated,
         neutered: validationResult.data.neutered,
         dewormed: validationResult.data.dewormed,
-        city: validationResult.data.city,
+        needsHealthCare: validationResult.data.needsHealthCare,
+        physicalLimitation: validationResult.data.physicalLimitation,
+        visualLimitation: validationResult.data.visualLimitation,
+        hearingLimitation: validationResult.data.hearingLimitation,
+        selectedPersonalities: selectedPersonalities,
         responsibleUserId: resolvedUserId,
       };
 
-      const response = await api.post<{ message: string; data: { id: number } }>(
+      const response = await api.post<{ message: string; data: { id: string } }>(
         '/pets',
         backendPayload,
       );
 
-      savedPetId = response.data.data.id;
-      const isSavedPetIdValid = Number.isFinite(savedPetId);
+      const backendId = response.data.data.id;
 
-      if (!isSavedPetIdValid) {
-        setSaveMessage('Nao foi possivel identificar o pet salvo no servidor.');
-        return;
-      }
+      // Backend retorna UUID, mas frontend usa IDs numéricos
+      // Gera ID local e salva o mapeamento para sincronização
+      const currentPets = getStoredPets();
+      savedPetId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
+
+      saveIdMapping(savedPetId, backendId);
+
       savedOnBackend = true;
     } catch {
+      // Erro ao salvar no backend - continua com salvamento local
       savedPetId = undefined;
     }
 
@@ -266,14 +274,15 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     setFormData(validationResult.data);
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
-    setSaveMessage(
-      isEditMode
-        ? 'Pet atualizado com sucesso.'
-        : savedOnBackend
-          ? 'Pet salvo com sucesso.'
-          : 'Pet salvo localmente com sucesso.',
-    );
-    navigate(routes.pets.detail.build(petToSave.id));
+    const successMessage = isEditMode
+      ? 'Pet atualizado com sucesso.'
+      : savedOnBackend
+        ? 'Pet salvo com sucesso.'
+        : 'Pet salvo localmente com sucesso.';
+
+    navigate(routes.pets.detail.build(petToSave.id), {
+      state: { successMessage },
+    });
   };
 
   return (

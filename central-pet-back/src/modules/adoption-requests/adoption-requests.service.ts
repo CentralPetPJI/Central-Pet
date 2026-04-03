@@ -37,7 +37,7 @@ export class AdoptionRequestsService {
   private readonly pets: MockPet[] = [...mockPets];
   private readonly users: MockUser[] = [...mockUsers];
 
-  findReceived(responsibleUserId?: string) {
+  findReceived(responsibleUserId?: string): { message: string; data: ReceivedAdoptionRequest[] } {
     const data = this.adoptionRequests
       .map((request) => {
         const pet = this.pets.find((item) => item.id === request.petId);
