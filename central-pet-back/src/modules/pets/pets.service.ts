@@ -58,7 +58,7 @@ export class PetsService {
     const pet: PetRecord = {
       id: randomUUID(),
       profilePhoto: createPetDto.profilePhoto,
-      galleryPhotos: createPetDto.galleryPhotos,
+      galleryPhotos: createPetDto.galleryPhotos ?? [],
       name: createPetDto.name,
       age: createPetDto.age,
       species: createPetDto.species,

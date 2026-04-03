@@ -1,16 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
+import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma/prisma.service';
 import { HealthController } from './../src/modules/health/health.controller';
 import { UsersController } from './../src/modules/users/users.controller';
-import { AuthController } from './../src/modules/auth/auth.controller';
 
 describe('App (e2e)', () => {
+  let app: INestApplication;
   let moduleFixture: TestingModule;
   let healthController: HealthController;
   let usersController: UsersController;
-  let authController: AuthController;
 
   beforeAll(async () => {
     process.env.DATABASE_URL =
@@ -28,12 +29,16 @@ describe('App (e2e)', () => {
       .useValue(prismaMock)
       .compile();
 
+    app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
+    await app.init();
+
     healthController = moduleFixture.get(HealthController);
     usersController = moduleFixture.get(UsersController);
-    authController = moduleFixture.get(AuthController);
   });
 
   afterAll(async () => {
+    await app.close();
     await moduleFixture.close();
   });
 
@@ -59,20 +64,20 @@ describe('App (e2e)', () => {
       cpf: '12345678901',
     });
 
-    const responseMock = {
-      setHeader: jest.fn<(name: string, value: string) => void>(),
-    };
+    const response = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({
+        email: 'maria@example.com',
+        password: 'Senha123!',
+      })
+      .expect(201);
 
-    const loginResponse = await authController.login({
-      email: 'maria@example.com',
-      password: 'Senha123!',
-    });
-
-    expect(loginResponse.message).toBe('Login successful');
-    expect(loginResponse.data.user.email).toBe('maria@example.com');
-    expect(responseMock.setHeader).toHaveBeenCalledWith(
-      'Set-Cookie',
-      expect.stringContaining('central_pet_session='),
-    );
+    expect(response.body.message).toBe('Login successful');
+    expect(response.body.data.user.email).toBe('maria@example.com');
+    // Verify sessionId is NOT exposed in response body (sanitized by interceptor)
+    expect(response.body.data.sessionId).toBeUndefined();
+    // Verify cookie is set via Set-Cookie header
+    expect(response.headers['set-cookie']).toBeDefined();
+    expect(response.headers['set-cookie'][0]).toContain('central_pet_session=');
   });
 });

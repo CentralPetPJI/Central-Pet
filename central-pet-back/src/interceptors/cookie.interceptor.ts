@@ -7,7 +7,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { Observable, tap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 const SESSION_COOKIE_NAME = 'central_pet_session';
 
@@ -30,17 +30,35 @@ export class CookieInterceptor implements NestInterceptor<
     const response = context.switchToHttp().getResponse<Response>();
 
     return next.handle().pipe(
-      tap((data) => {
-        if (data?.__clearSessionCookie) {
+      map((data) => {
+        // Handle non-object payloads
+        if (!data || typeof data !== 'object') {
+          return data;
+        }
+
+        if (data.__clearSessionCookie) {
           this.clearSessionCookie(response);
-          return;
+          // Remove the internal flag from response
+          const { __clearSessionCookie, ...sanitized } = data;
+          return sanitized;
         }
 
         const sessionId = data?.data?.sessionId;
 
         if (sessionId) {
           this.setSessionCookie(response, sessionId);
+          // Remove sessionId from the nested data object
+          const { data: nestedData, ...rest } = data;
+          if (nestedData) {
+            const { sessionId: _, ...sanitizedNestedData } = nestedData;
+            return {
+              ...rest,
+              data: sanitizedNestedData,
+            };
+          }
         }
+
+        return data;
       }),
     );
   }
