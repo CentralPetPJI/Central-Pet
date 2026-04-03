@@ -137,7 +137,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await expect(
       petCard.getByRole("heading", { level: 2, name: petName }),
     ).toBeVisible();
-    await expect(petCard.getByText("Cão")).toBeVisible();
+    await expect(petCard.getByText("Cachorro")).toBeVisible();
     await expect(petCard.getByText("Inteligência Artificial")).toBeVisible();
     await expect(petCard.getByText("Sao Paulo - SP")).toBeVisible();
   });

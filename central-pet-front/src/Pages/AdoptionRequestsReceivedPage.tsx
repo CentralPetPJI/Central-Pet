@@ -89,7 +89,7 @@ export default function AdoptionRequestsReceivedPage() {
         const response = await api.get<{ data: AdoptionRequestItem[] }>('/adoption-requests', {
           params: {
             type: 'received',
-            ...(currentUser.id ? { responsibleUserId: currentUser.id } : {}),
+            responsibleUserId: currentUser.id,
           },
         });
 
@@ -116,7 +116,7 @@ export default function AdoptionRequestsReceivedPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser, isAuthLoading]);
+  }, [currentUser?.id, isAuthLoading]);
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
