@@ -3,11 +3,10 @@ import './Header.css';
 import DropdownMenu from '../Components/DropdownMenu';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
-import { api } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth';
 
 const Header = () => {
-  const { currentUser, clearAuth } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white">
@@ -51,8 +50,7 @@ const Header = () => {
               <button
                 type="button"
                 onClick={() => {
-                  void api.post('/auth/logout').finally(() => {
-                    clearAuth();
+                  void logout().finally(() => {
                     window.location.assign(routes.home.path);
                   });
                 }}

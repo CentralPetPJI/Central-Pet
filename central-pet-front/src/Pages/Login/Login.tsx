@@ -1,20 +1,43 @@
-import { useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
+import { useAuth } from '@/lib/auth';
 
 type LoginLocationState = {
   registered?: boolean;
   email?: string;
 };
 
-const Login = () => {
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = error as {
+      response?: {
+        data?: {
+          message?: string | string[];
+        };
+      };
+    };
+
+    const apiMessage = response.response?.data?.message;
+
+    if (apiMessage) {
+      return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
+    }
+  }
+
+  return fallback;
+}
+
+export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as LoginLocationState | null;
-  const { refreshAuth } = useAuth();
-  const [email, setEmail] = useState('');
+  const { currentUser, isAuthenticated, isLoading, login } = useAuth();
+  const [email, setEmail] = useState(locationState?.email ?? '');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(
@@ -23,111 +46,143 @@ const Login = () => {
       : null,
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(routes.home.path, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setIsSubmitting(true);
     setFeedback(null);
 
     try {
-      await api.post('/auth/login', {
-        email,
-        password,
-      });
-
-      await refreshAuth();
-      navigate(routes.home.path);
+      await login({ email, password });
+      navigate(routes.home.path, { replace: true });
     } catch (error: unknown) {
-      let message = 'Erro desconhecido';
-
-      if (error instanceof Error) {
-        message = error.message;
-      }
-
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as {
-          response?: {
-            data?: {
-              message?: string | string[];
-            };
-          };
-        };
-
-        const apiMessage = err.response?.data?.message;
-
-        if (apiMessage) {
-          message = Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
-        }
-      }
-
-      setFeedback(message);
+      setFeedback(getErrorMessage(error, 'Não foi possível entrar com essas credenciais.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="rounded-3xl border border-[#d9f7fb] bg-white px-6 py-10 text-center shadow-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
+            Autenticando
+          </p>
+          <h1 className="mt-3 text-2xl font-extrabold text-slate-900">Carregando sua sessão</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-center w-full min-h-[50vh] mt-10">
-      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-[450px] border border-gray-100">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-800">Bem-vindo! 🐾</h2>
-          <p className="text-gray-500 mt-2">Acesse sua conta no Pet Central</p>
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
+              Central-Pet
+            </p>
+            <h1 className="mt-4 max-w-md text-4xl font-black leading-tight">
+              Entre para continuar ajudando animais.
+            </h1>
+            <p className="mt-4 max-w-lg text-base text-slate-700">
+              Acesse sua conta para gerenciar adoções, denúncias e acompanhar os pets cadastrados.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-white/75 p-4 shadow-sm backdrop-blur">
+              <p className="text-sm font-semibold text-slate-500">🐶 Adote um pet</p>
+              <p className="mt-1 font-bold text-slate-900">Encontre seu companheiro</p>
+            </div>
+            <div className="rounded-2xl bg-white/75 p-4 shadow-sm backdrop-blur">
+              <p className="text-sm font-semibold text-slate-500">🏠 Cadastre animais</p>
+              <p className="mt-1 font-bold text-slate-900">Ajude quem precisa de lar</p>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-600 ml-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#6fe2f1] focus:ring-2 focus:ring-[#6fe2f1] outline-none transition-all"
-              placeholder="seu@email.com"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-600 ml-1">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#6fe2f1] focus:ring-2 focus:ring-[#6fe2f1] outline-none transition-all"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {feedback ? (
-            <p
-              className={`text-sm ${
-                locationState?.registered ? 'text-emerald-700' : 'text-red-600'
-              }`}
-            >
-              {feedback}
+        <div className="p-8 sm:p-10">
+          <div className="mb-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
+              Acessar conta
             </p>
-          ) : null}
+            <h2 className="mt-3 text-3xl font-extrabold text-slate-900">Bem-vindo de volta</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              {currentUser
+                ? `Você já está conectado como ${currentUser.fullName}.`
+                : 'Entre com suas credenciais para continuar.'}
+            </p>
+          </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-4 mt-2 bg-[#6fe2f1] hover:bg-[#5bc8d6] text-gray-800 font-bold rounded-xl shadow-lg transform active:scale-95 transition-all"
-          >
-            {isSubmitting ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label htmlFor="login-email" className="text-sm font-semibold text-slate-700">
+                E-mail
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                placeholder="seu@email.com"
+                autoComplete="email"
+                required
+              />
+            </div>
 
-        <div className="mt-8 text-center border-t border-gray-100 pt-6">
-          <p className="text-gray-600">
+            <div className="space-y-2">
+              <label htmlFor="login-password" className="text-sm font-semibold text-slate-700">
+                Senha
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            {feedback ? (
+              <p
+                className={`rounded-2xl px-4 py-3 text-sm ${
+                  locationState?.registered
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-rose-50 text-rose-700'
+                }`}
+              >
+                {feedback}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-[#6fe2f1] px-4 py-3.5 text-sm font-bold text-slate-900 transition hover:bg-[#5ed8e6] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="mt-8 border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
             Ainda não tem conta?{' '}
-            <Link to={routes.register.path} className="text-[#5bc8d6] font-bold hover:underline">
+            <Link to={routes.register.path} className="font-bold text-[#4fb8c5] hover:underline">
               Cadastre-se
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}
