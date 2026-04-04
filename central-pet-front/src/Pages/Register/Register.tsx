@@ -72,31 +72,31 @@ function getErrorMessage(error: unknown): string {
 }
 
 /**
- * Formata CPF: 000.000.000-00
+ * Formata CPF: 000.000.000-00 (aceita alfanumérico)
  */
 function formatCpf(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11);
+  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
 
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  if (chars.length <= 3) return chars;
+  if (chars.length <= 6) return `${chars.slice(0, 3)}.${chars.slice(3)}`;
+  if (chars.length <= 9) return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6)}`;
 
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6, 9)}-${chars.slice(9)}`;
 }
 
 /**
- * Formata CNPJ: 00.000.000/0000-00
+ * Formata CNPJ: 00.000.000/0000-00 (aceita alfanumérico)
  */
 function formatCnpj(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 14);
+  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 14);
 
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
-  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
-  if (digits.length <= 12)
-    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  if (chars.length <= 2) return chars;
+  if (chars.length <= 5) return `${chars.slice(0, 2)}.${chars.slice(2)}`;
+  if (chars.length <= 8) return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5)}`;
+  if (chars.length <= 12)
+    return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8)}`;
 
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+  return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8, 12)}-${chars.slice(12)}`;
 }
 
 export default function Register() {
@@ -145,7 +145,7 @@ export default function Register() {
       return;
     }
 
-    const sanitizedDocument = formData.documentValue.replace(/\D/g, '');
+    const sanitizedDocument = formData.documentValue.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     const payload: RegisterData =
       role === 'ONG'
         ? {
@@ -233,7 +233,7 @@ export default function Register() {
                 value={formData.documentValue}
                 onChange={handleDocumentChange}
                 type="text"
-                inputMode="numeric"
+                inputMode="text"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                 placeholder={role === 'ONG' ? '00.000.000/0000-00' : '000.000.000-00'}
                 required
