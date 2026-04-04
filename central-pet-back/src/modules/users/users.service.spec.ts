@@ -14,7 +14,7 @@ describe('UsersService', () => {
     fullName: 'Maria Silva',
     email: 'maria@example.com',
     password: 'Senha123!',
-    role: 'ADOTANTE',
+    role: 'PESSOA_FISICA',
     cpf: '12345678901',
   });
 
@@ -24,16 +24,14 @@ describe('UsersService', () => {
     expect(result.message).toBe('User created successfully');
     expect(result.data.id).toBeDefined();
     expect(result.data.email).toBe('maria@example.com');
-    expect(result.data.role).toBe('ADOTANTE');
+    expect(result.data.role).toBe('PESSOA_FISICA');
     expect(result.data.cpf).toBe('12345678901');
   });
 
   it('deve rejeitar e-mails duplicados', async () => {
     await service.create(makeAdopterDto());
 
-    await expect(service.create(makeAdopterDto())).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(service.create(makeAdopterDto())).rejects.toThrow(ConflictException);
   });
 
   it('deve exigir cpf para contas de adotante', async () => {
@@ -41,12 +39,10 @@ describe('UsersService', () => {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
       password: 'Senha123!',
-      role: 'ADOTANTE',
+      role: 'PESSOA_FISICA',
     };
 
-    await expect(service.create(invalidDto)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
   });
 
   it('deve exigir cnpj para contas de ong', async () => {
@@ -57,8 +53,6 @@ describe('UsersService', () => {
       role: 'ONG',
     };
 
-    await expect(service.create(invalidDto)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
   });
 });

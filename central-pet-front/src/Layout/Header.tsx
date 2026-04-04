@@ -36,12 +36,6 @@ const Header = () => {
         </nav>
 
         <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
-          <Link
-            to={routes.pets.new.path}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
-          >
-            Cadastrar
-          </Link>
           {currentUser ? (
             <>
               <span className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800">

@@ -17,7 +17,7 @@ describe('AuthService', () => {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
       password: 'Senha123!',
-      role: 'ADOTANTE',
+      role: 'PESSOA_FISICA',
       birthDate: '1995-05-10',
       cpf: '12345678901',
     });
@@ -37,7 +37,7 @@ describe('AuthService', () => {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
       password: 'Senha123!',
-      role: 'ADOTANTE',
+      role: 'PESSOA_FISICA',
       birthDate: '1995-05-10',
       cpf: '12345678901',
     });
@@ -55,7 +55,7 @@ describe('AuthService', () => {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
       password: 'Senha123!',
-      role: 'ADOTANTE',
+      role: 'PESSOA_FISICA',
       birthDate: '1995-05-10',
       cpf: '12345678901',
     });
@@ -65,9 +65,7 @@ describe('AuthService', () => {
       password: 'Senha123!',
     });
 
-    const meResult = authService.getAuthenticatedUser(
-      loginResult.data.sessionId,
-    );
+    const meResult = authService.getAuthenticatedUser(loginResult.data.sessionId);
 
     expect(meResult.data.user.email).toBe('maria@example.com');
   });

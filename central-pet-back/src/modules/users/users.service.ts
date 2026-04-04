@@ -1,13 +1,9 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hashPassword } from '../auth/password.util';
 
-type UserRole = 'ADOTANTE' | 'ONG';
+type UserRole = 'PESSOA_FISICA' | 'ONG';
 
 type UserRecord = {
   id: string;
@@ -76,9 +72,9 @@ export class UsersService {
   }
 
   private validateCreateInput(createUserDto: CreateUserDto) {
-    if (createUserDto.role === 'ADOTANTE') {
+    if (createUserDto.role === 'PESSOA_FISICA') {
       if (!createUserDto.cpf) {
-        throw new BadRequestException('cpf is required for adopter accounts');
+        throw new BadRequestException('cpf is required for person accounts');
       }
     }
 
