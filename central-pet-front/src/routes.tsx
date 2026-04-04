@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
+import MyPetsPage from '@/Pages/MyPetsPage';
+import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceivedPage';
 import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
 import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
 import Login from '@/Pages/Login/Login';
@@ -27,10 +29,20 @@ export const routes = {
     path: '/register',
     element: <Register />,
   } satisfies AppRoute,
+  adoptionRequests: {
+    received: {
+      path: '/adoption-requests/received',
+      element: <AdoptionRequestsReceivedPage />,
+    } satisfies AppRoute,
+  },
   pets: {
     new: {
       path: '/pets/new',
       element: <PetPersonalityRegisterPage />,
+    } satisfies AppRoute,
+    mine: {
+      path: '/pets/mine',
+      element: <MyPetsPage />,
     } satisfies AppRoute,
     detail: {
       path: '/pets/:petId',

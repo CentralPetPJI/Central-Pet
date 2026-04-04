@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import PetModal from '@/Components/PetModal';
-import type { Pet } from '@/Models/Types';
+import type { Pet } from '@/Models/pet';
 
 const petStub: Pet = {
   id: 42,

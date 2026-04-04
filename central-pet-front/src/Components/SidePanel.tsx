@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Cat, Dog, PawPrint, type LucideIcon } from 'lucide-react';
-import { petSpeciesOptions } from '@/Mocks/PetRegisterFormMock';
+import { petSpeciesOptions } from '@/storage/pets';
 
 interface SidePanelProps {
   speciesCounts: Record<string, number>;

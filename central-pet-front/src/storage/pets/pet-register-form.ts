@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import dogImage from '../assets/image/dog.png';
+import dogImage from '@/assets/image/dog.png';
 
 export const petRegisterStorageKey = 'central-pet:register-form';
 
@@ -16,6 +16,7 @@ export interface PetRegisterFormData {
   tutor: string;
   shelter: string;
   city: string;
+  state: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -39,6 +40,7 @@ export const petRegisterFormSchema = z.object({
   tutor: z.string().trim().min(1, 'Informe o tutor responsavel.'),
   shelter: z.string().trim().min(1, 'Informe o abrigo ou origem do pet.'),
   city: z.string().trim().min(1, 'Informe a cidade do pet.'),
+  state: z.string().trim().min(1, 'Informe o estado (UF) do pet.'),
   contact: z.string().trim().min(1, 'Informe um contato para adocao.'),
   vaccinated: z.boolean(),
   neutered: z.boolean(),
@@ -73,7 +75,8 @@ export const initialPetRegisterFormData: PetRegisterFormData = {
   microchipped: true,
   tutor: 'ONG Patas do Centro',
   shelter: 'Abrigo Reencontro',
-  city: 'Sao Paulo - SP',
+  city: 'Sao Paulo',
+  state: 'SP',
   contact: '(11) 99999-0000',
   vaccinated: true,
   neutered: true,

@@ -1,116 +1,54 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-27
+**Analysis Date:** 2026-04-04
 
-## APIs & External Services
+## Internal HTTP API
 
-**Application API Surface:**
+- The backend exposes its API under `/api` from `central-pet-back/src/main.ts`.
+- Frontend requests go through the shared Axios instance in `central-pet-front/src/lib/api.ts`.
+- `VITE_API_URL` can override the default frontend target, which falls back to `http://localhost:3000/api`.
 
-- Internal backend API - NestJS endpoints exposed under `/api`
-  - SDK/Client: No dedicated frontend client detected; reverse proxy is configured in `central-pet-front/nginx.conf` and routes exist in `central-pet-back/src/modules/pets/pets.controller.ts` and `central-pet-back/src/modules/health/health.controller.ts`
-  - Auth: No API auth mechanism detected in `central-pet-back/src/` or `central-pet-front/src/`
+## Backend Endpoints
 
-**GitHub Platform:**
+- Health: `GET /api/health` from `central-pet-back/src/modules/health/health.controller.ts`.
+- Mock auth: `GET /api/auth/me` and `GET /api/auth/mock-users` from `central-pet-back/src/modules/mock-auth/mock-auth.controller.ts`.
+- Pets: `GET /api/pets`, `POST /api/pets`, `GET /api/pets/:id`, `PATCH /api/pets/:id` from `central-pet-back/src/modules/pets/pets.controller.ts`.
+- Adoption requests: `GET /api/adoption-requests` from `central-pet-back/src/modules/adoption-requests/adoption-requests.controller.ts`.
+- Personality traits: `GET /api/personality-traits` from `central-pet-back/src/modules/personality-traits/personality-traits.controller.ts`.
+- Pet history: `GET /api/pet-history` is the module boundary, although the controller is still empty.
 
-- GitHub Actions AI Inference - issue rewriting workflow in `.github/workflows/issue_updater.yml`
-  - SDK/Client: `actions/ai-inference@v1`
-  - Auth: `${{ secrets.GITHUB_TOKEN }}` used through `GH_TOKEN` in `.github/workflows/issue_updater.yml`
-- GitHub CLI - workflow edits issues and posts comments in `.github/workflows/issue_updater.yml`
-  - SDK/Client: `gh` CLI invoked in workflow shell steps
-  - Auth: `${{ secrets.GITHUB_TOKEN }}`
+## Auth Integration
 
-**Reverse Proxy / Edge:**
-
-- Caddy - optional host-level TLS termination and reverse proxy setup in `scripts/setup-single-droplet-prod.sh`
-  - SDK/Client: Not applicable
-  - Auth: No app-level auth; optional `CONTACT_EMAIL` config for certificate lifecycle
+- Mock auth is driven by the frontend header `x-mock-user-id`, set in `central-pet-front/src/lib/api.ts`.
+- The stored browser key is `central-pet:mock-user-id` in `central-pet-front/src/lib/mock-auth.ts`.
+- Backend modules read the same header in `central-pet-back/src/modules/mock-auth/mock-auth.controller.ts`, `central-pet-back/src/modules/pets/pets.controller.ts`, and `central-pet-back/src/modules/adoption-requests/adoption-requests.controller.ts`.
+- This is dev/mock auth only; the JWT strategy in `central-pet-front/src/lib/auth/strategies/jwt.strategy.ts` is a stub.
 
 ## Data Storage
 
-**Databases:**
+- Frontend browser storage is used heavily through `central-pet-front/src/Mocks/PetsStorage.ts` and `central-pet-front/src/lib/mock-auth.ts`.
+- Local storage keys include `central-pet:pets`, `central-pet:pet-profiles`, `central-pet:register-form`, and `central-pet:mock-user-id`.
+- Backend persistence is wired to PostgreSQL through Prisma, but current feature services still use in-memory arrays or seed objects.
+- `DATABASE_URL` is required by `central-pet-back/src/prisma/prisma.service.ts` and `central-pet-back/prisma.config.ts`.
 
-- PostgreSQL
-  - Connection: `DATABASE_URL` required by `central-pet-back/prisma.config.ts` and `central-pet-back/src/prisma/prisma.service.ts`
-  - Client: Prisma client generated into `central-pet-back/generated/prisma` from `central-pet-back/prisma/schema.prisma`
-- Internal dev/prod container options
-  - Development container: `postgres:16-alpine` in `docker-compose.dev.yml`
-  - Production internal-db profile: `postgres:17-alpine` in `docker-compose.prod.yml`
+## Database / ORM
 
-**File Storage:**
+- PostgreSQL is the intended database integration in `docker-compose.dev.yml` and `docker-compose.prod.yml`.
+- Prisma uses `@prisma/adapter-pg` in `central-pet-back/src/prisma/prisma.service.ts`.
+- The generated client is imported from `central-pet-back/generated/prisma/client`.
 
-- Local filesystem only
-  - Frontend static assets live under `central-pet-front/public/` and `central-pet-front/src/assets/`
-  - No S3, Cloudinary, UploadThing, or equivalent storage SDK detected
+## App and Test Orchestration
 
-**Caching:**
+- `tests/playwright.config.ts` starts the backend and frontend servers automatically for E2E runs.
+- The E2E package uses the root scripts `pnpm dev:back` and `pnpm dev:front`.
+- Development compose can boot frontend, backend, and Postgres together from `docker-compose.dev.yml`.
 
-- None detected
-  - No Redis, Memcached, or application cache service imports in `central-pet-back/src/` or `central-pet-front/src/`
+## File / Asset Storage
 
-## Authentication & Identity
-
-**Auth Provider:**
-
-- Not detected
-  - Implementation: No `Passport`, `JWT`, `Clerk`, `Auth0`, Firebase Auth, or custom auth middleware detected in `central-pet-back/src/` or `central-pet-front/src/`
-
-## Monitoring & Observability
-
-**Error Tracking:**
-
-- None detected
-  - No Sentry, Bugsnag, Datadog, Rollbar, or similar SDK imports found
-
-**Logs:**
-
-- NestJS `Logger` on backend bootstrap in `central-pet-back/src/main.ts`
-- Docker health checks in `docker-compose.prod.yml`
-- Nginx access/error logging via container defaults from `central-pet-front/Dockerfile`
-- GitHub Actions job logs in `.github/workflows/issue_updater.yml`
-
-## CI/CD & Deployment
-
-**Hosting:**
-
-- Docker Compose deployment from `docker-compose.prod.yml`
-- Frontend served by Nginx container from `central-pet-front/Dockerfile`
-- Backend served by Node container from `central-pet-back/Dockerfile`
-- Single-host deployment behind Caddy on Ubuntu/Debian in `scripts/setup-single-droplet-prod.sh`
-
-**CI Pipeline:**
-
-- GitHub Actions workflow present in `.github/workflows/issue_updater.yml`
-- No automated test/build/deploy CI workflow detected beyond the issue-formatting automation
-
-## Environment Configuration
-
-**Required env vars:**
-
-- `DATABASE_URL` - backend and Prisma database connection in `central-pet-back/prisma.config.ts`, `central-pet-back/src/prisma/prisma.service.ts`, and `docker-compose.prod.yml`
-- `FRONTEND_URL` - backend CORS origin in `central-pet-back/src/main.ts` and `docker-compose.prod.yml`
-- `PORT` - backend listen port in `central-pet-back/src/main.ts` and `docker-compose.prod.yml`
-- `FRONT_PORT` - production frontend bind port in `docker-compose.prod.yml` and `scripts/setup-single-droplet-prod.sh`
-- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` - internal PostgreSQL container config in `docker-compose.prod.yml`
-- `DOMAIN`, `CONTACT_EMAIL`, `DB_MODE`, `SERVICE`, `ENV_FILE` - deployment script inputs in `scripts/setup-single-droplet-prod.sh`
-
-**Secrets location:**
-
-- Local env files are present at repo root and in `central-pet-back/`; examples include `.env.example`, `.env.prod.example`, and `central-pet-back/.env.example`
-- Production deploy script defaults to `.env.prod` in `scripts/deploy-prod.sh`
-- GitHub workflow secret uses `${{ secrets.GITHUB_TOKEN }}` in `.github/workflows/issue_updater.yml`
-
-## Webhooks & Callbacks
-
-**Incoming:**
-
-- GitHub Issues event webhook handled by GitHub Actions `issues` trigger in `.github/workflows/issue_updater.yml`
-- No application-level webhook controller detected in `central-pet-back/src/`
-
-**Outgoing:**
-
-- GitHub issue update and comment callbacks executed through `gh issue edit` and `gh issue comment` in `.github/workflows/issue_updater.yml`
-- Browser-to-backend proxy target `http://back:3000/api/` configured in `central-pet-front/nginx.conf`
+- Frontend assets live in `central-pet-front/src/assets/`.
+- Pet images are currently stored as browser strings in the local mock form/data layer rather than an external file service.
+- No S3, Cloudinary, or similar file service is wired into the current codebase.
 
 ---
 
-_Integration audit: 2026-03-27_
+_Integration audit: 2026-04-04_

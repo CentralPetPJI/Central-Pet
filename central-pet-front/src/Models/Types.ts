@@ -1,16 +1,10 @@
-export interface Pet {
-  id: number;
-  name: string;
-  species: string;
-  physicalCharacteristics: string;
-  behavioralCharacteristics: string;
-  notes: string;
-  photo: string;
-}
-
-export interface Photo {
-  id: number;
-  url: string;
-  petId: number;
-  note: string;
-}
+export type {
+  AdoptionRequestStatus,
+  AuthContextValue,
+  AuthStrategy,
+  AuthUser,
+  LoginCredentials,
+  RegisterData,
+} from './auth';
+export type { Pet, PetApiResponse, PetListItem, Photo, ReceivedAdoptionRequest } from './pet';
+export type { MenuItem, NavLinkProps } from './ui';

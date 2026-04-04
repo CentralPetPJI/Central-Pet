@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import SidePanel from '@/Components/SidePanel';
-import { getStoredPets } from '@/Mocks/PetsStorage';
+import { MockUserChoiceGate } from '@/Components/Auth/MockUserChoiceGate';
+import { getStoredPets } from '@/storage/pets';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes } from '@/routes';
@@ -20,14 +21,17 @@ const App: React.FC = () => {
     routes.login,
     routes.register,
     routes.pets.new,
+    routes.pets.mine,
     routes.pets.edit,
     routes.pets.detail,
+    routes.adoptionRequests.received,
   ]);
   const showSidePanel = location.pathname === routes.home.path;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
+      <MockUserChoiceGate />
 
       <div className="flex-1">
         <div className="grid h-full w-full grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">

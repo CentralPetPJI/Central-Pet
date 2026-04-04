@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { isDevelopment } from '@/lib/dev-mode';
 import PetRegisterActions from '@/Components/PetRegister/PetRegisterActions';
 import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBehaviorSection';
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
@@ -7,13 +10,14 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
-import { petPersonalityStorageKey } from '@/Mocks/PetPersonalityOptions';
+import { saveIdMapping } from '@/storage/pets';
+import { petPersonalityStorageKey } from '@/storage/pets';
 import {
   initialPetRegisterFormData,
   petRegisterFormSchema,
   petRegisterStorageKey,
   type PetRegisterFormData,
-} from '@/Mocks/PetRegisterFormMock';
+} from '@/storage/pets';
 import {
   buildPetFromRegisterForm,
   buildRegisterFormDataFromPet,
@@ -21,7 +25,7 @@ import {
   getPetProfileById,
   getStoredPets,
   savePet,
-} from '@/Mocks/PetsStorage';
+} from '@/storage/pets';
 import { routes } from '@/routes';
 
 type FormErrors = Partial<Record<keyof PetRegisterFormData, string>>;
@@ -71,6 +75,7 @@ interface PetRegisterFormProps {
 
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
   const initialState = getInitialRegisterPageState(petId);
   const [formData, setFormData] = useState<PetRegisterFormData>(initialState.formData);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>(
@@ -174,7 +179,18 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return errors;
     }, {});
 
-  const handleSavePet = () => {
+  const handleSavePet = async () => {
+    if (isAuthLoading) {
+      setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
+      return;
+    }
+
+    const resolvedUserId = currentUser?.id ?? (isDevelopment() ? 'dev-user' : undefined);
+    if (!resolvedUserId) {
+      setSaveMessage('Nao foi possivel identificar o usuario atual.');
+      return;
+    }
+
     const normalizedFormData = {
       ...formData,
       name: formData.name.trim(),
@@ -194,10 +210,60 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     }
 
     setFormErrors({});
+    let savedPetId: number | undefined;
+    let savedOnBackend = false;
+
+    try {
+      const backendPayload = {
+        profilePhoto: validationResult.data.profilePhoto,
+        galleryPhotos: validationResult.data.galleryPhotos ?? [],
+        name: validationResult.data.name,
+        age: validationResult.data.age,
+        species: validationResult.data.species, // 'dog' | 'cat'
+        breed: validationResult.data.breed,
+        sex: validationResult.data.sex, // 'Macho' | 'Femea'
+        size: validationResult.data.size, // 'Pequeno' | 'Medio' | 'Grande'
+        microchipped: validationResult.data.microchipped,
+        tutor: validationResult.data.tutor,
+        shelter: validationResult.data.shelter,
+        city: validationResult.data.city,
+        contact: validationResult.data.contact,
+        vaccinated: validationResult.data.vaccinated,
+        neutered: validationResult.data.neutered,
+        dewormed: validationResult.data.dewormed,
+        needsHealthCare: validationResult.data.needsHealthCare,
+        physicalLimitation: validationResult.data.physicalLimitation,
+        visualLimitation: validationResult.data.visualLimitation,
+        hearingLimitation: validationResult.data.hearingLimitation,
+        selectedPersonalities: selectedPersonalities,
+        responsibleUserId: resolvedUserId,
+      };
+
+      const response = await api.post<{ message: string; data: { id: string } }>(
+        '/pets',
+        backendPayload,
+      );
+
+      const backendId = response.data.data.id;
+
+      // Backend retorna UUID, mas frontend usa IDs numéricos
+      // Gera ID local e salva o mapeamento para sincronização
+      const currentPets = getStoredPets();
+      savedPetId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
+
+      saveIdMapping(savedPetId, backendId);
+
+      savedOnBackend = true;
+    } catch (_error) {
+      // Erro ao salvar no backend - continua com salvamento local
+      savedPetId = undefined;
+    }
+
     const petToSave = buildPetFromRegisterForm(
       validationResult.data,
       selectedPersonalities,
-      isEditMode ? petId : undefined,
+      savedPetId,
+      resolvedUserId,
     );
     savePet(petToSave, {
       id: petToSave.id,
@@ -208,8 +274,15 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     setFormData(validationResult.data);
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
-    setSaveMessage(isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.');
-    navigate(routes.pets.detail.build(petToSave.id));
+    const successMessage = isEditMode
+      ? 'Pet atualizado com sucesso.'
+      : savedOnBackend
+        ? 'Pet salvo com sucesso.'
+        : 'Pet salvo localmente com sucesso.';
+
+    navigate(routes.pets.detail.build(petToSave.id), {
+      state: { successMessage },
+    });
   };
 
   return (

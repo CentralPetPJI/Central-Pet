@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
-import { HealthController } from '../src/modules/health/health.controller';
-import { UsersController } from '../src/modules/users/users.controller';
+import { AppModule } from '@/app.module';
+import { PrismaService } from '@/prisma/prisma.service';
+import { HealthController } from '@/modules/health/health.controller';
+import { UsersController } from '@/modules/users/users.controller';
 
 describe('App (e2e)', () => {
   type PersistedUser = {

@@ -1,6 +1,6 @@
 import FormSection from '@/Components/Form/FormSection';
 import SelectableCard from '@/Components/Form/SelectableCard';
-import { petPersonalityOptions } from '@/Mocks/PetPersonalityOptions';
+import { petPersonalityOptions } from '@/storage/pets';
 
 interface PetRegisterBehaviorSectionProps {
   selectedPersonalities: string[];

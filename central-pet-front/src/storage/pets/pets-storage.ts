@@ -1,12 +1,12 @@
-import defaultPetsData from '@/Mocks/Pet';
-import type { Pet } from '../Models/Types';
+import defaultPetsData from './default-pets';
+import type { Pet } from '@/Models/pet';
 import {
   initialPetRegisterFormData,
   isPetRegisterFormDataLike,
   normalizePetRegisterFormData,
   type PetRegisterFormData,
-} from './PetRegisterFormMock';
-import { petPersonalityOptions } from './PetPersonalityOptions';
+} from './pet-register-form';
+import { petPersonalityOptions } from './pet-personality-options';
 
 export const petsStorageKey = 'central-pet:pets';
 export const petProfilesStorageKey = 'central-pet:pet-profiles';
@@ -87,6 +87,7 @@ export const buildPetFromRegisterForm = (
   formData: PetRegisterFormData,
   selectedPersonalities: string[],
   petId?: number,
+  responsibleUserId?: string,
 ): Pet => {
   const personalityLabels = petPersonalityOptions
     .filter((option) => selectedPersonalities.includes(option.id))
@@ -107,6 +108,7 @@ export const buildPetFromRegisterForm = (
         ? personalityLabels.join(', ')
         : 'Perfil comportamental nao informado',
     notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
+    responsibleUserId,
   };
 };
 

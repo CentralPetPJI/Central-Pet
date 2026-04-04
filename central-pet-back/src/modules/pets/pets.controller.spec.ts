@@ -4,7 +4,7 @@ import { PersonalityTraitsService } from '../personality-traits/personality-trai
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 
-describe('PetsController', () => {
+describe('Controlador de pets', () => {
   let controller: PetsController;
 
   beforeEach(async () => {

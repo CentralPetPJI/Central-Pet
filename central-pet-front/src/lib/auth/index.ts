@@ -17,5 +17,6 @@ export { AuthProvider, AuthContext } from './context';
 export { useAuth } from './use-auth';
 
 // Strategies
+export { MockAuthStrategy } from './strategies/mock.strategy';
 export { JwtAuthStrategy } from './strategies/jwt.strategy';
 export { createAuthStrategy, type AuthStrategyType } from './strategies/factory';

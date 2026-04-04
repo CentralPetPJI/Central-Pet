@@ -1,4 +1,4 @@
-import type { PetPersonalityOption } from '@/Mocks/PetPersonalityOptions';
+import type { PetPersonalityOption } from '@/storage/pets';
 import PetProfileEmptyState from '@/Components/PetProfile/PetProfileEmptyState';
 
 interface PetProfilePersonalityListProps {

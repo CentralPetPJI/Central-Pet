@@ -1,6 +1,6 @@
 import FieldError from '@/Components/Form/FieldError';
 import FormSection from '@/Components/Form/FormSection';
-import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
+import type { PetRegisterFormData } from '@/storage/pets';
 
 interface PetRegisterPhotosSectionProps {
   formData: PetRegisterFormData;

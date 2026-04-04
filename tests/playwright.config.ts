@@ -17,7 +17,7 @@ export default defineConfig({
       cwd: '..',
     },
     {
-      command: 'pnpm dev:front',
+      command: 'VITE_AUTH_STRATEGY=jwt pnpm dev:front',
       url: 'http://localhost:5173',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

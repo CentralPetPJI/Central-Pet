@@ -409,3 +409,8 @@ yarn.lock
 .env
 .env.*
 !.env.example
+.planning
+.codex
+.github
+.idea
+test-results

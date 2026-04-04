@@ -1,4 +1,4 @@
-import { Pet } from '@/Models/Types';
+import type { Pet } from '@/Models/pet';
 
 const petsData: Pet[] = [
   {
@@ -61,7 +61,6 @@ const petsData: Pet[] = [
     behavioralCharacteristics: 'Brincalhao, curioso, energetico',
     notes: 'Precisa de estimulo e brincadeiras',
   },
-  // Add more pet objects as needed
 ];
 
 export default petsData;

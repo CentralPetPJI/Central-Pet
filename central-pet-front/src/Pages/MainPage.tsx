@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
-import { getStoredPets } from '@/Mocks/PetsStorage';
+import { getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
 
 const MainPage: React.FC = () => {
@@ -17,8 +17,8 @@ const MainPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-slate-900">Fluxo de doacao e adocao</h2>
           <p className="mt-1 text-sm text-slate-600">
-            O doador cadastra o pet com todas as informacoes. O adotante visualiza o perfil completo
-            do animal antes de decidir.
+            A pessoa física cadastra o pet com todas as informacoes. A ONG visualiza o perfil
+            completo do animal antes de decidir.
           </p>
         </div>
         <Link

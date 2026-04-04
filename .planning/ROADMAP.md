@@ -97,3 +97,39 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Persistence And Trust Rules   | 0/TBD          | Not started | -         |
 | 3. Register And Profile Refactor | 0/TBD          | Not started | -         |
 | 4. E2E Persona Coverage          | 0/TBD          | Not started | -         |
+
+### Phase 5: Auth Abstraction Layer
+
+**Goal:** Refactor frontend mock user context into a flexible auth abstraction with strategy pattern that works with mock auth today but can swap to JWT with minimal changes in v1.1.
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Create auth types, strategy interface, MockAuthStrategy, JwtAuthStrategy skeleton, and factory
+- [ ] 05-02-PLAN.md — Refactor AuthProvider to use strategy pattern, ensure backwards compatibility
+
+### Phase 6: refatroacao do storage
+
+**Goal:** Centralizar a camada de storage do frontend fora de `lib`, migrando helpers e consumidores imediatos para a nova estrutura sem alterar o contrato backend.
+**Requirements**: [STOR-01, STOR-02, STOR-03, STOR-04]
+**Depends on:** Phase 5
+**Plans:** 3 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Move auth/session storage out of `lib` and switch auth/api consumers to the new module.
+- [x] 06-02-PLAN.md — Relocate pet/form/id/personalities storage helpers into `src/storage/pets` with compatibility shims.
+- [x] 06-03-PLAN.md — Repoint app consumers, tests, and E2E seed to the new storage layout and remove old references.
+
+### Phase 7: refatoração types/models backend e frontend
+
+**Goal:** Separar contratos de domínio, API e UI em backend/frontend, mantendo o backend como referência e preservando o comportamento atual por meio de mapeadores.
+**Requirements**: [TYPE-01, TYPE-02, TYPE-03, TYPE-04]
+**Depends on:** Phase 6
+**Plans:** 4 plans
+
+Plans:
+- [x] 07-01-PLAN.md — Extract reusable backend pet domain model and mapping helpers.
+- [x] 07-02-PLAN.md — Split backend pet DTOs into input and output contracts.
+- [x] 07-03-PLAN.md — Split frontend models into domain files and keep compatibility barrels.
+- [x] 07-04-PLAN.md — Migrate consumers and API mappers to the new model boundaries.

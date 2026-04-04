@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Carousel from '@/Components/Carousel';
-import type { Pet } from '@/Models/Types';
+import type { Pet } from '@/Models/pet';
 
 const petsStub: Pet[] = [
   {

@@ -2,11 +2,11 @@ import { INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/bootstrap/setup-app';
-import { AuthService } from '../src/modules/auth/auth.service';
-import { PrismaService } from '../src/prisma/prisma.service';
-import { UsersService } from '../src/modules/users/users.service';
+import { AppModule } from '@/app.module';
+import { setupApp } from '@/bootstrap/setup-app';
+import { AuthService } from '@/modules/auth/auth.service';
+import { PrismaService } from '@/prisma/prisma.service';
+import { UsersService } from '@/modules/users/users.service';
 
 describe('Security (e2e)', () => {
   let app: INestApplication;

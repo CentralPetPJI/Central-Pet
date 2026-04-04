@@ -1,4 +1,7 @@
-/*
+/* eslint-disable react-refresh/only-export-components */
+/**
+ * Contexto de autenticação com padrão de estratégia
+ *
  * Este módulo fornece o AuthProvider e o AuthContext que usam
  * o padrão de estratégia para autenticação. A estratégia é criada
  * via factory com base na configuração do ambiente.
@@ -22,7 +25,6 @@ import type {
 } from '@/Models';
 import { createAuthStrategy } from './strategies/factory';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
