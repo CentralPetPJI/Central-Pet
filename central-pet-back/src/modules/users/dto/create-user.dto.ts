@@ -35,8 +35,8 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{11}$/, {
-    message: 'cpf must contain exactly 11 digits',
+  @Matches(/^[A-Za-z0-9]{11}$/, {
+    message: 'cpf must contain exactly 11 alphanumeric characters',
   })
   cpf?: string;
 
@@ -47,8 +47,8 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{14}$/, {
-    message: 'cnpj must contain exactly 14 digits',
+  @Matches(/^[A-Za-z0-9]{14}$/, {
+    message: 'cnpj must contain exactly 14 alphanumeric characters',
   })
   cnpj?: string;
 }

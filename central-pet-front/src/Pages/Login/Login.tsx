@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
@@ -8,28 +8,52 @@ type LoginLocationState = {
   email?: string;
 };
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+function getErrorMessage(error: unknown): string {
+  // Erro de requisição Axios
   if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = error as {
+    const axiosError = error as {
       response?: {
+        status?: number;
         data?: {
           message?: string | string[];
+          error?: string;
         };
       };
     };
 
-    const apiMessage = response.response?.data?.message;
+    const status = axiosError.response?.status;
+    const data = axiosError.response?.data;
 
+    // Mensagens específicas por status HTTP
+    if (status === 401) {
+      return 'E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.';
+    }
+
+    if (status === 429) {
+      return 'Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.';
+    }
+
+    if (status === 500) {
+      return 'Erro no servidor. Tente novamente em alguns instantes.';
+    }
+
+    if (status && status >= 500) {
+      return 'Serviço temporariamente indisponível. Tente novamente mais tarde.';
+    }
+
+    // Tenta pegar mensagem da API
+    const apiMessage = data?.message;
     if (apiMessage) {
       return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
     }
   }
 
-  return fallback;
+  // Erro de rede (sem conexão)
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'ERR_NETWORK') {
+    return 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.';
+  }
+
+  return 'Não foi possível entrar. Verifique suas credenciais e tente novamente.';
 }
 
 export default function Login() {
@@ -52,7 +76,7 @@ export default function Login() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setFeedback(null);
@@ -61,7 +85,7 @@ export default function Login() {
       await login({ email, password });
       navigate(routes.home.path, { replace: true });
     } catch (error: unknown) {
-      setFeedback(getErrorMessage(error, 'Não foi possível entrar com essas credenciais.'));
+      setFeedback(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

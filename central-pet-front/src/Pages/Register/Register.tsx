@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { RegisterData } from '@/Models';
 import { routes } from '@/routes';
@@ -6,28 +6,69 @@ import { useAuth } from '@/lib/auth';
 
 type RegisterRole = RegisterData['role'];
 
-function getErrorMessage(error: unknown, fallback: string): string {
+/**
+ * Extrai mensagem de erro amigável de diferentes tipos de erro.
+ * Fornece feedback específico para erros de cadastro.
+ */
+function getErrorMessage(error: unknown): string {
+  // Erro padrão do JavaScript
   if (error instanceof Error) {
     return error.message;
   }
 
+  // Erro de requisição Axios
   if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = error as {
+    const axiosError = error as {
       response?: {
+        status?: number;
         data?: {
           message?: string | string[];
+          error?: string;
         };
       };
     };
 
-    const apiMessage = response.response?.data?.message;
+    const status = axiosError.response?.status;
+    const data = axiosError.response?.data;
 
+    // Mensagens específicas por status HTTP
+    if (status === 400) {
+      const apiMessage = data?.message;
+      if (apiMessage) {
+        return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
+      }
+      return 'Dados inválidos. Verifique os campos e tente novamente.';
+    }
+
+    if (status === 409) {
+      return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
+    }
+
+    if (status === 429) {
+      return 'Muitas tentativas de cadastro. Aguarde alguns minutos antes de tentar novamente.';
+    }
+
+    if (status === 500) {
+      return 'Erro no servidor. Tente novamente em alguns instantes.';
+    }
+
+    if (status && status >= 500) {
+      return 'Serviço temporariamente indisponível. Tente novamente mais tarde.';
+    }
+
+    // Tenta pegar mensagem da API
+    const apiMessage = data?.message;
     if (apiMessage) {
       return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
     }
   }
 
-  return fallback;
+  // Erro de rede (sem conexão)
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'ERR_NETWORK') {
+    return 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.';
+  }
+
+  return 'Não foi possível criar sua conta. Tente novamente.';
 }
 
 /**
@@ -95,7 +136,7 @@ export default function Register() {
     setFormData((current) => ({ ...current, documentValue: '' }));
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFeedback(null);
 
@@ -129,7 +170,7 @@ export default function Register() {
       await register(payload);
       navigate(routes.home.path, { replace: true });
     } catch (error: unknown) {
-      setFeedback(getErrorMessage(error, 'Não foi possível criar sua conta.'));
+      setFeedback(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
