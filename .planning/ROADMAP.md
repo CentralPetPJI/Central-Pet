@@ -108,3 +108,15 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 Plans:
 - [ ] 05-01-PLAN.md — Create auth types, strategy interface, MockAuthStrategy, JwtAuthStrategy skeleton, and factory
 - [ ] 05-02-PLAN.md — Refactor AuthProvider to use strategy pattern, ensure backwards compatibility
+
+### Phase 6: refatroacao do storage
+
+**Goal:** Centralizar a camada de storage do frontend fora de `lib`, migrando helpers e consumidores imediatos para a nova estrutura sem alterar o contrato backend.
+**Requirements**: [STOR-01, STOR-02, STOR-03, STOR-04]
+**Depends on:** Phase 5
+**Plans:** 3 plans
+
+Plans:
+- [x] 06-01-PLAN.md — Move auth/session storage out of `lib` and switch auth/api consumers to the new module.
+- [ ] 06-02-PLAN.md — Relocate pet/form/id/personalities storage helpers into `src/storage/pets` with compatibility shims.
+- [ ] 06-03-PLAN.md — Repoint app consumers, tests, and E2E seed to the new storage layout and remove old references.
