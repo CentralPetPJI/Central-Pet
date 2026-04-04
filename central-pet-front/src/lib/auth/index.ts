@@ -1,7 +1,7 @@
 /**
  * Auth Abstraction Layer - Barrel Export
  *
- * Re-exports all auth types, strategies, and factory for convenient imports.
+ * Re-exports all auth types, strategies, context, hook, and factory for convenient imports.
  */
 
 // Types
@@ -12,6 +12,10 @@ export type {
   LoginCredentials,
   RegisterData,
 } from './types';
+
+// Context and Hook
+export { AuthProvider, AuthContext } from './context';
+export { useAuth } from './use-auth';
 
 // Strategies
 export { MockAuthStrategy } from './strategies/mock.strategy';
