@@ -77,24 +77,12 @@ export class UsersService {
 
   private validateCreateInput(createUserDto: CreateUserDto) {
     if (createUserDto.role === 'ADOTANTE') {
-      if (!createUserDto.birthDate) {
-        throw new BadRequestException(
-          'birthDate is required for adopter accounts',
-        );
-      }
-
       if (!createUserDto.cpf) {
         throw new BadRequestException('cpf is required for adopter accounts');
       }
     }
 
     if (createUserDto.role === 'ONG') {
-      if (!createUserDto.organizationName?.trim()) {
-        throw new BadRequestException(
-          'organizationName is required for ONG accounts',
-        );
-      }
-
       if (!createUserDto.cnpj) {
         throw new BadRequestException('cnpj is required for ONG accounts');
       }

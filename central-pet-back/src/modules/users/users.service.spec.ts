@@ -15,7 +15,6 @@ describe('UsersService', () => {
     email: 'maria@example.com',
     password: 'Senha123!',
     role: 'ADOTANTE',
-    birthDate: '1995-05-10',
     cpf: '12345678901',
   });
 
@@ -37,7 +36,7 @@ describe('UsersService', () => {
     );
   });
 
-  it('should require cpf and birthDate for adopter accounts', async () => {
+  it('should require cpf for adopter accounts', async () => {
     const invalidDto: CreateUserDto = {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
@@ -50,7 +49,7 @@ describe('UsersService', () => {
     );
   });
 
-  it('should require organizationName and cnpj for ong accounts', async () => {
+  it('should require cnpj for ong accounts', async () => {
     const invalidDto: CreateUserDto = {
       fullName: 'Casa de Apoio',
       email: 'ong@example.com',

@@ -5,16 +5,13 @@ import { routes } from '@/routes';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [role, setRole] = useState<'adotante' | 'ong'>('adotante');
+  const [isOng, setIsOng] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nome: '',
-    nascimento: '',
-    cpf: '',
-    cnpj: '',
-    nomeOng: '',
+    documento: '',
     email: '',
     senha: '',
     confirmarSenha: '',
@@ -36,15 +33,16 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
+      const sanitizedDocument = formData.documento.replace(/\D/g, '');
+
       await api.post('/users', {
-        fullName: role === 'adotante' ? formData.nome : formData.nomeOng,
+        fullName: formData.nome,
         email: formData.email,
         password: formData.senha,
-        role: role === 'adotante' ? 'ADOTANTE' : 'ONG',
-        birthDate: role === 'adotante' ? formData.nascimento : undefined,
-        cpf: role === 'adotante' ? formData.cpf.replace(/\D/g, '') : undefined,
-        organizationName: role === 'ong' ? formData.nomeOng : undefined,
-        cnpj: role === 'ong' ? formData.cnpj.replace(/\D/g, '') : undefined,
+        role: isOng ? 'ONG' : 'ADOTANTE',
+        organizationName: isOng ? formData.nome : undefined,
+        cpf: isOng ? undefined : sanitizedDocument,
+        cnpj: isOng ? sanitizedDocument : undefined,
       });
 
       navigate(routes.login.path, {
@@ -87,93 +85,49 @@ const Register = () => {
           <p className="text-sm text-slate-500 font-medium">Rápido e fácil!</p>
         </div>
 
-        <div className="flex justify-center gap-4 mb-8 bg-slate-200/60 p-1.5 rounded-xl w-fit mx-auto">
-          <button
-            type="button"
-            onClick={() => setRole('adotante')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${role === 'adotante' ? 'bg-[#6fe2f1] text-slate-900 shadow-md' : 'text-slate-600'}`}
-          >
-            Quero Adotar
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('ong')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${role === 'ong' ? 'bg-[#6fe2f1] text-slate-900 shadow-md' : 'text-slate-600'}`}
-          >
-            Sou uma ONG
-          </button>
-        </div>
-
         <form
           onSubmit={handleFinalizar}
           className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"
         >
-          {role === 'adotante' ? (
-            <>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-600 ml-1">Nome Completo</label>
-                <input
-                  name="nome"
-                  value={formData.nome}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
-                  placeholder="Seu nome"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">Nascimento</label>
-                <input
-                  name="nascimento"
-                  value={formData.nascimento}
-                  onChange={handleChange}
-                  type="date"
-                  className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">CPF</label>
-                <input
-                  name="cpf"
-                  value={formData.cpf}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
-                  placeholder="000.000.000-00"
-                  required
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">Nome da ONG</label>
-                <input
-                  name="nomeOng"
-                  value={formData.nomeOng}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
-                  placeholder="Nome da instituição"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">CNPJ</label>
-                <input
-                  name="cnpj"
-                  value={formData.cnpj}
-                  onChange={handleChange}
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
-                  placeholder="00.000.000/0000-00"
-                  required
-                />
-              </div>
-            </>
-          )}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-600 ml-1">
+              {isOng ? 'Nome da Instituição' : 'Nome Completo'}
+            </label>
+            <input
+              name="nome"
+              value={formData.nome}
+              onChange={handleChange}
+              type="text"
+              className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
+              placeholder={isOng ? 'Nome da instituição' : 'Seu nome'}
+              required
+            />
+          </div>
+
+          <div className="flex items-end md:justify-end">
+            <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isOng}
+                onChange={(e) => setIsOng(e.target.checked)}
+                className="h-4 w-4 accent-[#6fe2f1]"
+              />
+              Sou uma ONG (usar CNPJ)
+            </label>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700 ml-1">{isOng ? 'CNPJ' : 'CPF'}</label>
+            <input
+              name="documento"
+              value={formData.documento}
+              onChange={handleChange}
+              type="text"
+              className="w-full px-4 py-2.5 bg-white rounded-xl border border-slate-300 outline-none"
+              placeholder={isOng ? '00.000.000/0000-00' : '000.000.000-00'}
+              required
+            />
+          </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-slate-700 ml-1">E-mail</label>
