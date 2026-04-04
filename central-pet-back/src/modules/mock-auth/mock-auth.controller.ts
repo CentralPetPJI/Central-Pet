@@ -6,8 +6,8 @@ export class MockAuthController {
   constructor(private readonly mockAuthService: MockAuthService) {}
 
   @Get('me')
-  getMe(@Headers('x-mock-user-id') mockUserId?: string) {
-    return this.mockAuthService.getCurrentUser(mockUserId);
+  getMe(@Headers('x-user-id') userId?: string) {
+    return this.mockAuthService.getCurrentUser(userId);
   }
 
   @Get('mock-users')

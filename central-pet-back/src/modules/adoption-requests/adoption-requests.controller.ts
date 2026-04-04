@@ -6,11 +6,8 @@ export class AdoptionRequestsController {
   constructor(private readonly adoptionRequestsService: AdoptionRequestsService) {}
 
   @Get()
-  findAll(
-    @Query('type') type?: 'received' | 'sent',
-    @Headers('x-mock-user-id') mockUserId?: string,
-  ) {
-    if (!mockUserId) {
+  findAll(@Query('type') type?: 'received' | 'sent', @Headers('x-user-id') userId?: string) {
+    if (!userId) {
       throw new Error('User ID is required');
     }
 
@@ -18,6 +15,6 @@ export class AdoptionRequestsController {
       throw new Error('Only "received" type is currently supported');
     }
 
-    return this.adoptionRequestsService.findReceived(mockUserId);
+    return this.adoptionRequestsService.findReceived(userId);
   }
 }

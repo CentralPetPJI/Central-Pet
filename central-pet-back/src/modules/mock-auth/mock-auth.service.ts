@@ -16,20 +16,19 @@ export class MockAuthService {
     };
   }
 
-  getCurrentUser(mockUserId?: string) {
-    if (!mockUserId) {
-      throw new UnauthorizedException('Invalid or missing mock credentials');
+  getCurrentUser(userId?: string) {
+    if (!userId) {
+      throw new UnauthorizedException('Invalid or missing user credentials');
     }
 
-    const userId = mockUserId;
     const user = this.mockUsers.find((item) => item.id === userId);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid or missing mock credentials');
+      throw new UnauthorizedException('Invalid or missing user credentials');
     }
 
     return {
-      message: 'Authenticated mock user retrieved successfully',
+      message: 'Authenticated user retrieved successfully',
       data: {
         user,
       },

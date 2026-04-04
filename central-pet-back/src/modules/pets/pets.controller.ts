@@ -18,9 +18,9 @@ export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
   @Post()
-  create(@Body() createPetDto: CreatePetDto, @Headers('x-mock-user-id') mockUserId?: string) {
-    // Prefer mockUserId from header over body-provided responsibleUserId
-    const responsibleUserId = mockUserId ?? createPetDto.responsibleUserId;
+  create(@Body() createPetDto: CreatePetDto, @Headers('x-user-id') userId?: string) {
+    // Prioriza o userId do header em vez do responsibleUserId enviado no body
+    const responsibleUserId = userId ?? createPetDto.responsibleUserId;
 
     if (!responsibleUserId) {
       throw new BadRequestException('responsibleUserId is required');
@@ -36,11 +36,11 @@ export class PetsController {
   findAll(
     @Query('createdByUserId') createdByUserId?: string,
     @Query('responsibleUserId') responsibleUserId?: string,
-    @Headers('x-mock-user-id') mockUserId?: string,
+    @Headers('x-user-id') userId?: string,
   ) {
-    // Se não especificar responsibleUserId, usa o mock-user-id do header
-    const userId = responsibleUserId ?? createdByUserId ?? mockUserId;
-    return this.petsService.findAll(userId);
+    // Se não especificar responsibleUserId, usa o user-id do header
+    const resolvedUserId = responsibleUserId ?? createdByUserId ?? userId;
+    return this.petsService.findAll(resolvedUserId);
   }
 
   @Get(':id')

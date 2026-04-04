@@ -1,10 +1,10 @@
 import { describe, expect, it } from '@jest/globals';
 import { PersonalityTraitsService } from './personality-traits.service';
 
-describe('PersonalityTraitsService', () => {
+describe('Servico de traços de personalidade', () => {
   const service = new PersonalityTraitsService();
 
-  it('should return all personality traits', () => {
+  it('deve retornar todos os traços de personalidade', () => {
     const result = service.findAll();
 
     expect(result.message).toBe('Personality traits retrieved successfully');
@@ -12,7 +12,7 @@ describe('PersonalityTraitsService', () => {
     expect(result.data.length).toBeGreaterThan(0);
   });
 
-  it('should expose known personality trait ids', () => {
+  it('deve expor os ids conhecidos dos traços de personalidade', () => {
     const traitIds = service.getTraitIds();
 
     expect(traitIds).toContain('playful');
@@ -23,7 +23,7 @@ describe('PersonalityTraitsService', () => {
     expect(traitIds).toContain('friendly');
   });
 
-  it('should return traits with expected structure', () => {
+  it('deve retornar traços com a estrutura esperada', () => {
     const traits = service.getAllTraits();
     const first = traits[0];
 

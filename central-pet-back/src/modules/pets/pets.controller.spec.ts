@@ -4,7 +4,7 @@ import { PersonalityTraitsService } from '../personality-traits/personality-trai
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 
-describe('PetsController', () => {
+describe('Controlador de pets', () => {
   let controller: PetsController;
 
   beforeEach(async () => {
@@ -16,7 +16,7 @@ describe('PetsController', () => {
     controller = module.get<PetsController>(PetsController);
   });
 
-  it('should be defined', () => {
+  it('deve estar definido', () => {
     expect(controller).toBeDefined();
   });
 });
