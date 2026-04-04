@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { mockUsers, defaultMockUserId, type MockUser } from '../../mocks/users.mock';
+import { mockUsers, defaultMockUserId, type MockUser } from '@/mocks';
 
 @Injectable()
 export class MockAuthService {

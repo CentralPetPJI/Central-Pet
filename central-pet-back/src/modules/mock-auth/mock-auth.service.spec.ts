@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
-import { defaultMockUserId, mockUserIds } from '../../mocks/users.mock';
+import { defaultMockUserId, mockUserIds } from '@/mocks';
 import { MockAuthService } from './mock-auth.service';
 
 describe('Servico de autenticacao mock', () => {

@@ -6,7 +6,7 @@ import {
   type MockAdoptionRequest,
   type MockPet,
   type MockUser,
-} from '../../mocks';
+} from '@/mocks';
 import {
   mapToReceivedAdoptionRequest,
   type ReceivedAdoptionRequest,

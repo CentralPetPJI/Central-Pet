@@ -1,5 +1,4 @@
-import type { MockPet } from '../../../mocks/pets.mock';
-import type { MockUser } from '../../../mocks/users.mock';
+import type { MockPet, MockUser } from '@/mocks';
 
 export type PetHistoryEventName = 'PET_REGISTERED' | 'ADOPTION' | 'RETURNED' | 'TRANSFERRED';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { mockPets } from '../../../mocks';
+import { mockPets } from '@/mocks';
 import { createPetRecordFromMockPet, mapPetRecordToPersistence } from './pet-record.mapper';
 
 describe('pet record mapper', () => {

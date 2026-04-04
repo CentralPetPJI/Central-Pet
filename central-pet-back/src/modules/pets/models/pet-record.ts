@@ -1,4 +1,4 @@
-import type { MockPet } from '../../../mocks/pets.mock';
+import type { MockPet } from '@/mocks';
 
 export type PetAdoptionStatus = 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
 export type PetSourceType = 'ONG' | 'PESSOA_FISICA';

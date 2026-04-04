@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
-import { mockUserIds } from '../../mocks/users.mock';
+import { mockUserIds } from '@/mocks';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
 

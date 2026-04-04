@@ -1,7 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { mockAdoptionRequests } from '../../../mocks/adoption-requests.mock';
-import { mockPets } from '../../../mocks/pets.mock';
-import { mockUsers } from '../../../mocks/users.mock';
+import { mockAdoptionRequests, mockPets, mockUsers } from '@/mocks';
 import { mapToReceivedAdoptionRequest } from '../models/received-adoption-request';
 
 describe('received adoption request mapper', () => {

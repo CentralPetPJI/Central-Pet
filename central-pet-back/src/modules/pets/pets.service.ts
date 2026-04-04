@@ -4,7 +4,7 @@ import { PersonalityTraitsService } from '../personality-traits/personality-trai
 import { CreatePetDto } from './dto/create-pet.dto';
 import { PetResponseDto } from './dto/pet-response.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { mockPets } from '../../mocks';
+import { mockPets } from '@/mocks';
 import type { PetRecord } from './models/pet-record';
 import { createPetRecordFromMockPet, mapPetRecordToPersistence } from './mappers/pet-record.mapper';
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { mockUserIds } from '../../mocks';
+import { mockUserIds } from '@/mocks';
 import { AdoptionRequestsService } from './adoption-requests.service';
 
 describe('Servico de solicitacoes de adocao', () => {
