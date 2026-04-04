@@ -8,7 +8,7 @@ import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
 import { isDevelopment } from '@/lib/dev-mode';
-import type { MenuItem } from '@/Models/Types';
+import type { MenuItem } from '@/Models/ui';
 
 const roleLabelMap = {
   PESSOA_FISICA: 'Pessoa física',
@@ -16,19 +16,19 @@ const roleLabelMap = {
 } as const;
 
 const Header = () => {
-  const { currentUser, mockUsers, selectMockUser, clearAuth } = useAuth();
+  const { currentUser, users, selectUser, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-  // Close mobile menu when route changes
-  // Using a ref to track location and conditionally update state
+  // Fecha o menu mobile quando a rota muda
+  // Usa uma ref para rastrear a rota e atualizar o estado de forma condicional
   const locationRef = useRef(location);
 
   useLayoutEffect(() => {
     if (locationRef.current.pathname !== location.pathname) {
-      // This is a legitimate use case: closing UI when navigating
+      // Este é um caso legítimo: fechar a interface ao navegar
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMobileMenuOpen(false);
       locationRef.current = location;
@@ -102,22 +102,22 @@ const Header = () => {
 
         {/* Ações do Usuário - Desktop */}
         <div className="hidden lg:flex items-center gap-2">
-          {/* Mock User Selector (apenas em DEV) */}
+          {/* Seletor de usuário (apenas em DEV) */}
           {isDevelopment() && (
             <label className="flex items-center gap-2 rounded-md border border-gray-300 bg-white/70 px-3 py-2 text-sm text-gray-800">
-              <span className="hidden xl:inline">Usuario mock</span>
+              <span className="hidden xl:inline">Usuario</span>
               <select
-                aria-label="Selecionar usuario mock"
+                aria-label="Selecionar usuario"
                 className="min-w-36 bg-transparent outline-none"
                 value={currentUser?.id ?? ''}
                 onChange={(event) => {
-                  void selectMockUser(event.target.value);
+                  void selectUser(event.target.value);
                 }}
               >
                 <option value="" disabled>
                   Selecionar perfil
                 </option>
-                {mockUsers.map((user) => (
+                {users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.fullName} • {roleLabelMap[user.role]}
                   </option>
@@ -214,7 +214,7 @@ const Header = () => {
               </button>
             </div>
 
-            {/* Divider */}
+            {/* Divisor */}
             <hr className="my-4 border-gray-200" />
 
             {/* Ações do usuário */}
@@ -230,7 +230,7 @@ const Header = () => {
                 <button
                   className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
                   onClick={() => {
-                    clearAuth();
+                    void logout();
                     setIsMobileMenuOpen(false);
                   }}
                 >
@@ -247,7 +247,7 @@ const Header = () => {
               </Link>
             )}
 
-            {/* Mock User Selector Mobile (apenas em DEV) */}
+            {/* Seletor de usuário no mobile (apenas em DEV) */}
             {isDevelopment() && (
               <>
                 <hr className="my-4 border-gray-200" />
@@ -257,13 +257,13 @@ const Header = () => {
                     className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                     value={currentUser?.id ?? ''}
                     onChange={(event) => {
-                      void selectMockUser(event.target.value);
+                      void selectUser(event.target.value);
                     }}
                   >
                     <option value="" disabled>
                       Selecionar perfil
                     </option>
-                    {mockUsers.map((user) => (
+                    {users.map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.fullName} • {roleLabelMap[user.role]}
                       </option>

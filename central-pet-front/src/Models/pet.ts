@@ -1,0 +1,61 @@
+export interface Pet {
+  id: number;
+  name: string;
+  species: string;
+  physicalCharacteristics: string;
+  behavioralCharacteristics: string;
+  notes: string;
+  photo: string;
+  responsibleUserId?: string;
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
+  sourceName?: string;
+}
+
+export interface Photo {
+  id: number;
+  url: string;
+  petId: number;
+  note: string;
+}
+
+export interface PetApiResponse {
+  id: string;
+  profilePhoto: string;
+  galleryPhotos: string[];
+  name: string;
+  age: string;
+  species: string;
+  breed: string;
+  sex: string;
+  size: string;
+  microchipped: boolean;
+  tutor: string;
+  shelter: string;
+  city: string;
+  state?: string;
+  contact: string;
+  vaccinated: boolean;
+  neutered: boolean;
+  dewormed: boolean;
+  needsHealthCare: boolean;
+  physicalLimitation: boolean;
+  visualLimitation: boolean;
+  hearingLimitation: boolean;
+  selectedPersonalities: string[];
+  responsibleUserId: string;
+  adoptionStatus?: string;
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
+  sourceName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PetListItem {
+  id: string;
+  name: string;
+  species: string;
+  breed?: string;
+  city?: string;
+  state?: string;
+  adoptionStatus: string;
+}

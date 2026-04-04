@@ -30,6 +30,6 @@ export function getMode(): 'development' | 'production' {
     return mode;
   }
 
-  // Silently default to production for unknown modes
+  // Em modos desconhecidos, assume produção silenciosamente
   return 'production';
 }

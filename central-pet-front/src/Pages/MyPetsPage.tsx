@@ -5,16 +5,8 @@ import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
 import { getLocalId, getPetProfileById, getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
-
-type MyPetItem = {
-  id: string;
-  name: string;
-  species: string;
-  breed?: string;
-  city?: string;
-  state?: string;
-  adoptionStatus: string;
-};
+import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
+import type { PetApiResponse, PetListItem } from '@/Models/pet';
 
 const statusLabelMap: Record<string, string> = {
   AVAILABLE: 'Disponivel',
@@ -34,7 +26,7 @@ function normalizeBackendPetId(backendId: string): string | number {
 
 export default function MyPetsPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const [pets, setPets] = useState<MyPetItem[]>([]);
+  const [pets, setPets] = useState<PetListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -57,7 +49,7 @@ export default function MyPetsPage() {
       setErrorMessage(null);
 
       try {
-        const response = await api.get<{ data: MyPetItem[] }>('/pets', {
+        const response = await api.get<{ data: PetApiResponse[] }>('/pets', {
           params: {
             responsibleUserId: currentUser.id,
           },
@@ -68,10 +60,13 @@ export default function MyPetsPage() {
         }
 
         // Converte IDs do backend (UUID) para IDs locais quando possível
-        const normalizedPets = response.data.data.map((pet) => ({
-          ...pet,
-          id: String(normalizeBackendPetId(pet.id)),
-        }));
+        const normalizedPets = response.data.data.map((pet) =>
+          mapPetApiResponseToPetListItem({
+            ...pet,
+            id: String(normalizeBackendPetId(pet.id)),
+            adoptionStatus: pet.adoptionStatus ?? 'AVAILABLE',
+          }),
+        );
 
         setPets(normalizedPets);
       } catch {
@@ -86,7 +81,7 @@ export default function MyPetsPage() {
           );
 
           // Converter Pet[] do localStorage para MyPetItem[] esperado
-          const formattedPets: MyPetItem[] = localPets.map((pet) => {
+          const formattedPets: PetListItem[] = localPets.map((pet) => {
             // Busca o perfil completo para pegar dados adicionais
             const profile = getPetProfileById(pet.id);
 

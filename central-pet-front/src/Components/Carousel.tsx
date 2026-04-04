@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Pet } from '../Models/Types';
+import type { Pet } from '@/Models/pet';
 import PetModal from './PetModal.tsx';
 
 type CarouselProps = {

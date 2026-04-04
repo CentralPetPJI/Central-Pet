@@ -1,5 +1,5 @@
 import defaultPetsData from './default-pets';
-import type { Pet } from '@/Models/Types';
+import type { Pet } from '@/Models/pet';
 import {
   initialPetRegisterFormData,
   isPetRegisterFormDataLike,

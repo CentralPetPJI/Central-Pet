@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
-import { Pet } from '../Models/Types';
+import type { Pet } from '@/Models/pet';
 
 interface PetModalProps {
   petData: Pet;

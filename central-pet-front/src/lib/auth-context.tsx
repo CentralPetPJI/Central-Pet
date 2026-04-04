@@ -1,12 +1,14 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
- * BACKWARDS COMPATIBILITY LAYER
+ * CAMADA DE COMPATIBILIDADE RETROATIVA
+ * CAMADA DE COMPATIBILIDADE RETROATIVA
  *
- * This file re-exports from the new auth module structure.
- * Existing imports from '@/lib/auth-context' continue to work.
+ * Este arquivo reexporta a nova estrutura do módulo de autenticação.
+ * Imports existentes de '@/lib/auth-context' continuam funcionando.
  *
- * New code should import from '@/lib/auth' instead.
+ * Novos códigos devem importar de '@/lib/auth'.
  */
 
-// Re-export everything consumers currently use
+// Reexporta tudo que os consumidores usam atualmente
 export { AuthProvider, useAuth } from './auth';
 export type { AuthUser } from './auth';

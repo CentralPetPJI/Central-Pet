@@ -1,4 +1,4 @@
-import type { Pet } from '@/Models/Types';
+import type { Pet } from '@/Models/pet';
 
 const petsData: Pet[] = [
   {

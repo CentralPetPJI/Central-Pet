@@ -1,9 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
- * Auth Context with Strategy Pattern
+ * Contexto de autenticação com padrão de estratégia
  *
- * This module provides the AuthProvider and AuthContext that use
- * the strategy pattern for authentication. The strategy is created
- * via the factory based on environment configuration.
+ * Este módulo fornece o AuthProvider e o AuthContext que usam
+ * o padrão de estratégia para autenticação. A estratégia é criada
+ * via factory com base na configuração do ambiente.
  */
 
 import {
@@ -21,17 +22,17 @@ import type {
   AuthUser,
   LoginCredentials,
   RegisterData,
-} from './types';
+} from '@/Models';
 import { createAuthStrategy } from './strategies/factory';
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [mockUsers, setMockUsers] = useState<AuthUser[]>([]);
+  const [users, setUsers] = useState<AuthUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Create strategy once on mount
+  // Cria a estratégia uma única vez na montagem
   const strategyRef = useRef<AuthStrategy | null>(null);
   if (!strategyRef.current) {
     strategyRef.current = createAuthStrategy();
@@ -78,33 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [strategy],
   );
 
-  const selectMockUser = useCallback(
+  const selectUser = useCallback(
     async (userId: string) => {
-      if (!strategy.selectMockUser) {
-        console.warn('selectMockUser not available for this auth strategy');
-        return;
+      if (!strategy.selectUser) {
+        throw new Error('selectUser not available for this auth strategy');
       }
-      await strategy.selectMockUser(userId);
+      await strategy.selectUser(userId);
       await refreshCurrentUser();
     },
     [strategy, refreshCurrentUser],
   );
 
-  // Backwards compatibility alias for clearAuth
-  const clearAuth = useCallback(async () => {
-    await logout();
-  }, [logout]);
-
-  // Initialize on mount
+  // Inicializa na montagem
   useEffect(() => {
     const bootstrap = async () => {
       try {
         await strategy.initialize();
 
-        // Load mock users if available
-        if (strategy.getMockUsers) {
-          const users = await strategy.getMockUsers();
-          setMockUsers(users);
+        if (strategy.getUsers) {
+          const availableUsers = await strategy.getUsers();
+          setUsers(availableUsers);
         }
       } finally {
         await refreshCurrentUser();
@@ -118,16 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       currentUser,
-      mockUsers,
+      users,
       isLoading,
       isAuthenticated: currentUser !== null,
       login,
       logout,
       register,
-      selectMockUser,
-      clearAuth,
+      selectUser,
     }),
-    [currentUser, mockUsers, isLoading, login, logout, register, selectMockUser, clearAuth],
+    [currentUser, users, isLoading, login, logout, register, selectUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

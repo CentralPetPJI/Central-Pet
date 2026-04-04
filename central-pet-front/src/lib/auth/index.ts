@@ -4,14 +4,13 @@
  * Re-exports all auth types, strategies, context, hook, and factory for convenient imports.
  */
 
-// Types
 export type {
   AuthUser,
   AuthStrategy,
   AuthContextValue,
   LoginCredentials,
   RegisterData,
-} from './types';
+} from '@/Models';
 
 // Context and Hook
 export { AuthProvider, AuthContext } from './context';

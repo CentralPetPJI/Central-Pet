@@ -1,14 +1,7 @@
-/**
- * Estratégia de autenticação mock
- *
- * Implementa AuthStrategy para desenvolvimento e testes E2E.
- * Usa usuários mock do backend e armazena o ID selecionado no localStorage.
- */
-
 import { api } from '../../api';
 import { isDevelopment } from '../../dev-mode';
 import { clearStoredUserId, getStoredUserId, setStoredUserId } from '@/storage/auth';
-import type { AuthStrategy, AuthUser, LoginCredentials, RegisterData } from '../types';
+import type { AuthStrategy, AuthUser, LoginCredentials, RegisterData } from '@/Models';
 
 type UsersResponse = {
   data: {
@@ -88,10 +81,6 @@ export class MockAuthStrategy implements AuthStrategy {
   async register(_data: RegisterData): Promise<AuthUser> {
     throw new Error('Mock auth does not support registration.');
   }
-
-  // -------------------------------------------------------------------------
-  // Métodos específicos do modo mock
-  // -------------------------------------------------------------------------
 
   /**
    * Retorna a lista de usuários disponíveis.

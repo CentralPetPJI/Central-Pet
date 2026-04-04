@@ -1,26 +1,18 @@
-/**
- * Auth Strategy Factory
- *
- * Creates the appropriate auth strategy based on environment configuration.
- * Set VITE_AUTH_STRATEGY=jwt to use JWT auth (when implemented).
- * Defaults to 'mock' for development and E2E tests.
- */
-
-import type { AuthStrategy } from '../types';
+import type { AuthStrategy } from '@/Models';
 import { MockAuthStrategy } from './mock.strategy';
 import { JwtAuthStrategy } from './jwt.strategy';
 
 /**
- * Available auth strategy types.
+ * Tipos de estratégia de autenticação disponíveis.
  */
 export type AuthStrategyType = 'mock' | 'jwt';
 
 /**
- * Creates the appropriate auth strategy based on environment.
+ * Cria a estratégia de autenticação apropriada com base no ambiente.
  *
- * @returns AuthStrategy instance based on VITE_AUTH_STRATEGY env var.
- *          Returns MockAuthStrategy if not set or set to 'mock'.
- *          Returns JwtAuthStrategy if set to 'jwt'.
+ * @returns Instância de AuthStrategy com base na variável VITE_AUTH_STRATEGY.
+ *          Retorna MockAuthStrategy se não estiver definida ou estiver como 'mock'.
+ *          Retorna JwtAuthStrategy se estiver como 'jwt'.
  */
 export function createAuthStrategy(): AuthStrategy {
   const strategyType = (import.meta.env.VITE_AUTH_STRATEGY as AuthStrategyType) || 'mock';

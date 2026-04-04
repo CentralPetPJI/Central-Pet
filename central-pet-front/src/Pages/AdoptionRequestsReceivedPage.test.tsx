@@ -22,7 +22,7 @@ vi.mock('@/lib/auth-context', () => ({
   }),
 }));
 
-describe('AdoptionRequestsReceivedPage', () => {
+describe('Pagina de solicitacoes recebidas', () => {
   beforeEach(() => {
     getMock.mockReset();
   });
