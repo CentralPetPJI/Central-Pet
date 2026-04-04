@@ -153,4 +153,6 @@ export type AuthContextValue = {
   // Mock-specific (only available when using mock strategy)
   mockUsers: AuthUser[];
   selectMockUser: (userId: string) => Promise<void>;
+  // Backwards compatibility alias (deprecated - use logout instead)
+  clearAuth: () => Promise<void>;
 };
