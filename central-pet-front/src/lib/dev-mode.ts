@@ -11,6 +11,11 @@ export function isDevelopment(): boolean {
   return import.meta.env.DEV;
 }
 
+export function shouldDisplayMockUsers() {
+  console.log('VITE_AUTH_STRATEGY', import.meta.env.VITE_AUTH_STRATEGY);
+  return isDevelopment() && import.meta.env.VITE_AUTH_STRATEGY == 'mock';
+}
+
 /**
  * Verifica se a aplicação está rodando em modo produção
  * @returns true se em produção, false caso contrário

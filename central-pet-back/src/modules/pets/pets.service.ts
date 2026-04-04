@@ -2,83 +2,44 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { randomUUID } from 'crypto';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
-import { PetResponseDto } from './dto/pet-response.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { mockPets } from '@/mocks';
-import type { PetRecord } from './models/pet-record';
-import { createPetRecordFromMockPet, mapPetRecordToPersistence } from './mappers/pet-record.mapper';
+
+type PetRecord = {
+  id: string;
+  profilePhoto: string;
+  galleryPhotos: string[];
+  name: string;
+  age: string;
+  species: string;
+  breed: string;
+  sex: string;
+  size: string;
+  microchipped: boolean;
+  tutor: string;
+  shelter: string;
+  city: string;
+  contact: string;
+  vaccinated: boolean;
+  neutered: boolean;
+  dewormed: boolean;
+  needsHealthCare: boolean;
+  physicalLimitation: boolean;
+  visualLimitation: boolean;
+  hearingLimitation: boolean;
+  selectedPersonalities: string[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 @Injectable()
 export class PetsService {
-  // Inicializa o armazenamento em memória com mockPets para o filtro por usuário funcionar por padrão
-  // Não inicializa durante os testes para manter os resultados determinísticos
-  private readonly pets: PetRecord[] =
-    process.env.NODE_ENV === 'test' ? [] : mockPets.map(createPetRecordFromMockPet);
+  private readonly pets: PetRecord[] = [];
 
   constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
-  private normalizeSpecies(species: string): string {
-    const speciesMap: Record<string, string> = {
-      dog: 'DOG',
-      Dog: 'DOG',
-      DOG: 'DOG',
-      cachorro: 'DOG',
-      Cachorro: 'DOG',
-      CACHORRO: 'DOG',
-      cat: 'CAT',
-      Cat: 'CAT',
-      CAT: 'CAT',
-      gato: 'CAT',
-      Gato: 'CAT',
-      GATO: 'CAT',
-    };
-    return speciesMap[species] || species;
-  }
-
-  private normalizeSize(size: string): string {
-    const sizeMap: Record<string, string> = {
-      pequeno: 'SMALL',
-      Pequeno: 'SMALL',
-      PEQUENO: 'SMALL',
-      small: 'SMALL',
-      Small: 'SMALL',
-      SMALL: 'SMALL',
-      medio: 'MEDIUM',
-      Medio: 'MEDIUM',
-      MEDIO: 'MEDIUM',
-      medium: 'MEDIUM',
-      Medium: 'MEDIUM',
-      MEDIUM: 'MEDIUM',
-      grande: 'LARGE',
-      Grande: 'LARGE',
-      GRANDE: 'LARGE',
-      large: 'LARGE',
-      Large: 'LARGE',
-      LARGE: 'LARGE',
-    };
-    return sizeMap[size] || size;
-  }
-
-  private normalizeSex(sex: string): string {
-    const sexMap: Record<string, string> = {
-      macho: 'MALE',
-      Macho: 'MALE',
-      MACHO: 'MALE',
-      male: 'MALE',
-      Male: 'MALE',
-      MALE: 'MALE',
-      femea: 'FEMALE',
-      Femea: 'FEMALE',
-      FEMEA: 'FEMALE',
-      female: 'FEMALE',
-      Female: 'FEMALE',
-      FEMALE: 'FEMALE',
-    };
-    return sexMap[sex] || sex;
-  }
-
   private validateSelectedPersonalities(selectedPersonalities: string[]) {
     const validTraitIds = this.personalityTraitsService.getTraitIds();
+
     const invalidTraits = selectedPersonalities.filter(
       (traitId) => !validTraitIds.includes(traitId),
     );
@@ -94,20 +55,16 @@ export class PetsService {
 
     this.validateSelectedPersonalities(selectedPersonalities);
 
-    if (!createPetDto.responsibleUserId) {
-      throw new BadRequestException('responsibleUserId is required');
-    }
-
     const pet: PetRecord = {
       id: randomUUID(),
       profilePhoto: createPetDto.profilePhoto,
       galleryPhotos: createPetDto.galleryPhotos ?? [],
       name: createPetDto.name,
       age: createPetDto.age,
-      species: this.normalizeSpecies(createPetDto.species),
+      species: createPetDto.species,
       breed: createPetDto.breed,
-      sex: this.normalizeSex(createPetDto.sex),
-      size: this.normalizeSize(createPetDto.size),
+      sex: createPetDto.sex,
+      size: createPetDto.size,
       microchipped: createPetDto.microchipped,
       tutor: createPetDto.tutor,
       shelter: createPetDto.shelter,
@@ -121,58 +78,27 @@ export class PetsService {
       visualLimitation: createPetDto.visualLimitation,
       hearingLimitation: createPetDto.hearingLimitation,
       selectedPersonalities,
-      responsibleUserId: createPetDto.responsibleUserId,
-      adoptionStatus: 'AVAILABLE',
       createdAt: now,
       updatedAt: now,
     };
 
-    this.pets.push(mapPetRecordToPersistence(pet));
+    this.pets.push(pet);
 
     return {
       message: 'Pet created successfully',
-      data: this.petRecordToDto(pet),
+      data: pet,
     };
   }
 
-  private petRecordToDto(pet: PetRecord) {
-    const speciesOutMap: Record<string, string> = {
-      DOG: 'dog',
-      CAT: 'cat',
-    };
-
-    const sexOutMap: Record<string, string> = {
-      MALE: 'Macho',
-      FEMALE: 'Femea',
-    };
-
-    const sizeOutMap: Record<string, string> = {
-      SMALL: 'Pequeno',
-      MEDIUM: 'Medio',
-      LARGE: 'Grande',
-    };
-
-    return new PetResponseDto({
-      ...pet,
-      species: speciesOutMap[pet.species] ?? pet.species,
-      sex: sexOutMap[pet.sex] ?? pet.sex,
-      size: sizeOutMap[pet.size] ?? pet.size,
-    });
-  }
-
-  findAll(responsibleUserId?: string) {
-    const list = responsibleUserId
-      ? this.pets.filter((p) => p.responsibleUserId === responsibleUserId)
-      : this.pets;
-
+  findAll() {
     return {
       message: 'Pets retrieved successfully',
-      data: list.map((p) => this.petRecordToDto(p)),
+      data: this.pets,
     };
   }
 
-  findOne(id: string | number) {
-    const pet = this.pets.find((item) => item.id === String(id));
+  findOne(id: string) {
+    const pet = this.pets.find((item) => item.id === id);
 
     if (!pet) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
@@ -180,12 +106,12 @@ export class PetsService {
 
     return {
       message: 'Pet retrieved successfully',
-      data: this.petRecordToDto(pet),
+      data: pet,
     };
   }
 
-  update(id: string | number, updatePetDto: UpdatePetDto) {
-    const index = this.pets.findIndex((item) => item.id === String(id));
+  update(id: string, updatePetDto: UpdatePetDto) {
+    const index = this.pets.findIndex((item) => item.id === id);
 
     if (index === -1) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
@@ -197,44 +123,11 @@ export class PetsService {
 
     const definedUpdates = Object.fromEntries(
       Object.entries(updatePetDto).filter(([, value]) => value !== undefined),
-    ) as Partial<UpdatePetDto>;
-
-    const normalizedUpdates: Partial<PetRecord> = {};
-
-    if (definedUpdates.species) {
-      normalizedUpdates.species = this.normalizeSpecies(definedUpdates.species);
-    }
-    if (definedUpdates.size) {
-      normalizedUpdates.size = this.normalizeSize(definedUpdates.size);
-    }
-    if (definedUpdates.sex) {
-      normalizedUpdates.sex = this.normalizeSex(definedUpdates.sex);
-    }
+    ) as Partial<PetRecord>;
 
     const updatedPet: PetRecord = {
       ...this.pets[index],
-      profilePhoto: definedUpdates.profilePhoto ?? this.pets[index].profilePhoto,
-      galleryPhotos: definedUpdates.galleryPhotos ?? this.pets[index].galleryPhotos,
-      name: definedUpdates.name ?? this.pets[index].name,
-      age: definedUpdates.age ?? this.pets[index].age,
-      species: normalizedUpdates.species ?? this.pets[index].species,
-      breed: definedUpdates.breed ?? this.pets[index].breed,
-      sex: normalizedUpdates.sex ?? this.pets[index].sex,
-      size: normalizedUpdates.size ?? this.pets[index].size,
-      microchipped: definedUpdates.microchipped ?? this.pets[index].microchipped,
-      tutor: definedUpdates.tutor ?? this.pets[index].tutor,
-      shelter: definedUpdates.shelter ?? this.pets[index].shelter,
-      city: definedUpdates.city ?? this.pets[index].city,
-      contact: definedUpdates.contact ?? this.pets[index].contact,
-      vaccinated: definedUpdates.vaccinated ?? this.pets[index].vaccinated,
-      neutered: definedUpdates.neutered ?? this.pets[index].neutered,
-      dewormed: definedUpdates.dewormed ?? this.pets[index].dewormed,
-      needsHealthCare: definedUpdates.needsHealthCare ?? this.pets[index].needsHealthCare,
-      physicalLimitation: definedUpdates.physicalLimitation ?? this.pets[index].physicalLimitation,
-      visualLimitation: definedUpdates.visualLimitation ?? this.pets[index].visualLimitation,
-      hearingLimitation: definedUpdates.hearingLimitation ?? this.pets[index].hearingLimitation,
-      selectedPersonalities:
-        definedUpdates.selectedPersonalities ?? this.pets[index].selectedPersonalities,
+      ...definedUpdates,
       updatedAt: new Date().toISOString(),
     };
 
@@ -242,7 +135,7 @@ export class PetsService {
 
     return {
       message: 'Pet updated successfully',
-      data: this.petRecordToDto(updatedPet),
+      data: updatedPet,
     };
   }
 }

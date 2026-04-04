@@ -1,11 +1,11 @@
 {
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "eslint": "^10.0.1",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.5.0",
+    "eslint-plugin-react-refresh": "^0.5.2",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
+    "lint-staged": "^16.4.0",
     "only-allow": "^1.2.2",
     "prettier": "3.8.1"
   },
@@ -24,10 +24,9 @@
     "build:front": "pnpm --filter central-pet-front build",
     "build:back": "pnpm --filter central-pet-back build",
     "test:front": "pnpm --filter central-pet-front test:run",
-    "test:back": "pnpm --filter central-pet-back test",
     "test:e2e": "pnpm --filter central-pet-e2e-tests test",
-    "test:e2e:ui": "pnpm --filter central-pet-e2e-tests test:ui",
-    "test:all": "pnpm test:back && pnpm --filter central-pet-back test:e2e && pnpm test:front && pnpm test:e2e"
+    "test:back": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
+    "test:all": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e && pnpm --filter central-pet-front test:run && pnpm --filter central-pet-e2e-tests test"
   },
   "packageManager": "pnpm@10.30.1"
 }

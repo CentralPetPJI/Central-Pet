@@ -1,13 +1,12 @@
 import { BadRequestException, NotFoundException, ValidationPipe } from '@nestjs/common';
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
-import { CreatePetDto } from './dto/create-pet.dto';
-import { mockUserIds } from '@/mocks';
-import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
+import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 
-describe('Servico de pets', () => {
+describe('PetsService', () => {
   let service: PetsService;
   let validationPipe: ValidationPipe;
 
@@ -46,7 +45,6 @@ describe('Servico de pets', () => {
     visualLimitation: false,
     hearingLimitation: false,
     selectedPersonalities: ['playful', 'friendly'],
-    responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
   });
 
   const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {
@@ -91,7 +89,7 @@ describe('Servico de pets', () => {
     expect(result.data.selectedPersonalities).toEqual([]);
   });
 
-  it('deve rejeitar traços de personalidade invalidos na criacao', async () => {
+  it('deve rejeitar traços de personalidade inválidos na criação', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     dto.selectedPersonalities = ['playful', 'invalid-trait'];
 
@@ -108,7 +106,7 @@ describe('Servico de pets', () => {
     expect(result.data.length).toBe(1);
   });
 
-  it('deve encontrar um pet existente', async () => {
+  it('deve buscar um pet existente', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     const created = service.create(dto);
 
@@ -119,11 +117,11 @@ describe('Servico de pets', () => {
     expect(found.data.name).toBe('Luna');
   });
 
-  it('deve lançar NotFoundException quando o pet nao existir no findOne', () => {
+  it('deve lançar NotFoundException quando o pet não existir no findOne', () => {
     expect(() => service.findOne('missing-id')).toThrow(NotFoundException);
   });
 
-  it('deve atualizar um pet existente e preservar os demais campos', async () => {
+  it('deve atualizar um pet existente e preservar outros campos', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -138,18 +136,20 @@ describe('Servico de pets', () => {
     expect(updated.data.id).toBe(created.data.id);
     expect(updated.data.name).toBe('Jones');
     expect(updated.data.selectedPersonalities).toEqual(['playful', 'friendly']);
+
     expect(updated.data.profilePhoto).toBe(created.data.profilePhoto);
     expect(updated.data.species).toBe(created.data.species);
     expect(updated.data.breed).toBe(created.data.breed);
     expect(updated.data.city).toBe(created.data.city);
     expect(updated.data.contact).toBe(created.data.contact);
+
     expect(updated.data.updatedAt).toBeDefined();
     expect(new Date(updated.data.updatedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(created.data.updatedAt).getTime(),
     );
   });
 
-  it('deve rejeitar traços de personalidade invalidos na atualizacao', async () => {
+  it('deve rejeitar traços de personalidade inválidos na atualização', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -160,12 +160,12 @@ describe('Servico de pets', () => {
     expect(() => service.update(created.data.id, updateDto)).toThrow(BadRequestException);
   });
 
-  it('deve lançar NotFoundException quando o pet nao existir na atualizacao', async () => {
+  it('deve lançar NotFoundException quando o pet não existir na atualização', async () => {
     const updateDto = await validateUpdateDto({ name: 'Novo Nome' });
     expect(() => service.update('missing-id', updateDto)).toThrow(NotFoundException);
   });
 
-  it('deve preservar selectedPersonalities quando o payload de atualizacao omitir o campo', async () => {
+  it('deve preservar selectedPersonalities quando a atualização omitir o campo', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -179,7 +179,7 @@ describe('Servico de pets', () => {
     expect(updated.data.selectedPersonalities).toEqual(created.data.selectedPersonalities);
   });
 
-  it('deve limpar selectedPersonalities quando o payload de atualizacao enviar um array vazio', () => {
+  it('deve limpar selectedPersonalities quando a atualização enviar um array vazio', () => {
     const created = service.create(makeCreateDto());
 
     const updated = service.update(created.data.id, {
@@ -189,7 +189,8 @@ describe('Servico de pets', () => {
     expect(updated.data.selectedPersonalities).toEqual([]);
   });
 
-  describe('CreatePetDto validation', () => {
+  // New tests for DTO validation decorators
+  describe('Validação de CreatePetDto', () => {
     it('deve rejeitar quando galleryPhotos exceder @ArrayMaxSize(10)', async () => {
       const dto = {
         ...makeCreateDto(),
@@ -218,7 +219,7 @@ describe('Servico de pets', () => {
       await expect(validateCreateDto(dto)).rejects.toThrow();
     });
 
-    it('deve aceitar quando selectedPersonalities tiver valores unicos', async () => {
+    it('deve aceitar quando selectedPersonalities tiver valores únicos', async () => {
       const dto = {
         ...makeCreateDto(),
         selectedPersonalities: ['playful', 'friendly', 'calm'],
@@ -226,6 +227,95 @@ describe('Servico de pets', () => {
 
       const validated = await validateCreateDto(dto);
       expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
+    });
+
+    it('deve rejeitar quando name exceder @MaxLength(100)', async () => {
+      const dto = {
+        ...makeCreateDto(),
+        name: 'a'.repeat(101),
+      };
+
+      await expect(validateCreateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve rejeitar quando species não estiver nos valores permitidos (@IsIn)', async () => {
+      const dto = {
+        ...makeCreateDto(),
+        species: 'bird',
+      };
+
+      await expect(validateCreateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve rejeitar quando um campo obrigatório estiver ausente (@IsNotEmpty)', async () => {
+      const dto = {
+        ...makeCreateDto(),
+        name: '',
+      };
+
+      await expect(validateCreateDto(dto)).rejects.toThrow();
+    });
+  });
+
+  describe('Validação de UpdatePetDto', () => {
+    it('deve rejeitar quando galleryPhotos exceder @ArrayMaxSize(10)', async () => {
+      const dto = {
+        galleryPhotos: Array(11).fill('data:image/png;base64,test'),
+      };
+
+      await expect(validateUpdateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve aceitar quando galleryPhotos tiver exatamente 10 itens', async () => {
+      const dto = {
+        galleryPhotos: Array(10).fill('data:image/png;base64,test'),
+      };
+
+      const validated = await validateUpdateDto(dto);
+      expect(validated.galleryPhotos?.length).toBe(10);
+    });
+
+    it('deve rejeitar quando selectedPersonalities tiver valores duplicados (@ArrayUnique)', async () => {
+      const dto = {
+        selectedPersonalities: ['playful', 'playful', 'friendly'],
+      };
+
+      await expect(validateUpdateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve aceitar quando selectedPersonalities tiver valores únicos', async () => {
+      const dto = {
+        selectedPersonalities: ['playful', 'friendly', 'calm'],
+      };
+
+      const validated = await validateUpdateDto(dto);
+      expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
+    });
+
+    it('deve rejeitar quando name exceder @MaxLength(100)', async () => {
+      const dto = {
+        name: 'a'.repeat(101),
+      };
+
+      await expect(validateUpdateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve rejeitar quando species não estiver nos valores permitidos (@IsIn)', async () => {
+      const dto = {
+        species: 'bird',
+      };
+
+      await expect(validateUpdateDto(dto)).rejects.toThrow();
+    });
+
+    it('deve permitir atualizações parciais apenas com os campos informados', async () => {
+      const dto = {
+        name: 'New Name',
+      };
+
+      const validated = await validateUpdateDto(dto);
+      expect(validated.name).toBe('New Name');
+      expect(validated.species).toBeUndefined();
     });
   });
 });

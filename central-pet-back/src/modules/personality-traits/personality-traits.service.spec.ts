@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { PersonalityTraitsService } from './personality-traits.service';
 
-describe('Servico de traços de personalidade', () => {
+describe('PersonalityTraitsService', () => {
   const service = new PersonalityTraitsService();
 
   it('deve retornar todos os traços de personalidade', () => {
@@ -12,7 +12,7 @@ describe('Servico de traços de personalidade', () => {
     expect(result.data.length).toBeGreaterThan(0);
   });
 
-  it('deve expor os ids conhecidos dos traços de personalidade', () => {
+  it('deve expor ids conhecidos dos traços de personalidade', () => {
     const traitIds = service.getTraitIds();
 
     expect(traitIds).toContain('playful');

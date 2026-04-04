@@ -7,7 +7,7 @@ import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import { isDevelopment } from '@/lib/dev-mode';
+import {shouldDisplayMockUsers} from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
 
 const roleLabelMap = {
@@ -103,7 +103,7 @@ const Header = () => {
         {/* Ações do Usuário - Desktop */}
         <div className="hidden lg:flex items-center gap-2">
           {/* Seletor de usuário (apenas em DEV) */}
-          {isDevelopment() && (
+          {shouldDisplayMockUsers() && (
             <label className="flex items-center gap-2 rounded-md border border-gray-300 bg-white/70 px-3 py-2 text-sm text-gray-800">
               <span className="hidden xl:inline">Usuario</span>
               <select
@@ -248,7 +248,7 @@ const Header = () => {
             )}
 
             {/* Seletor de usuário no mobile (apenas em DEV) */}
-            {isDevelopment() && (
+            {shouldDisplayMockUsers() && (
               <>
                 <hr className="my-4 border-gray-200" />
                 <label className="block text-xs text-gray-600">

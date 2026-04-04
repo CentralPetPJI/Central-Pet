@@ -1,5 +1,5 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
-import { getStoredUserId } from '@/storage/auth';
+import { getStoredUserId } from '@/storage';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
 

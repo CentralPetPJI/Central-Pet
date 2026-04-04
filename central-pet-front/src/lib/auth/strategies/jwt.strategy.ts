@@ -1,62 +1,105 @@
 /**
  * Estratégia de autenticação JWT
  *
- * TODO (v1.1): Implementar autenticação JWT real
- * - POST /auth/login → retorna JWT em cookie httpOnly
- * - POST /auth/logout → limpa o cookie
- * - POST /auth/register → cria conta e retorna JWT
- * - GET /auth/me → retorna o usuário atual a partir do token
- * - Lógica de renovação de token
+ * Implementa autenticação usando sessões com cookies httpOnly.
+ * O backend gerencia as sessões e retorna cookies seguros.
  */
 
+import { api } from '@/lib/api';
 import type { AuthStrategy, AuthUser, LoginCredentials, RegisterData } from '@/Models';
 
+type LoginResponse = {
+  message: string;
+  data: {
+    user: AuthUser;
+  };
+};
+
+type GetUserResponse = {
+  message: string;
+  data: {
+    user: AuthUser;
+  };
+};
+
+type CreateUserResponse = {
+  message: string;
+  data: AuthUser;
+};
+
 /**
- * Estrutura base da estratégia de autenticação JWT.
+ * Estratégia de autenticação JWT com cookies httpOnly.
  *
- * Será implementada na v1.1 quando autenticação real for necessária.
- * Por enquanto, todos os métodos lançam erros de "não implementado".
+ * Utiliza cookies httpOnly gerenciados pelo backend para segurança contra XSS.
+ * O token nunca fica exposto no JavaScript do cliente.
  */
 export class JwtAuthStrategy implements AuthStrategy {
   readonly type = 'jwt' as const;
 
   /**
    * Inicializa a autenticação JWT.
-   * TODO (v1.1): Verificar sessão/token existente.
+   * Não precisa fazer nada pois o cookie é gerenciado automaticamente.
    */
   async initialize(): Promise<void> {
-    // TODO (v1.1): Verificar sessão/token existente
+    // Cookie httpOnly é enviado automaticamente com requisições
+    // Não há necessidade de configuração adicional
   }
 
   /**
-   * Obtém o usuário atual a partir do token JWT.
-   * TODO (v1.1): GET /auth/me com cookie JWT.
+   * Obtém o usuário atual a partir da sessão do cookie.
    */
   async getCurrentUser(): Promise<AuthUser | null> {
-    throw new Error('JWT auth not implemented. Coming in v1.1.');
+    try {
+      const response = await api.get<GetUserResponse>('/auth/me');
+      return response.data.data.user;
+    } catch (_error) {
+      // Se não estiver autenticado ou sessão expirou, retorna null
+      return null;
+    }
   }
 
   /**
    * Faz login com credenciais de email/senha.
-   * TODO (v1.1): POST /auth/login.
+   * O backend retorna um cookie httpOnly com o sessionId.
    */
-  async login(_credentials: LoginCredentials): Promise<AuthUser> {
-    throw new Error('JWT auth not implemented. Coming in v1.1.');
+  async login(credentials: LoginCredentials): Promise<AuthUser> {
+    const response = await api.post<LoginResponse>('/auth/login', {
+      email: credentials.email,
+      password: credentials.password,
+    });
+
+    return response.data.data.user;
   }
 
   /**
    * Encerra a sessão (logout).
-   * TODO (v1.1): POST /auth/logout.
+   * O backend limpa o cookie httpOnly.
    */
   async logout(): Promise<void> {
-    throw new Error('JWT auth not implemented. Coming in v1.1.');
+    await api.post('/auth/logout');
   }
 
   /**
    * Registra uma nova conta de usuário.
-   * TODO (v1.1): POST /auth/register.
+   * Após criar, faz auto-login com as mesmas credenciais.
    */
-  async register(_data: RegisterData): Promise<AuthUser> {
-    throw new Error('JWT auth not implemented. Coming in v1.1.');
+  async register(data: RegisterData): Promise<AuthUser> {
+    // Cria o usuário
+    await api.post<CreateUserResponse>('/users', {
+      fullName: data.fullName,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      birthDate: data.birthDate,
+      cpf: data.cpf,
+      organizationName: data.organizationName,
+      cnpj: data.cnpj,
+    });
+
+    // Faz auto-login após criar a conta
+    return this.login({
+      email: data.email,
+      password: data.password,
+    });
   }
 }

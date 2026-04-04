@@ -1,6 +1,6 @@
 # 🐾 Pull Request — Central-Pet
 
-Obrigado por contribuir com o **Central-Pet**! 💙  
+Obrigado por contribuir com o **Central-Pet**! 💙
 
 ---
 
@@ -33,9 +33,9 @@ Marque com um `x` o que se aplica:
 
 Descreva o passo a passo para validar a alteração:
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 Resultado esperado:
 
@@ -76,7 +76,7 @@ Antes de solicitar review, confirme:
 
 ## 🔗 Issue Relacionada
 
-Closes #  
+Closes #
 
 ---
 
@@ -85,4 +85,3 @@ Closes #
 Alguma informação extra que o revisor deva saber?
 
 ---
-

@@ -1,46 +1,21 @@
-import {
-  Body,
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  Headers,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { SessionGuard } from '../auth/guards/session.guard';
 
 @Controller('pets')
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
   @Post()
-  create(@Body() createPetDto: CreatePetDto, @Headers('x-user-id') userId?: string) {
-    // Prioriza o userId do header em vez do responsibleUserId enviado no body
-    const responsibleUserId = userId ?? createPetDto.responsibleUserId;
-
-    if (!responsibleUserId) {
-      throw new BadRequestException('responsibleUserId is required');
-    }
-
-    return this.petsService.create({
-      ...createPetDto,
-      responsibleUserId,
-    });
+  create(@Body() createPetDto: CreatePetDto) {
+    return this.petsService.create(createPetDto);
   }
 
   @Get()
-  findAll(
-    @Query('createdByUserId') createdByUserId?: string,
-    @Query('responsibleUserId') responsibleUserId?: string,
-    @Headers('x-user-id') userId?: string,
-  ) {
-    // Se não especificar responsibleUserId, usa o user-id do header
-    const resolvedUserId = responsibleUserId ?? createdByUserId ?? userId;
-    return this.petsService.findAll(resolvedUserId);
+  findAll() {
+    return this.petsService.findAll();
   }
 
   @Get(':id')
