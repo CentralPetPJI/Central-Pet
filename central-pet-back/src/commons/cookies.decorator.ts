@@ -5,10 +5,8 @@ interface RequestWithCookies extends Request {
   cookies: Record<string, string>;
 }
 
-export const Cookies = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest<RequestWithCookies>();
+export const Cookies = createParamDecorator((data: string | undefined, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest<RequestWithCookies>();
 
-    return data ? request.cookies[data] : request.cookies;
-  },
-);
+  return data ? request.cookies[data] : request.cookies;
+});

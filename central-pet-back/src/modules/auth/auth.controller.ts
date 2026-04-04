@@ -32,8 +32,8 @@ export class AuthController {
 
   @Post('logout')
   @UseInterceptors(CookieInterceptor)
-  logout(@Cookies(SESSION_COOKIE_NAME) sessionId?: string) {
-    const result = this.authService.logout(sessionId);
+  async logout(@Cookies(SESSION_COOKIE_NAME) sessionId?: string) {
+    const result = await this.authService.logout(sessionId);
 
     // Para logout, podemos passar uma flag ou usar um valor especial
     return {

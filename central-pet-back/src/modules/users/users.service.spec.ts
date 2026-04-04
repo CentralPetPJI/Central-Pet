@@ -1,13 +1,52 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 describe('UsersService', () => {
+  type CreateUserInput = {
+    fullName: string;
+    email: string;
+    role: 'PESSOA_FISICA' | 'ONG';
+    birthDate?: string | null;
+    cpf?: string | null;
+    organizationName?: string | null;
+    cnpj?: string | null;
+    passwordHash: string;
+  };
+
   let service: UsersService;
+  let prismaMock: {
+    user: {
+      findFirst: jest.Mock;
+      findUnique: jest.Mock;
+      create: jest.Mock;
+    };
+  };
 
   beforeEach(() => {
-    service = new UsersService();
+    prismaMock = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockImplementation(({ data }: { data: CreateUserInput }) => ({
+          id: 'user-1',
+          fullName: data.fullName,
+          email: data.email,
+          role: data.role,
+          birthDate: data.birthDate ?? null,
+          cpf: data.cpf ?? null,
+          organizationName: data.organizationName ?? null,
+          cnpj: data.cnpj ?? null,
+          passwordHash: data.passwordHash,
+          createdAt: new Date('2026-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+        })),
+      },
+    };
+
+    service = new UsersService(prismaMock as unknown as PrismaService);
   });
 
   const makeAdopterDto = (): CreateUserDto => ({
@@ -29,7 +68,7 @@ describe('UsersService', () => {
   });
 
   it('deve rejeitar e-mails duplicados', async () => {
-    await service.create(makeAdopterDto());
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: 'existing' });
 
     await expect(service.create(makeAdopterDto())).rejects.toThrow(ConflictException);
   });

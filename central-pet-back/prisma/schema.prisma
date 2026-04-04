@@ -12,3 +12,32 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  PESSOA_FISICA
+  ONG
+}
+
+model User {
+  id               String    @id @default(uuid())
+  fullName         String
+  email            String    @unique
+  role             UserRole
+  birthDate        String?
+  cpf              String?   @unique
+  organizationName String?
+  cnpj             String?   @unique
+  passwordHash     String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  sessions         Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

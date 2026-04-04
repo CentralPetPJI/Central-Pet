@@ -1,55 +1,50 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hashPassword } from '../auth/password.util';
+import { PrismaService } from '../../prisma/prisma.service';
 
-type UserRole = 'PESSOA_FISICA' | 'ONG';
+type UserRecord = Awaited<ReturnType<PrismaService['user']['findUnique']>>;
+type PersistedUser = NonNullable<UserRecord>;
 
-type UserRecord = {
-  id: string;
-  fullName: string;
-  email: string;
-  role: UserRole;
-  birthDate?: string;
-  cpf?: string;
-  organizationName?: string;
-  cnpj?: string;
-  passwordHash: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PublicUser = Omit<UserRecord, 'passwordHash'>;
+export type PublicUser = Omit<PersistedUser, 'passwordHash'>;
 
 @Injectable()
 export class UsersService {
-  private readonly users: UserRecord[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
 
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
-    const now = new Date().toISOString();
+    const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
+    const normalizedCnpj = createUserDto.cnpj?.trim().toUpperCase();
+    const passwordHash = await hashPassword(createUserDto.password);
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: normalizedEmail },
+          ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
+          ...(normalizedCnpj ? [{ cnpj: normalizedCnpj }] : []),
+        ],
+      },
+    });
 
-    if (this.users.some((user) => user.email === normalizedEmail)) {
+    if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
-    const user: UserRecord = {
-      id: randomUUID(),
-      fullName: createUserDto.fullName.trim(),
-      email: normalizedEmail,
-      role: createUserDto.role,
-      birthDate: createUserDto.birthDate,
-      cpf: createUserDto.cpf,
-      organizationName: createUserDto.organizationName?.trim(),
-      cnpj: createUserDto.cnpj,
-      passwordHash: await hashPassword(createUserDto.password),
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    this.users.push(user);
+    const user = await this.prisma.user.create({
+      data: {
+        fullName: createUserDto.fullName.trim(),
+        email: normalizedEmail,
+        role: createUserDto.role,
+        birthDate: createUserDto.birthDate,
+        cpf: normalizedCpf,
+        organizationName: createUserDto.organizationName?.trim(),
+        cnpj: normalizedCnpj,
+        passwordHash,
+      },
+    });
 
     return {
       message: 'User created successfully',
@@ -57,31 +52,30 @@ export class UsersService {
     };
   }
 
-  findByEmail(email: string) {
+  async findByEmail(email: string) {
     const normalizedEmail = email.trim().toLowerCase();
-    return this.users.find((user) => user.email === normalizedEmail);
+    return this.prisma.user.findUnique({ where: { email: normalizedEmail } });
   }
 
-  findById(id: string) {
-    return this.users.find((user) => user.id === id);
+  async findById(id: string) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  toPublicUser(user: UserRecord): PublicUser {
+  toPublicUser(user: PersistedUser): PublicUser {
     const { passwordHash: _passwordHash, ...publicUser } = user;
-    return publicUser;
+
+    return {
+      ...publicUser,
+    };
   }
 
   private validateCreateInput(createUserDto: CreateUserDto) {
-    if (createUserDto.role === 'PESSOA_FISICA') {
-      if (!createUserDto.cpf) {
-        throw new BadRequestException('cpf is required for person accounts');
-      }
+    if (createUserDto.role === 'PESSOA_FISICA' && !createUserDto.cpf) {
+      throw new BadRequestException('cpf is required for person accounts');
     }
 
-    if (createUserDto.role === 'ONG') {
-      if (!createUserDto.cnpj) {
-        throw new BadRequestException('cnpj is required for ONG accounts');
-      }
+    if (createUserDto.role === 'ONG' && !createUserDto.cnpj) {
+      throw new BadRequestException('cnpj is required for ONG accounts');
     }
   }
 }
