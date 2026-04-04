@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Cat, Dog, PawPrint, type LucideIcon } from 'lucide-react';
-import { petSpeciesOptions } from '@/Mocks/PetRegisterFormMock';
+import { petSpeciesOptions } from '@/storage/pets';
 
 interface SidePanelProps {
   speciesCounts: Record<string, number>;
@@ -40,8 +40,7 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, number }: StatCardProps) {
   const [count, setCount] = useState(0);
-  const normalizedLabel =
-    number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
+  const normalizedLabel = number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
 
   useEffect(() => {
     let start = 0;

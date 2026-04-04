@@ -8,7 +8,7 @@ import {
   petSexOptions,
   petSpeciesOptions,
   type PetRegisterFormData,
-} from '@/Mocks/PetRegisterFormMock';
+} from '@/storage/pets';
 
 type FormErrors = Partial<Record<keyof PetRegisterFormData, string>>;
 

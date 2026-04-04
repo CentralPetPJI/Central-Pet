@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import type { MenuItem } from '@/Models/Types';
+import type { MenuItem } from '@/Models/ui';
 
 type DropdownMenuProps = {
   title: string;
@@ -24,7 +24,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const dropdownRef = useRef<HTMLLIElement>(null);
   const menuItemRefs = useRef<(HTMLElement | null)[]>([]);
 
-  // Compute stable mapping from item indices to non-divider positions
+  // Calcula um mapeamento estável dos índices dos itens para posições sem divisores
   const nonDividerIndices = useMemo(() => {
     const mapping = new Map<number, number>();
     let nonDividerCounter = 0;
@@ -143,7 +143,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
           onKeyDown={handleKeyDown}
         >
           {items.map((item, index) => {
-            // Divider (separador visual)
+            // Divisor (separador visual)
             if (item.divider) {
               return <li key={index} className="my-1 border-t border-gray-200" role="separator" />;
             }

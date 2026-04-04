@@ -17,10 +17,10 @@ const roleCardCopy = {
 } as const;
 
 /**
- * Mostra uma escolha inicial de perfil quando nenhum mock user foi selecionado.
+ * Mostra uma escolha inicial de perfil quando nenhum usuário foi selecionado.
  */
 export function MockUserChoiceGate() {
-  const { currentUser, isLoading, mockUsers, selectMockUser } = useAuth();
+  const { currentUser, isLoading, users, selectUser } = useAuth();
   const dev = isDevelopment();
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export function MockUserChoiceGate() {
     return null;
   }
 
-  const personUser = mockUsers.find((user) => user.role === 'PESSOA_FISICA');
-  const ongUser = mockUsers.find((user) => user.role === 'ONG');
+  const personUser = users.find((user) => user.role === 'PESSOA_FISICA');
+  const ongUser = users.find((user) => user.role === 'ONG');
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
@@ -75,7 +75,7 @@ export function MockUserChoiceGate() {
                   return;
                 }
 
-                void selectMockUser(card.user.id);
+                void selectUser(card.user.id);
               }}
               className="flex min-h-44 flex-col items-start justify-between rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50"
             >

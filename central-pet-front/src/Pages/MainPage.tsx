@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
-import { getStoredPets } from '@/Mocks/PetsStorage';
+import { getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
 
 const MainPage: React.FC = () => {

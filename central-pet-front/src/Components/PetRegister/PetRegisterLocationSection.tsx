@@ -1,7 +1,7 @@
 import FormField from '@/Components/Form/FormField';
 import FormInput from '@/Components/Form/FormInput';
 import FormSection from '@/Components/Form/FormSection';
-import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
+import type { PetRegisterFormData } from '@/storage/pets';
 
 type FormErrors = Partial<Record<keyof PetRegisterFormData, string>>;
 

@@ -2,71 +2,18 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { randomUUID } from 'crypto';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { PetResponseDto } from './dto/pet-response.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { mockPets } from '../../mocks';
-
-type PetRecord = {
-  id: string;
-  profilePhoto: string;
-  galleryPhotos: string[];
-  name: string;
-  age: string;
-  species: string;
-  breed: string;
-  sex: string;
-  size: string;
-  microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  contact: string;
-  vaccinated: boolean;
-  neutered: boolean;
-  dewormed: boolean;
-  needsHealthCare: boolean;
-  physicalLimitation: boolean;
-  visualLimitation: boolean;
-  hearingLimitation: boolean;
-  selectedPersonalities: string[];
-  responsibleUserId: string;
-  createdAt: string;
-  updatedAt: string;
-};
+import { mockPets } from '@/mocks';
+import type { PetRecord } from './models/pet-record';
+import { createPetRecordFromMockPet, mapPetRecordToPersistence } from './mappers/pet-record.mapper';
 
 @Injectable()
 export class PetsService {
-  // Seed in-memory store with mockPets so per-user filtering works out-of-the-box
-  // Skip seeding during tests to keep test expectations deterministic
+  // Inicializa o armazenamento em memória com mockPets para o filtro por usuário funcionar por padrão
+  // Não inicializa durante os testes para manter os resultados determinísticos
   private readonly pets: PetRecord[] =
-    process.env.NODE_ENV === 'test'
-      ? []
-      : mockPets.map((p) => ({
-          id: String(p.id),
-          profilePhoto: p.photo ?? '',
-          galleryPhotos: [],
-          name: p.name,
-          age: p.ageMonths ? `${p.ageMonths} meses` : '',
-          species: this.normalizeSpecies(p.species ?? ''),
-          breed: p.breed ?? '',
-          sex: this.normalizeSex(p.sex ?? ''),
-          size: this.normalizeSize(p.size ?? ''),
-          microchipped: false,
-          tutor: p.sourceName ?? '',
-          shelter: p.sourceName ?? '',
-          city: p.city ?? '',
-          contact: '',
-          vaccinated: p.vaccinated,
-          neutered: p.neutered,
-          dewormed: p.dewormed,
-          needsHealthCare: false,
-          physicalLimitation: false,
-          visualLimitation: false,
-          hearingLimitation: false,
-          selectedPersonalities: [],
-          responsibleUserId: p.responsibleUserId,
-          createdAt: p.createdAt ?? new Date().toISOString(),
-          updatedAt: p.updatedAt ?? new Date().toISOString(),
-        }));
+    process.env.NODE_ENV === 'test' ? [] : mockPets.map(createPetRecordFromMockPet);
 
   constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
@@ -130,30 +77,6 @@ export class PetsService {
     return sexMap[sex] || sex;
   }
 
-  private normalizeAdoptionStatus(status: string): string {
-    const statusMap: Record<string, string> = {
-      available: 'AVAILABLE',
-      Available: 'AVAILABLE',
-      AVAILABLE: 'AVAILABLE',
-      in_process: 'IN_PROCESS',
-      In_process: 'IN_PROCESS',
-      IN_PROCESS: 'IN_PROCESS',
-      adopted: 'ADOPTED',
-      Adopted: 'ADOPTED',
-      ADOPTED: 'ADOPTED',
-      unavailable: 'UNAVAILABLE',
-      Unavailable: 'UNAVAILABLE',
-      UNAVAILABLE: 'UNAVAILABLE',
-    };
-
-    const mapped = statusMap[status];
-    if (!mapped) {
-      throw new BadRequestException(`Invalid adoption status: ${status}`);
-    }
-
-    return mapped;
-  }
-
   private validateSelectedPersonalities(selectedPersonalities: string[]) {
     const validTraitIds = this.personalityTraitsService.getTraitIds();
     const invalidTraits = selectedPersonalities.filter(
@@ -199,11 +122,12 @@ export class PetsService {
       hearingLimitation: createPetDto.hearingLimitation,
       selectedPersonalities,
       responsibleUserId: createPetDto.responsibleUserId,
+      adoptionStatus: 'AVAILABLE',
       createdAt: now,
       updatedAt: now,
     };
 
-    this.pets.push(pet);
+    this.pets.push(mapPetRecordToPersistence(pet));
 
     return {
       message: 'Pet created successfully',
@@ -228,12 +152,12 @@ export class PetsService {
       LARGE: 'Grande',
     };
 
-    return {
+    return new PetResponseDto({
       ...pet,
       species: speciesOutMap[pet.species] ?? pet.species,
       sex: sexOutMap[pet.sex] ?? pet.sex,
       size: sizeOutMap[pet.size] ?? pet.size,
-    };
+    });
   }
 
   findAll(responsibleUserId?: string) {
@@ -288,7 +212,7 @@ export class PetsService {
     }
 
     const updatedPet: PetRecord = {
-      id: this.pets[index].id,
+      ...this.pets[index],
       profilePhoto: definedUpdates.profilePhoto ?? this.pets[index].profilePhoto,
       galleryPhotos: definedUpdates.galleryPhotos ?? this.pets[index].galleryPhotos,
       name: definedUpdates.name ?? this.pets[index].name,
@@ -311,8 +235,6 @@ export class PetsService {
       hearingLimitation: definedUpdates.hearingLimitation ?? this.pets[index].hearingLimitation,
       selectedPersonalities:
         definedUpdates.selectedPersonalities ?? this.pets[index].selectedPersonalities,
-      responsibleUserId: this.pets[index].responsibleUserId,
-      createdAt: this.pets[index].createdAt,
       updatedAt: new Date().toISOString(),
     };
 

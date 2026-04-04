@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import SidePanel from '@/Components/SidePanel';
 import { MockUserChoiceGate } from '@/Components/Auth/MockUserChoiceGate';
-import { getStoredPets } from '@/Mocks/PetsStorage';
+import { getStoredPets } from '@/storage/pets';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes } from '@/routes';

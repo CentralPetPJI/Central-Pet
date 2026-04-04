@@ -1,4 +1,4 @@
-import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
+import type { PetRegisterFormData } from '@/storage/pets';
 
 interface PetProfileHeroProps {
   formData: PetRegisterFormData;

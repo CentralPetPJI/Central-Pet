@@ -3,14 +3,14 @@ import { ClipboardList, DoorOpen, PawPrint, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import type { MenuItem } from '@/Models/Types';
+import type { MenuItem } from '@/Models/ui';
 
 /**
  * UserMenu - Dropdown do usuário logado com avatar e opções
  * Mostra nome, avatar com iniciais, e menu de ações do usuário
  */
 export function UserMenu() {
-  const { currentUser, clearAuth } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -67,7 +67,7 @@ export function UserMenu() {
     {
       label: 'Sair',
       onClick: () => {
-        clearAuth();
+        void logout();
         setIsOpen(false);
       },
       icon: <DoorOpen className="h-4 w-4 text-rose-500" />,
@@ -124,7 +124,7 @@ export function UserMenu() {
 
           {/* Itens do menu */}
           {menuItems.map((item, index) => {
-            // Divider
+            // Divisor
             if (item.divider) {
               return <li key={index} className="my-1 border-t border-gray-200" role="separator" />;
             }

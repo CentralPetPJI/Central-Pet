@@ -10,14 +10,14 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
-import { saveIdMapping } from '@/Mocks/PetIdMapping';
-import { petPersonalityStorageKey } from '@/Mocks/PetPersonalityOptions';
+import { saveIdMapping } from '@/storage/pets';
+import { petPersonalityStorageKey } from '@/storage/pets';
 import {
   initialPetRegisterFormData,
   petRegisterFormSchema,
   petRegisterStorageKey,
   type PetRegisterFormData,
-} from '@/Mocks/PetRegisterFormMock';
+} from '@/storage/pets';
 import {
   buildPetFromRegisterForm,
   buildRegisterFormDataFromPet,
@@ -25,7 +25,7 @@ import {
   getPetProfileById,
   getStoredPets,
   savePet,
-} from '@/Mocks/PetsStorage';
+} from '@/storage/pets';
 import { routes } from '@/routes';
 
 type FormErrors = Partial<Record<keyof PetRegisterFormData, string>>;

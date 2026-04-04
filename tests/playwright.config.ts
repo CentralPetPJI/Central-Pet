@@ -9,7 +9,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: [
-    // Backend server
+    // Servidor de backend
     {
       command: "pnpm dev:back",
       url: "http://localhost:3000/api/health",
@@ -17,7 +17,7 @@ export default defineConfig({
       timeout: 120_000,
       cwd: "..",
     },
-    // Frontend server
+    // Servidor de frontend
     {
       command: "pnpm dev:front",
       url: "http://localhost:5173",

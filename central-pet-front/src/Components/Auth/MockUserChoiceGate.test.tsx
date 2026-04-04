@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MockUserChoiceGate } from './MockUserChoiceGate';
 
-const { selectMockUserMock, isDevelopmentMock } = vi.hoisted(() => ({
-  selectMockUserMock: vi.fn(),
+const { selectUserMock, isDevelopmentMock } = vi.hoisted(() => ({
+  selectUserMock: vi.fn(),
   isDevelopmentMock: vi.fn(),
 }));
 
@@ -11,7 +11,7 @@ vi.mock('@/lib/auth-context', () => ({
   useAuth: () => ({
     currentUser: null,
     isLoading: false,
-    mockUsers: [
+    users: [
       {
         id: 'user-pessoa-fisica',
         fullName: 'Rafael Lima',
@@ -23,7 +23,7 @@ vi.mock('@/lib/auth-context', () => ({
         role: 'ONG',
       },
     ],
-    selectMockUser: selectMockUserMock,
+    selectUser: selectUserMock,
   }),
 }));
 
@@ -33,11 +33,11 @@ vi.mock('@/lib/dev-mode', () => ({
 
 describe('MockUserChoiceGate', () => {
   beforeEach(() => {
-    selectMockUserMock.mockReset();
+    selectUserMock.mockReset();
     isDevelopmentMock.mockReset();
   });
 
-  it('renders the role picker in production and selects the chosen mock user', async () => {
+  it('renderiza o seletor de perfil em producao e seleciona o usuario escolhido', async () => {
     isDevelopmentMock.mockReturnValue(false);
 
     render(<MockUserChoiceGate />);
@@ -48,6 +48,6 @@ describe('MockUserChoiceGate', () => {
 
     await screen.getByRole('button', { name: /Pessoa física/i }).click();
 
-    expect(selectMockUserMock).toHaveBeenCalledWith('user-pessoa-fisica');
+    expect(selectUserMock).toHaveBeenCalledWith('user-pessoa-fisica');
   });
 });

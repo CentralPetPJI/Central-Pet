@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import dogImage from '../assets/image/dog.png';
+import dogImage from '@/assets/image/dog.png';
 
 export const petRegisterStorageKey = 'central-pet:register-form';
 

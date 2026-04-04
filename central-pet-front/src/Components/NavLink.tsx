@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import type { NavLinkProps } from '@/Models/Types';
+import type { NavLinkProps } from '@/Models/ui';
 
 /**
  * Link de navegação com detecção automática de rota ativa

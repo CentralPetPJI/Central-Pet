@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { userStorageKey } from "../../central-pet-front/src/storage/auth";
 
 /**
  * Teste E2E: Fluxo crítico de cadastro e visualização de pets
@@ -8,10 +9,12 @@ test.describe("Fluxo de Cadastro de Pets", () => {
   const TEST_USER_ID = "550e8400-e29b-41d4-a716-446655440001";
 
   test.beforeEach(async ({ page }) => {
-    // Define usuário mock no localStorage ANTES de qualquer navegação
-    await page.addInitScript((userId) => {
-      localStorage.setItem("central-pet:mock-user-id", userId);
-    }, TEST_USER_ID);
+    await page.addInitScript(
+      ({ key, userId }) => {
+        localStorage.setItem(key, userId);
+      },
+      { key: userStorageKey, userId: TEST_USER_ID },
+    );
   });
 
   test("deve cadastrar pet no backend e exibir na lista Meus Pets", async ({
