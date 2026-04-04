@@ -18,7 +18,7 @@ describe('UsersService', () => {
     cpf: '12345678901',
   });
 
-  it('should create an adopter user', async () => {
+  it('deve criar um usuário adotante', async () => {
     const result = await service.create(makeAdopterDto());
 
     expect(result.message).toBe('User created successfully');
@@ -28,7 +28,7 @@ describe('UsersService', () => {
     expect(result.data.cpf).toBe('12345678901');
   });
 
-  it('should reject duplicate emails', async () => {
+  it('deve rejeitar e-mails duplicados', async () => {
     await service.create(makeAdopterDto());
 
     await expect(service.create(makeAdopterDto())).rejects.toThrow(
@@ -36,7 +36,7 @@ describe('UsersService', () => {
     );
   });
 
-  it('should require cpf for adopter accounts', async () => {
+  it('deve exigir cpf para contas de adotante', async () => {
     const invalidDto: CreateUserDto = {
       fullName: 'Maria Silva',
       email: 'maria@example.com',
@@ -49,7 +49,7 @@ describe('UsersService', () => {
     );
   });
 
-  it('should require cnpj for ong accounts', async () => {
+  it('deve exigir cnpj para contas de ong', async () => {
     const invalidDto: CreateUserDto = {
       fullName: 'Casa de Apoio',
       email: 'ong@example.com',

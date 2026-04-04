@@ -12,7 +12,7 @@ describe('AuthService', () => {
     authService = new AuthService(usersService);
   });
 
-  it('should authenticate an existing user', async () => {
+  it('deve autenticar um usuário existente', async () => {
     await usersService.create({
       fullName: 'Maria Silva',
       email: 'maria@example.com',
@@ -32,7 +32,7 @@ describe('AuthService', () => {
     expect(result.data.user.email).toBe('maria@example.com');
   });
 
-  it('should reject invalid credentials', async () => {
+  it('deve rejeitar credenciais inválidas', async () => {
     await usersService.create({
       fullName: 'Maria Silva',
       email: 'maria@example.com',
@@ -50,7 +50,7 @@ describe('AuthService', () => {
     ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('should return authenticated user from a valid session', async () => {
+  it('deve retornar usuário autenticado de uma sessão válida', async () => {
     await usersService.create({
       fullName: 'Maria Silva',
       email: 'maria@example.com',

@@ -42,7 +42,7 @@ describe('App (e2e)', () => {
     await moduleFixture.close();
   });
 
-  it('/api/health (GET)', () => {
+  it('/api/health (GET) deve responder com status de saúde', () => {
     const body = healthController.check() as {
       status: string;
       service: string;
@@ -54,7 +54,7 @@ describe('App (e2e)', () => {
     expect(body.timestamp).toBeDefined();
   });
 
-  it('/api/users (POST) and /api/auth/login (POST)', async () => {
+  it('/api/users (POST) e /api/auth/login (POST) devem cadastrar e autenticar usuário', async () => {
     await usersController.create({
       fullName: 'Maria Silva',
       email: 'maria@example.com',

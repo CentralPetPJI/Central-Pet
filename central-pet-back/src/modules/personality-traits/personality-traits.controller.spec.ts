@@ -9,7 +9,7 @@ describe('PersonalityTraitsController', () => {
     controller = new PersonalityTraitsController(new PersonalityTraitsService());
   });
 
-  it('should return personality traits', () => {
+  it('deve retornar os traços de personalidade', () => {
     const result = controller.findAll();
 
     expect(result.message).toBe('Personality traits retrieved successfully');

@@ -65,7 +65,7 @@ describe('PetsService', () => {
     return transformed as UpdatePetDto;
   };
 
-  it('should create a pet successfully', async () => {
+  it('deve criar um pet com sucesso', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     const result = service.create(dto);
 
@@ -78,7 +78,7 @@ describe('PetsService', () => {
     expect(result.data.updatedAt).toBeDefined();
   });
 
-  it('should create a pet with empty selectedPersonalities when omitted', async () => {
+  it('deve criar um pet com selectedPersonalities vazio quando omitido', async () => {
     const dto = await validateCreateDto({
       ...makeCreateDto(),
       selectedPersonalities: undefined,
@@ -89,14 +89,14 @@ describe('PetsService', () => {
     expect(result.data.selectedPersonalities).toEqual([]);
   });
 
-  it('should reject invalid personality traits on create', async () => {
+  it('deve rejeitar traços de personalidade inválidos na criação', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     dto.selectedPersonalities = ['playful', 'invalid-trait'];
 
     expect(() => service.create(dto)).toThrow(BadRequestException);
   });
 
-  it('should list all created pets', async () => {
+  it('deve listar todos os pets criados', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     service.create(dto);
 
@@ -106,7 +106,7 @@ describe('PetsService', () => {
     expect(result.data.length).toBe(1);
   });
 
-  it('should find one existing pet', async () => {
+  it('deve buscar um pet existente', async () => {
     const dto = await validateCreateDto(makeCreateDto());
     const created = service.create(dto);
 
@@ -117,11 +117,11 @@ describe('PetsService', () => {
     expect(found.data.name).toBe('Luna');
   });
 
-  it('should throw NotFoundException when pet does not exist on findOne', () => {
+  it('deve lançar NotFoundException quando o pet não existir no findOne', () => {
     expect(() => service.findOne('missing-id')).toThrow(NotFoundException);
   });
 
-  it('should update an existing pet and preserve other fields', async () => {
+  it('deve atualizar um pet existente e preservar outros campos', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -149,7 +149,7 @@ describe('PetsService', () => {
     );
   });
 
-  it('should reject invalid personality traits on update', async () => {
+  it('deve rejeitar traços de personalidade inválidos na atualização', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -160,12 +160,12 @@ describe('PetsService', () => {
     expect(() => service.update(created.data.id, updateDto)).toThrow(BadRequestException);
   });
 
-  it('should throw NotFoundException when pet does not exist on update', async () => {
+  it('deve lançar NotFoundException quando o pet não existir na atualização', async () => {
     const updateDto = await validateUpdateDto({ name: 'Novo Nome' });
     expect(() => service.update('missing-id', updateDto)).toThrow(NotFoundException);
   });
 
-  it('should preserve selectedPersonalities when update payload omits the field', async () => {
+  it('deve preservar selectedPersonalities quando a atualização omitir o campo', async () => {
     const createDto = await validateCreateDto(makeCreateDto());
     const created = service.create(createDto);
 
@@ -179,7 +179,7 @@ describe('PetsService', () => {
     expect(updated.data.selectedPersonalities).toEqual(created.data.selectedPersonalities);
   });
 
-  it('should clear selectedPersonalities when update payload sends an empty array', () => {
+  it('deve limpar selectedPersonalities quando a atualização enviar um array vazio', () => {
     const created = service.create(makeCreateDto());
 
     const updated = service.update(created.data.id, {
@@ -190,8 +190,8 @@ describe('PetsService', () => {
   });
 
   // New tests for DTO validation decorators
-  describe('CreatePetDto validation', () => {
-    it('should reject when galleryPhotos exceeds @ArrayMaxSize(10)', async () => {
+  describe('Validação de CreatePetDto', () => {
+    it('deve rejeitar quando galleryPhotos exceder @ArrayMaxSize(10)', async () => {
       const dto = {
         ...makeCreateDto(),
         galleryPhotos: Array(11).fill('data:image/png;base64,test'),
@@ -200,7 +200,7 @@ describe('PetsService', () => {
       await expect(validateCreateDto(dto)).rejects.toThrow();
     });
 
-    it('should accept when galleryPhotos has exactly 10 items', async () => {
+    it('deve aceitar quando galleryPhotos tiver exatamente 10 itens', async () => {
       const dto = {
         ...makeCreateDto(),
         galleryPhotos: Array(10).fill('data:image/png;base64,test'),
@@ -210,7 +210,7 @@ describe('PetsService', () => {
       expect(validated.galleryPhotos?.length).toBe(10);
     });
 
-    it('should reject when selectedPersonalities has duplicate values (@ArrayUnique)', async () => {
+    it('deve rejeitar quando selectedPersonalities tiver valores duplicados (@ArrayUnique)', async () => {
       const dto = {
         ...makeCreateDto(),
         selectedPersonalities: ['playful', 'playful', 'friendly'],
@@ -219,7 +219,7 @@ describe('PetsService', () => {
       await expect(validateCreateDto(dto)).rejects.toThrow();
     });
 
-    it('should accept when selectedPersonalities has unique values', async () => {
+    it('deve aceitar quando selectedPersonalities tiver valores únicos', async () => {
       const dto = {
         ...makeCreateDto(),
         selectedPersonalities: ['playful', 'friendly', 'calm'],
@@ -229,7 +229,7 @@ describe('PetsService', () => {
       expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
     });
 
-    it('should reject when name exceeds @MaxLength(100)', async () => {
+    it('deve rejeitar quando name exceder @MaxLength(100)', async () => {
       const dto = {
         ...makeCreateDto(),
         name: 'a'.repeat(101),
@@ -238,7 +238,7 @@ describe('PetsService', () => {
       await expect(validateCreateDto(dto)).rejects.toThrow();
     });
 
-    it('should reject when species is not in allowed values (@IsIn)', async () => {
+    it('deve rejeitar quando species não estiver nos valores permitidos (@IsIn)', async () => {
       const dto = {
         ...makeCreateDto(),
         species: 'bird',
@@ -247,7 +247,7 @@ describe('PetsService', () => {
       await expect(validateCreateDto(dto)).rejects.toThrow();
     });
 
-    it('should reject when required field is missing (@IsNotEmpty)', async () => {
+    it('deve rejeitar quando um campo obrigatório estiver ausente (@IsNotEmpty)', async () => {
       const dto = {
         ...makeCreateDto(),
         name: '',
@@ -257,8 +257,8 @@ describe('PetsService', () => {
     });
   });
 
-  describe('UpdatePetDto validation', () => {
-    it('should reject when galleryPhotos exceeds @ArrayMaxSize(10)', async () => {
+  describe('Validação de UpdatePetDto', () => {
+    it('deve rejeitar quando galleryPhotos exceder @ArrayMaxSize(10)', async () => {
       const dto = {
         galleryPhotos: Array(11).fill('data:image/png;base64,test'),
       };
@@ -266,7 +266,7 @@ describe('PetsService', () => {
       await expect(validateUpdateDto(dto)).rejects.toThrow();
     });
 
-    it('should accept when galleryPhotos has exactly 10 items', async () => {
+    it('deve aceitar quando galleryPhotos tiver exatamente 10 itens', async () => {
       const dto = {
         galleryPhotos: Array(10).fill('data:image/png;base64,test'),
       };
@@ -275,7 +275,7 @@ describe('PetsService', () => {
       expect(validated.galleryPhotos?.length).toBe(10);
     });
 
-    it('should reject when selectedPersonalities has duplicate values (@ArrayUnique)', async () => {
+    it('deve rejeitar quando selectedPersonalities tiver valores duplicados (@ArrayUnique)', async () => {
       const dto = {
         selectedPersonalities: ['playful', 'playful', 'friendly'],
       };
@@ -283,7 +283,7 @@ describe('PetsService', () => {
       await expect(validateUpdateDto(dto)).rejects.toThrow();
     });
 
-    it('should accept when selectedPersonalities has unique values', async () => {
+    it('deve aceitar quando selectedPersonalities tiver valores únicos', async () => {
       const dto = {
         selectedPersonalities: ['playful', 'friendly', 'calm'],
       };
@@ -292,7 +292,7 @@ describe('PetsService', () => {
       expect(validated.selectedPersonalities).toEqual(['playful', 'friendly', 'calm']);
     });
 
-    it('should reject when name exceeds @MaxLength(100)', async () => {
+    it('deve rejeitar quando name exceder @MaxLength(100)', async () => {
       const dto = {
         name: 'a'.repeat(101),
       };
@@ -300,7 +300,7 @@ describe('PetsService', () => {
       await expect(validateUpdateDto(dto)).rejects.toThrow();
     });
 
-    it('should reject when species is not in allowed values (@IsIn)', async () => {
+    it('deve rejeitar quando species não estiver nos valores permitidos (@IsIn)', async () => {
       const dto = {
         species: 'bird',
       };
@@ -308,7 +308,7 @@ describe('PetsService', () => {
       await expect(validateUpdateDto(dto)).rejects.toThrow();
     });
 
-    it('should allow partial updates with only specified fields', async () => {
+    it('deve permitir atualizações parciais apenas com os campos informados', async () => {
       const dto = {
         name: 'New Name',
       };
