@@ -97,3 +97,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Persistence And Trust Rules   | 0/TBD          | Not started | -         |
 | 3. Register And Profile Refactor | 0/TBD          | Not started | -         |
 | 4. E2E Persona Coverage          | 0/TBD          | Not started | -         |
+
+### Phase 5: Auth Abstraction Layer
+
+**Goal:** Refactor frontend mock user context into a flexible auth abstraction with strategy pattern that works with mock auth today but can swap to JWT with minimal changes in v1.1.
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Create auth types, strategy interface, MockAuthStrategy, JwtAuthStrategy skeleton, and factory
+- [ ] 05-02-PLAN.md — Refactor AuthProvider to use strategy pattern, ensure backwards compatibility
