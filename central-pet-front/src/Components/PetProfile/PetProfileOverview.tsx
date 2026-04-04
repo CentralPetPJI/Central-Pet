@@ -1,5 +1,5 @@
 import dogImage from '@/assets/image/dog.png';
-import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
+import type { PetRegisterFormData } from '@/storage/pets';
 import PetProfileFactGrid, {
   type PetProfileFact,
 } from '@/Components/PetProfile/PetProfileFactGrid';

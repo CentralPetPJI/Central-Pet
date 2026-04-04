@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
-import { getLocalId } from '@/Mocks/PetIdMapping';
-import { getPetProfileById, getStoredPets } from '@/Mocks/PetsStorage';
+import { getLocalId, getPetProfileById, getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
 
 type MyPetItem = {
@@ -80,7 +79,7 @@ export default function MyPetsPage() {
           return;
         }
 
-        // Fallback: usar localStorage quando backend não estiver disponível
+        // Alternativa: usar localStorage quando o backend não estiver disponível
         try {
           const localPets = getStoredPets().filter(
             (pet) => pet.responsibleUserId === currentUser.id,

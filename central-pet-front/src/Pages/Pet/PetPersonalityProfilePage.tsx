@@ -8,9 +8,9 @@ import PetProfileHero from '@/Components/PetProfile/PetProfileHero';
 import PetProfileOverview from '@/Components/PetProfile/PetProfileOverview';
 import PetProfilePersonalityList from '@/Components/PetProfile/PetProfilePersonalityList';
 import PetProfileSection from '@/Components/PetProfile/PetProfileSection';
-import { petPersonalityOptions } from '@/Mocks/PetPersonalityOptions';
-import { initialPetRegisterFormData, type PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
-import { getPetById, getPetProfileById } from '@/Mocks/PetsStorage';
+import { petPersonalityOptions } from '@/storage/pets';
+import { initialPetRegisterFormData, type PetRegisterFormData } from '@/storage/pets';
+import { getPetById, getPetProfileById } from '@/storage/pets';
 import { routes } from '@/routes';
 
 const PetPersonalityProfilePage = () => {

@@ -1,19 +1,16 @@
 /**
- * Mock Authentication Strategy
+ * Estratégia de autenticação mock
  *
- * Implements AuthStrategy for development and E2E testing.
- * Uses mock users from backend, stores selected user ID in localStorage.
+ * Implementa AuthStrategy para desenvolvimento e testes E2E.
+ * Usa usuários mock do backend e armazena o ID selecionado no localStorage.
  */
 
 import { api } from '../../api';
-import { clearStoredMockUserId, getStoredMockUserId, setStoredMockUserId } from '../../mock-auth';
 import { isDevelopment } from '../../dev-mode';
+import { clearStoredUserId, getStoredUserId, setStoredUserId } from '@/storage/auth';
 import type { AuthStrategy, AuthUser, LoginCredentials, RegisterData } from '../types';
 
-/**
- * Response structure from /auth/mock-users endpoint.
- */
-type MockUsersResponse = {
+type UsersResponse = {
   data: {
     users: AuthUser[];
     defaultUserId: string;
@@ -21,44 +18,44 @@ type MockUsersResponse = {
 };
 
 /**
- * Mock authentication strategy.
+ * Estratégia de autenticação mock.
  *
- * Used for development and E2E tests where real authentication is not needed.
- * Mock users are loaded from the backend and stored in localStorage.
+ * Usada em desenvolvimento e testes E2E, quando autenticação real não é necessária.
+ * Os usuários mock são carregados do backend e armazenados no localStorage.
  */
 export class MockAuthStrategy implements AuthStrategy {
   readonly type = 'mock' as const;
 
-  private mockUsers: AuthUser[] = [];
+  private users: AuthUser[] = [];
 
   /**
-   * Initialize mock auth by loading available mock users from backend.
-   * Auto-selects default user in development if none stored.
+   * Inicializa a autenticação mock carregando os usuários disponíveis do backend.
+   * Seleciona automaticamente o usuário padrão em desenvolvimento se não houver um salvo.
    */
   async initialize(): Promise<void> {
-    const response = await api.get<MockUsersResponse>('/auth/mock-users');
+    const response = await api.get<UsersResponse>('/auth/mock-users');
     const { defaultUserId, users } = response.data.data;
 
-    this.mockUsers = users;
+    this.users = users;
 
-    // Check if stored user still exists in mock users list
-    const storedId = getStoredMockUserId();
+    // Verifica se o usuário salvo ainda existe na lista de usuários mock
+    const storedId = getStoredUserId();
     const hasStoredUser = storedId ? users.some((u) => u.id === storedId) : false;
 
-    // Clear invalid stored user ID
+    // Remove ID de usuário salvo inválido
     if (!hasStoredUser && storedId) {
-      clearStoredMockUserId();
+      clearStoredUserId();
     }
 
-    // Auto-select default user in development if none stored
+    // Seleciona automaticamente o usuário padrão em desenvolvimento se não houver um salvo
     if (!hasStoredUser && !storedId && isDevelopment()) {
-      setStoredMockUserId(defaultUserId);
+      setStoredUserId(defaultUserId);
     }
   }
 
   /**
-   * Get current user from /auth/me endpoint.
-   * Returns null if not authenticated (no mock user selected).
+   * Obtém o usuário atual do endpoint /auth/me.
+   * Retorna null se não estiver autenticado (nenhum usuário mock selecionado).
    */
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
@@ -70,49 +67,49 @@ export class MockAuthStrategy implements AuthStrategy {
   }
 
   /**
-   * Login is not supported in mock strategy.
-   * Use selectMockUser instead.
+   * Login não é suportado na estratégia mock.
+   * Use selectUser no lugar.
    */
   async login(_credentials: LoginCredentials): Promise<AuthUser> {
-    throw new Error('Mock auth does not support login. Use selectMockUser instead.');
+    throw new Error('Mock auth does not support login. Use selectUser instead.');
   }
 
   /**
-   * Logout clears the stored mock user ID.
+   * O logout remove o ID do usuário mock salvo.
    */
   async logout(): Promise<void> {
-    clearStoredMockUserId();
+    clearStoredUserId();
   }
 
   /**
-   * Registration is not supported in mock strategy.
-   * Mock users are defined in backend.
+   * Cadastro não é suportado na estratégia mock.
+   * Os usuários mock são definidos no backend.
    */
   async register(_data: RegisterData): Promise<AuthUser> {
     throw new Error('Mock auth does not support registration.');
   }
 
   // -------------------------------------------------------------------------
-  // Mock-Specific Methods
+  // Métodos específicos do modo mock
   // -------------------------------------------------------------------------
 
   /**
-   * Get the list of available mock users.
+   * Retorna a lista de usuários disponíveis.
    */
-  async getMockUsers(): Promise<AuthUser[]> {
-    return this.mockUsers;
+  async getUsers(): Promise<AuthUser[]> {
+    return this.users;
   }
 
   /**
-   * Select a mock user for the current session.
-   * Stores the user ID in localStorage.
+   * Seleciona um usuário para a sessão atual.
+   * Armazena o ID do usuário no localStorage.
    */
-  async selectMockUser(userId: string): Promise<AuthUser> {
-    const user = this.mockUsers.find((u) => u.id === userId);
+  async selectUser(userId: string): Promise<AuthUser> {
+    const user = this.users.find((u) => u.id === userId);
     if (!user) {
-      throw new Error(`Mock user not found: ${userId}`);
+      throw new Error(`User not found: ${userId}`);
     }
-    setStoredMockUserId(userId);
+    setStoredUserId(userId);
     return user;
   }
 }

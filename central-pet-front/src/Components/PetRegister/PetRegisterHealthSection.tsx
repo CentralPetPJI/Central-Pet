@@ -1,6 +1,6 @@
 import FormCheckbox from '@/Components/Form/FormCheckbox';
 import FormSection from '@/Components/Form/FormSection';
-import type { PetRegisterFormData } from '@/Mocks/PetRegisterFormMock';
+import type { PetRegisterFormData } from '@/storage/pets';
 
 // TODO: Mover isso pro back, talvez ;)
 const healthFields = [
