@@ -4,41 +4,17 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
+import type { ReceivedAdoptionRequest } from '@/Models/pet';
 import { routes } from '@/routes';
 
-type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
-
-type AdoptionRequestItem = {
-  id: string;
-  pet: {
-    id: string;
-    name: string;
-    species: string;
-    city: string;
-    state: string;
-    responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
-    sourceName: string;
-  };
-  adopter: {
-    id: string;
-    name: string;
-    city: string;
-    state: string;
-  };
-  message: string;
-  status: AdoptionRequestStatus;
-  requestedAt: string;
-};
-
-const statusLabelMap: Record<AdoptionRequestStatus, string> = {
+const statusLabelMap: Record<ReceivedAdoptionRequest['status'], string> = {
   PENDING: 'Pendente',
   UNDER_REVIEW: 'Em análise',
   APPROVED: 'Aprovada',
   REJECTED: 'Recusada',
 };
 
-const statusClassNameMap: Record<AdoptionRequestStatus, string> = {
+const statusClassNameMap: Record<ReceivedAdoptionRequest['status'], string> = {
   PENDING: 'bg-amber-100 text-amber-800',
   UNDER_REVIEW: 'bg-sky-100 text-sky-800',
   APPROVED: 'bg-emerald-100 text-emerald-800',
@@ -52,7 +28,7 @@ function formatRequestDate(date: string) {
   }).format(new Date(date));
 }
 
-function normalizePetRouteId(petId: string): string | number {
+function normalizePetRouteId(petId: string | number): string | number {
   const numericId = Number(petId);
 
   if (Number.isFinite(numericId)) {
@@ -64,7 +40,7 @@ function normalizePetRouteId(petId: string): string | number {
 
 export default function AdoptionRequestsReceivedPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const [requests, setRequests] = useState<AdoptionRequestItem[]>([]);
+  const [requests, setRequests] = useState<ReceivedAdoptionRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -86,7 +62,7 @@ export default function AdoptionRequestsReceivedPage() {
       setErrorMessage(null);
 
       try {
-        const response = await api.get<{ data: AdoptionRequestItem[] }>('/adoption-requests', {
+        const response = await api.get<{ data: ReceivedAdoptionRequest[] }>('/adoption-requests', {
           params: {
             type: 'received',
             responsibleUserId: currentUser.id,

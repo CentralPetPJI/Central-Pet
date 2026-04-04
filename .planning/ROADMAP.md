@@ -118,5 +118,18 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md — Move auth/session storage out of `lib` and switch auth/api consumers to the new module.
-- [ ] 06-02-PLAN.md — Relocate pet/form/id/personalities storage helpers into `src/storage/pets` with compatibility shims.
-- [ ] 06-03-PLAN.md — Repoint app consumers, tests, and E2E seed to the new storage layout and remove old references.
+- [x] 06-02-PLAN.md — Relocate pet/form/id/personalities storage helpers into `src/storage/pets` with compatibility shims.
+- [x] 06-03-PLAN.md — Repoint app consumers, tests, and E2E seed to the new storage layout and remove old references.
+
+### Phase 7: refatoração types/models backend e frontend
+
+**Goal:** Separar contratos de domínio, API e UI em backend/frontend, mantendo o backend como referência e preservando o comportamento atual por meio de mapeadores.
+**Requirements**: [TYPE-01, TYPE-02, TYPE-03, TYPE-04]
+**Depends on:** Phase 6
+**Plans:** 4 plans
+
+Plans:
+- [x] 07-01-PLAN.md — Extract reusable backend pet domain model and mapping helpers.
+- [x] 07-02-PLAN.md — Split backend pet DTOs into input and output contracts.
+- [x] 07-03-PLAN.md — Split frontend models into domain files and keep compatibility barrels.
+- [x] 07-04-PLAN.md — Migrate consumers and API mappers to the new model boundaries.

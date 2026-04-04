@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceivedPage';
+import type { ReceivedAdoptionRequest } from '@/Models/pet';
 
 const { getMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
@@ -52,7 +53,7 @@ describe('Pagina de solicitacoes recebidas', () => {
             message: 'Tenho uma casa segura e ja convivo com gatos.',
             status: 'PENDING',
             requestedAt: '2026-03-31T09:15:00.000Z',
-          },
+          } satisfies ReceivedAdoptionRequest,
         ],
       },
     });

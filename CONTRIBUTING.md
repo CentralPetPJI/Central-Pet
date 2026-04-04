@@ -42,6 +42,11 @@ Exemplos:
 - `docs: atualizar README com novas instruções`
 - `refactor: melhorar lógica do Carousel`
 
+## 🌐 Idioma do projeto
+
+- Documentações, Mensagens de commit e comentários no código: português
+- Código, nomes de variáveis, funções, componentes e identificadores: inglês
+
 ## 🚩 Como abrir uma issue
 
 1. Verifique se já existe uma issue semelhante.

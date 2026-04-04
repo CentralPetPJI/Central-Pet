@@ -59,3 +59,53 @@ export interface PetListItem {
   state?: string;
   adoptionStatus: string;
 }
+
+export type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+
+export interface ReceivedAdoptionRequest {
+  id: string;
+  pet: {
+    id: number;
+    name: string;
+    species: string;
+    city: string;
+    state: string;
+    responsibleUserId: string;
+    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceName: string;
+  };
+  adopter: {
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+  };
+  message: string;
+  status: AdoptionRequestStatus;
+  requestedAt: string;
+}
+
+export type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+
+export interface ReceivedAdoptionRequest {
+  id: string;
+  pet: {
+    id: number;
+    name: string;
+    species: string;
+    city: string;
+    state: string;
+    responsibleUserId: string;
+    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceName: string;
+  };
+  adopter: {
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+  };
+  message: string;
+  status: AdoptionRequestStatus;
+  requestedAt: string;
+}
