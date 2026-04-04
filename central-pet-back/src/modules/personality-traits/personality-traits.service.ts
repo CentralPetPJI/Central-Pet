@@ -7,15 +7,13 @@ export class PersonalityTraitsService {
     {
       id: 'playful',
       title: 'Brincalhao',
-      description:
-        'Adora interagir, correr e transformar qualquer momento em diversao.',
+      description: 'Adora interagir, correr e transformar qualquer momento em diversao.',
       conflictsWith: [],
     },
     {
       id: 'calm',
       title: 'Calmo',
-      description:
-        'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+      description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
       conflictsWith: [],
     },
     {
@@ -39,8 +37,7 @@ export class PersonalityTraitsService {
     {
       id: 'friendly',
       title: 'Sociavel',
-      description:
-        'Recebe bem visitas, outros pets e busca companhia com facilidade.',
+      description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
       conflictsWith: [],
     },
   ];

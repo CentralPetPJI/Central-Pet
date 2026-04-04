@@ -23,6 +23,12 @@ O Central-Pet organiza a jornada de adocao e apoio a animais resgatados, oferece
 ## Estrutura de Pastas
 
 ```
+central-pet-back/
+  Dockerfile
+  prisma/
+  src/
+    modules/
+
 central-pet-front/
   Dockerfile
   src/
@@ -69,7 +75,7 @@ docker compose -f docker-compose.prod.yml up --build
 
 Aplicacao disponivel em `http://localhost:8080`.
 
-Os arquivos `docker-compose` ficam na raiz para orquestrar o monolito, mas cada aplicacao deve manter seu proprio `Dockerfile`. Hoje o frontend usa [central-pet-front/Dockerfile](./central-pet-front/Dockerfile), e o backend pode seguir o mesmo padrao quando existir.
+Os arquivos `docker-compose` ficam na raiz para orquestrar o monorepo, e cada aplicacao mantem seu proprio `Dockerfile`: [central-pet-front/Dockerfile](./central-pet-front/Dockerfile) e [central-pet-back/Dockerfile](./central-pet-back/Dockerfile).
 
 ## Contribuicao
 

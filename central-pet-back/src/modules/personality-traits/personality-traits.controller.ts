@@ -3,9 +3,7 @@ import { PersonalityTraitsService } from './personality-traits.service';
 
 @Controller('personality-traits')
 export class PersonalityTraitsController {
-  constructor(
-    private readonly personalityTraitsService: PersonalityTraitsService,
-  ) {}
+  constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
   @Get()
   findAll() {

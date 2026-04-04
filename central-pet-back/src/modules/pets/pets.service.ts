@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
@@ -39,9 +35,7 @@ type PetRecord = {
 export class PetsService {
   private readonly pets: PetRecord[] = [];
 
-  constructor(
-    private readonly personalityTraitsService: PersonalityTraitsService,
-  ) {}
+  constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
   private validateSelectedPersonalities(selectedPersonalities: string[]) {
     const validTraitIds = this.personalityTraitsService.getTraitIds();
@@ -51,9 +45,7 @@ export class PetsService {
     );
 
     if (invalidTraits.length > 0) {
-      throw new BadRequestException(
-        `Invalid personality traits: ${invalidTraits.join(', ')}`,
-      );
+      throw new BadRequestException(`Invalid personality traits: ${invalidTraits.join(', ')}`);
     }
   }
 
@@ -66,7 +58,7 @@ export class PetsService {
     const pet: PetRecord = {
       id: randomUUID(),
       profilePhoto: createPetDto.profilePhoto,
-      galleryPhotos: createPetDto.galleryPhotos,
+      galleryPhotos: createPetDto.galleryPhotos ?? [],
       name: createPetDto.name,
       age: createPetDto.age,
       species: createPetDto.species,

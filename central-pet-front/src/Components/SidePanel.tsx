@@ -40,8 +40,7 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, number }: StatCardProps) {
   const [count, setCount] = useState(0);
-  const normalizedLabel =
-    number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
+  const normalizedLabel = number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
 
   useEffect(() => {
     let start = 0;

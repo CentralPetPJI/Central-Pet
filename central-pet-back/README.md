@@ -57,6 +57,33 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
+## Security
+
+This API includes baseline hardening controls by default:
+
+- `helmet` for secure HTTP headers
+- Global request throttling with `@nestjs/throttler`
+- Cookie-based session with `HttpOnly` and `SameSite=Lax`
+- Global `ValidationPipe` with `whitelist` and `forbidNonWhitelisted`
+
+### Environment variables
+
+Required and security-relevant env vars:
+
+- `PORT`
+- `FRONTEND_URL`
+- `DATABASE_URL`
+- `THROTTLE_TTL` (window in milliseconds, default `60000`)
+- `THROTTLE_LIMIT` (max requests per window, default `60`)
+
+### Security checklist
+
+- Never commit real secrets (`.env`, database credentials, tokens)
+- Keep `NODE_ENV=production` in production to enforce `Secure` cookies
+- Restrict `FRONTEND_URL` to trusted origins only
+- Review throttling values based on traffic profile
+- Run `pnpm run test:e2e -- test/security.e2e-spec.ts` in CI
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

@@ -3,8 +3,11 @@ import './Header.css';
 import DropdownMenu from '../Components/DropdownMenu';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
+import { useAuth } from '@/lib/auth';
 
 const Header = () => {
+  const { currentUser, logout } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-300 bg-gradient-to-r from-[#6fe2f1] to-white">
       <div className="flex w-full flex-wrap items-center gap-3 px-3 py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:px-4">
@@ -33,18 +36,39 @@ const Header = () => {
         </nav>
 
         <div className="order-2 ml-auto flex flex-wrap items-center justify-end gap-2 lg:order-3">
-          <Link
-            to={routes.pets.new.path}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
-          >
-            Cadastrar
-          </Link>
-          <Link
-            to={routes.login.path}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
-          >
-            Entrar
-          </Link>
+          {currentUser ? (
+            <>
+              <span className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800">
+                {currentUser.fullName}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  void logout().finally(() => {
+                    window.location.assign(routes.home.path);
+                  });
+                }}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to={routes.register.path}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Criar conta
+              </Link>
+              <Link
+                to={routes.login.path}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 transition hover:bg-gray-100"
+              >
+                Entrar
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
