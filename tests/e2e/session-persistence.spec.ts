@@ -1,26 +1,33 @@
 import { expect, test } from "@playwright/test";
+import {
+  criarUsuarioViaApi,
+  fazerLogin,
+  gerarUsuarioUnico,
+} from "../utils/user-helpers";
 
 /**
  * Testes E2E para verificar persistência de sessão após refresh
  *
- * Cobertura:
- * - Mock auth: verificar que usuário selecionado persiste após refresh
- * - Verificação de que o userId permanece no localStorage
- *
- * Regressão corrigida: perda de sessão após refresh (bootstrap race condition)
+ * Estes testes usam JWT (autenticação real) e verificam que:
+ * - Sessão persiste após refresh
+ * - Cookies são mantidos pelo navegador
+ * - Backend reconhece a sessão após reload
  */
 
-test.describe("Persistência de sessão", () => {
-  test("deve manter sessão do usuário após refresh da página (mock auth)", async ({
+test.describe("Persistência de sessão (JWT)", () => {
+  test("deve manter sessão do usuário após refresh da página", async ({
     page,
+    request,
   }) => {
-    // Navega para home
-    await page.goto("/");
+    // Criar usuário e fazer login
+    const usuario = gerarUsuarioUnico("session-refresh");
+    await criarUsuarioViaApi(request, usuario);
+    await fazerLogin(page, usuario);
 
-    // Aguarda carregamento da página
+    // Aguarda carregamento completo
     await page.waitForLoadState("networkidle");
 
-    // Verifica se está autenticado (botão UserMenu visível)
+    // Verifica que está autenticado (botão UserMenu visível)
     const userMenuButton = page.getByRole("button", {
       name: /Menu do usuário/i,
     });
@@ -30,12 +37,7 @@ test.describe("Persistência de sessão", () => {
     const buttonElement = await userMenuButton.elementHandle();
     const initialUserText = await buttonElement?.textContent();
     expect(initialUserText).toBeTruthy();
-
-    // Captura userId do localStorage antes do refresh
-    const userIdBeforeRefresh = await page.evaluate(() => {
-      return localStorage.getItem("central-pet:user-id");
-    });
-    expect(userIdBeforeRefresh).not.toBeNull();
+    expect(initialUserText).toContain(usuario.fullName);
 
     // Faz refresh da página
     await page.reload();
@@ -48,16 +50,16 @@ test.describe("Persistência de sessão", () => {
     const buttonElementAfter = await userMenuButton.elementHandle();
     const userTextAfterRefresh = await buttonElementAfter?.textContent();
     expect(userTextAfterRefresh).toBe(initialUserText);
-
-    // Verifica que o localStorage ainda tem o mesmo userId
-    const userIdAfterRefresh = await page.evaluate(() => {
-      return localStorage.getItem("central-pet:user-id");
-    });
-    expect(userIdAfterRefresh).toBe(userIdBeforeRefresh);
   });
 
-  test("deve manter sessão após múltiplos refreshes", async ({ page }) => {
-    await page.goto("/");
+  test("deve manter sessão após múltiplos refreshes", async ({
+    page,
+    request,
+  }) => {
+    const usuario = gerarUsuarioUnico("multi-refresh");
+    await criarUsuarioViaApi(request, usuario);
+    await fazerLogin(page, usuario);
+
     await page.waitForLoadState("networkidle");
 
     // Espera carregar
@@ -84,8 +86,12 @@ test.describe("Persistência de sessão", () => {
 
   test("deve manter sessão ao navegar entre páginas e fazer refresh", async ({
     page,
+    request,
   }) => {
-    await page.goto("/");
+    const usuario = gerarUsuarioUnico("nav-refresh");
+    await criarUsuarioViaApi(request, usuario);
+    await fazerLogin(page, usuario);
+
     await page.waitForLoadState("networkidle");
 
     // Captura usuário inicial
@@ -115,7 +121,7 @@ test.describe("Persistência de sessão", () => {
     await expect(userMenuButton).toBeVisible({ timeout: 10000 });
     const midButtonElement = await userMenuButton.elementHandle();
     const midUserText = await midButtonElement?.textContent();
-    expect(midUserText).toBe(initialUserText);
+    expect(midUserText).toContain(usuario.fullName);
 
     // Volta para home
     await page.goto("/");

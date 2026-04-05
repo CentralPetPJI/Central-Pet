@@ -1,34 +1,35 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   fullyParallel: true,
   retries: 0,
+  globalSetup: "./global-setup.ts",
   use: {
-    baseURL: 'http://localhost:5173',
-    trace: 'retain-on-failure',
+    baseURL: "http://localhost:5173",
+    trace: "retain-on-failure",
   },
   webServer: [
     {
-      command: 'pnpm dev:back',
-      url: 'http://localhost:3000/api/health',
+      command: "pnpm dev:back",
+      url: "http://localhost:3000/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
-      cwd: '..',
+      cwd: "..",
     },
     {
-      command: 'VITE_AUTH_STRATEGY=jwt pnpm dev:front',
-      url: 'http://localhost:5173',
+      command: "VITE_AUTH_STRATEGY=jwt pnpm dev:front",
+      url: "http://localhost:5173",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
-      cwd: '..',
+      cwd: "..",
     },
   ],
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
       },
     },
   ],
