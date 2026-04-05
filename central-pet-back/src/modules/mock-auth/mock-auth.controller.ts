@@ -1,7 +1,7 @@
 import { Controller, Get, Headers } from '@nestjs/common';
 import { MockAuthService } from './mock-auth.service';
 
-@Controller('auth')
+@Controller('mock-auth')
 export class MockAuthController {
   constructor(private readonly mockAuthService: MockAuthService) {}
 

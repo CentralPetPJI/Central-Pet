@@ -42,6 +42,6 @@ PGPASSWORD=$DB_PASS psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CRE
 
 # Executa migrations
 echo "🚀 Executando migrations..."
-DATABASE_URL=$DATABASE_URL npx prisma migrate deploy
+DATABASE_URL=$DATABASE_URL pnpm exec prisma migrate deploy
 
 echo "✅ Banco de teste configurado com sucesso!"

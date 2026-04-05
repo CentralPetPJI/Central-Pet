@@ -39,6 +39,7 @@ describe('Pagina Meus Pets', () => {
             city: 'Campinas',
             state: 'SP',
             adoptionStatus: 'IN_PROCESS',
+            responsibleUserId: '33333333-3333-3333-3333-333333333333',
           },
         ],
       },
@@ -60,5 +61,40 @@ describe('Pagina Meus Pets', () => {
       },
     });
     expect(screen.getByText('Em processo')).toBeInTheDocument();
+  });
+
+  it('nao exibe pets de outro usuario quando backend retorna lista mista', async () => {
+    getMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: '4',
+            name: 'Pringles',
+            species: 'CAT',
+            adoptionStatus: 'IN_PROCESS',
+            responsibleUserId: '33333333-3333-3333-3333-333333333333',
+          },
+          {
+            id: '5',
+            name: 'Thor',
+            species: 'DOG',
+            adoptionStatus: 'AVAILABLE',
+            responsibleUserId: '99999999-9999-9999-9999-999999999999',
+          },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <MyPetsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('heading', { name: 'Thor' })).not.toBeInTheDocument();
   });
 });

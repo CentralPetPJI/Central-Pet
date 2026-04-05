@@ -26,7 +26,7 @@ export class MockAuthStrategy implements AuthStrategy {
    * Seleciona automaticamente o usuário padrão em desenvolvimento se não houver um salvo.
    */
   async initialize(): Promise<void> {
-    const response = await api.get<UsersResponse>('/auth/mock-users');
+    const response = await api.get<UsersResponse>('/mock-auth/mock-users');
     const { defaultUserId, users } = response.data.data;
 
     this.users = users;
@@ -52,7 +52,7 @@ export class MockAuthStrategy implements AuthStrategy {
    */
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      const response = await api.get<{ data: { user: AuthUser } }>('/auth/me');
+      const response = await api.get<{ data: { user: AuthUser } }>('/mock-auth/me');
       return response.data.data.user;
     } catch {
       return null;

@@ -44,6 +44,7 @@ describe('PetsService', () => {
     physicalLimitation: false,
     visualLimitation: false,
     hearingLimitation: false,
+    responsibleUserId: 'user-1',
     selectedPersonalities: ['playful', 'friendly'],
   });
 
@@ -104,6 +105,34 @@ describe('PetsService', () => {
 
     expect(result.message).toBe('Pets retrieved successfully');
     expect(result.data.length).toBe(1);
+  });
+
+  it('deve listar apenas os pets do usuario informado', async () => {
+    const dtoUser1 = await validateCreateDto(makeCreateDto());
+    const dtoUser2 = await validateCreateDto({
+      ...makeCreateDto(),
+      name: 'Toto',
+      responsibleUserId: 'user-2',
+    });
+
+    service.create(dtoUser1);
+    service.create(dtoUser2);
+
+    const result = service.findAll('user-1');
+
+    expect(result.message).toBe('Pets retrieved successfully');
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.name).toBe('Luna');
+    expect(result.data[0]?.responsibleUserId).toBe('user-1');
+  });
+
+  it('deve rejeitar criacao sem responsibleUserId', async () => {
+    const dto = await validateCreateDto({
+      ...makeCreateDto(),
+      responsibleUserId: undefined,
+    });
+
+    expect(() => service.create(dto)).toThrow(BadRequestException);
   });
 
   it('deve buscar um pet existente', async () => {

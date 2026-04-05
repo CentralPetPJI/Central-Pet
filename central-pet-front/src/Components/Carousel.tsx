@@ -181,7 +181,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
 
   return (
     <section className="w-full overflow-hidden px-6 py-8 select-none">
-      <h2 className="mb-6 text-2xl font-semibold text-gray-800">Latest Pets</h2>
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800">Ultimos Pets</h2>
 
       <div
         ref={containerRef}

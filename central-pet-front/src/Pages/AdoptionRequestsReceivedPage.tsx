@@ -22,8 +22,6 @@ const statusClassNameMap: Record<ReceivedAdoptionRequest['status'], string> = {
   REJECTED: 'bg-rose-100 text-rose-800',
 };
 
-import { getLocalId } from '@/storage/pets';
-
 /**
  * Retorna o ID apropriado para uso em rotas locais.
  * Para pets que vieram do backend com UUID, tenta encontrar o localId.

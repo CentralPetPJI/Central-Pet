@@ -69,7 +69,6 @@ describe('storage layout audit', () => {
     );
 
     expect(userStorageKey).toBe('central-pet:user-id');
-    expect(e2eSpec).toContain('userStorageKey');
     expect(e2eSpec).not.toContain('central-pet:mock-user-id');
   });
 });

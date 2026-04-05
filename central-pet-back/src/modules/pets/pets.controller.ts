@@ -1,8 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
-import { SessionGuard } from '../auth/guards/session.guard';
 
 @Controller('pets')
 export class PetsController {
@@ -14,8 +13,8 @@ export class PetsController {
   }
 
   @Get()
-  findAll() {
-    return this.petsService.findAll();
+  findAll(@Query('responsibleUserId') responsibleUserId?: string) {
+    return this.petsService.findAll(responsibleUserId);
   }
 
   @Get(':id')

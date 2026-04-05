@@ -27,6 +27,8 @@ type PetRecord = {
   visualLimitation: boolean;
   hearingLimitation: boolean;
   selectedPersonalities: string[];
+  responsibleUserId: string;
+  adoptionStatus: 'AVAILABLE';
   createdAt: string;
   updatedAt: string;
 };
@@ -50,6 +52,10 @@ export class PetsService {
   }
 
   create(createPetDto: CreatePetDto) {
+    if (!createPetDto.responsibleUserId) {
+      throw new BadRequestException('responsibleUserId is required');
+    }
+
     const now = new Date().toISOString();
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
 
@@ -78,6 +84,8 @@ export class PetsService {
       visualLimitation: createPetDto.visualLimitation,
       hearingLimitation: createPetDto.hearingLimitation,
       selectedPersonalities,
+      responsibleUserId: createPetDto.responsibleUserId,
+      adoptionStatus: 'AVAILABLE',
       createdAt: now,
       updatedAt: now,
     };
@@ -90,10 +98,14 @@ export class PetsService {
     };
   }
 
-  findAll() {
+  findAll(responsibleUserId?: string) {
+    const pets = responsibleUserId
+      ? this.pets.filter((pet) => pet.responsibleUserId === responsibleUserId)
+      : this.pets;
+
     return {
       message: 'Pets retrieved successfully',
-      data: this.pets,
+      data: pets,
     };
   }
 

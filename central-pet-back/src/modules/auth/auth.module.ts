@@ -7,7 +7,7 @@ import { SessionGuard } from './guards/session.guard';
 @Module({
   imports: [UsersModule],
   controllers: [AuthController],
-  providers: [AuthService, SessionGuard],
-  exports: [AuthService, SessionGuard],
+  providers: [AuthService],
+  exports: [AuthService],
 })
 export class AuthModule {}

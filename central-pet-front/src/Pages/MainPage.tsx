@@ -17,8 +17,7 @@ const MainPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-slate-900">Fluxo de doacao e adocao</h2>
           <p className="mt-1 text-sm text-slate-600">
-            A pessoa física cadastra o pet com todas as informacoes. A ONG visualiza o perfil
-            completo do animal antes de decidir.
+            Cadastre um pet para adoção ou encontre o companheiro ideal para levar para casa.
           </p>
         </div>
         <Link

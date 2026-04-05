@@ -1,81 +1,30 @@
-import { INestApplication, UnauthorizedException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
 import { AppModule } from '@/app.module';
 import { setupApp } from '@/bootstrap/setup-app';
-import { AuthService } from '@/modules/auth/auth.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { UsersService } from '@/modules/users/users.service';
+import { TestDatabaseHelper } from './helpers/test-database.helper';
 
 describe('Security (e2e)', () => {
   let app: INestApplication;
   let moduleFixture: TestingModule;
-
-  const publicUser = {
-    id: 'user-1',
-    fullName: 'Maria Silva',
-    email: 'maria@example.com',
-    role: 'PESSOA_FISICA' as const,
-    birthDate: '1995-05-10',
-    cpf: '12345678901',
-    organizationName: null,
-    cnpj: null,
-    createdAt: new Date('2026-01-01T00:00:00.000Z'),
-    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-  };
-
-  const prismaMock: Pick<PrismaService, '$connect'> = {
-    $connect: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-  };
-
-  const authServiceMock: Pick<AuthService, 'login' | 'logout' | 'getAuthenticatedUser'> = {
-    login: jest.fn(async () => ({
-      message: 'Login successful',
-      data: {
-        sessionId: 'session-test-id',
-        user: publicUser,
-      },
-    })),
-    logout: jest.fn(async () => ({
-      message: 'Logout successful',
-    })),
-    getAuthenticatedUser: jest.fn(async (sessionId?: string | null) => {
-      if (!sessionId) {
-        throw new UnauthorizedException('Authentication required');
-      }
-
-      return {
-        message: 'Authenticated user retrieved successfully',
-        data: {
-          user: publicUser,
-        },
-      };
-    }),
-  };
-
-  const usersServiceMock: Pick<UsersService, 'create'> = {
-    create: jest.fn(async () => ({
-      message: 'User created successfully',
-      data: publicUser,
-    })),
-  };
+  let dbHelper: TestDatabaseHelper;
 
   beforeAll(async () => {
-    process.env.DATABASE_URL =
-      process.env.DATABASE_URL ?? 'postgresql://test:test@localhost:5432/testdb?schema=public';
     process.env.THROTTLE_TTL = '60000';
     process.env.THROTTLE_LIMIT = '20';
+
+    // Configura banco de dados de teste com schema isolado
+    dbHelper = new TestDatabaseHelper();
+    await dbHelper.setup();
 
     moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(PrismaService)
-      .useValue(prismaMock)
-      .overrideProvider(AuthService)
-      .useValue(authServiceMock)
-      .overrideProvider(UsersService)
-      .useValue(usersServiceMock)
+      .useValue(dbHelper.getClient())
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -84,9 +33,15 @@ describe('Security (e2e)', () => {
     await app.init();
   });
 
+  beforeEach(async () => {
+    // Limpa dados entre testes
+    await dbHelper.cleanup();
+  });
+
   afterAll(async () => {
     await app.close();
     await moduleFixture.close();
+    await dbHelper.teardown();
   });
 
   it('blocks non-whitelisted fields in login payload', async () => {
@@ -127,7 +82,20 @@ describe('Security (e2e)', () => {
   });
 
   it('sets secure session cookie attributes and hides sessionId on login', async () => {
+    // Criar usuário para o teste
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
+    
+    await request(httpServer)
+      .post('/api/users')
+      .send({
+        fullName: 'Maria Silva',
+        email: 'maria@example.com',
+        password: 'Senha123!',
+        role: 'PESSOA_FISICA',
+        cpf: '12345678901',
+      })
+      .expect(201);
+
     const response = await request(httpServer)
       .post('/api/auth/login')
       .send({
@@ -152,10 +120,34 @@ describe('Security (e2e)', () => {
   });
 
   it('clears session cookie and keeps internal control fields private on logout', async () => {
+    // Criar usuário e fazer login primeiro
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
+    
+    await request(httpServer)
+      .post('/api/users')
+      .send({
+        fullName: 'Joao Santos',
+        email: 'joao@example.com',
+        password: 'Senha123!',
+        role: 'PESSOA_FISICA',
+        cpf: '98765432100',
+      })
+      .expect(201);
+
+    const loginResponse = await request(httpServer)
+      .post('/api/auth/login')
+      .send({
+        email: 'joao@example.com',
+        password: 'Senha123!',
+      })
+      .expect(201);
+
+    const loginCookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    const sessionCookie = loginCookies.find((c: string) => c.startsWith('central_pet_session='));
+
     const response = await request(httpServer)
       .post('/api/auth/logout')
-      .set('Cookie', ['central_pet_session=session-test-id'])
+      .set('Cookie', [sessionCookie!])
       .expect(201);
 
     const rawSetCookie = response.headers['set-cookie'];

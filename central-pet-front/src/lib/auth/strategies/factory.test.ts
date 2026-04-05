@@ -8,10 +8,10 @@ describe('createAuthStrategy', () => {
     vi.unstubAllEnvs();
   });
 
-  it('usa mock auth por padrao', () => {
+  it('usa jwt auth por padrao', () => {
     const strategy = createAuthStrategy();
 
-    expect(strategy).toBeInstanceOf(MockAuthStrategy);
+    expect(strategy).toBeInstanceOf(JwtAuthStrategy);
   });
 
   it('cria a estrategia JWT quando solicitado', () => {
