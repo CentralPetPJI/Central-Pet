@@ -16,10 +16,11 @@ const statusLabelMap: Record<string, string> = {
 };
 
 /**
- * Converte ID do backend (UUID) para ID local (number) usando PetIdMapping
- * Se não houver mapeamento, retorna o próprio UUID como string
+ * Retorna o ID apropriado para uso em rotas locais.
+ * Se houver mapeamento (pet cadastrado via frontend), usa o localId.
+ * Caso contrário, retorna o ID do backend como está.
  */
-function normalizeBackendPetId(backendId: string): string | number {
+function getPetRouteId(backendId: string): string | number {
   const localId = getLocalId(backendId);
   return localId ?? backendId;
 }
@@ -59,11 +60,14 @@ export default function MyPetsPage() {
           return;
         }
 
-        // Converte IDs do backend (UUID) para IDs locais quando possível
-        const normalizedPets = response.data.data.map((pet) =>
+        const scopedPets = response.data.data.filter(
+          (pet) => !pet.responsibleUserId || pet.responsibleUserId === currentUser.id,
+        );
+
+        // Converte para PetListItem mantendo o ID original do backend
+        const normalizedPets = scopedPets.map((pet) =>
           mapPetApiResponseToPetListItem({
             ...pet,
-            id: String(normalizeBackendPetId(pet.id)),
             adoptionStatus: pet.adoptionStatus ?? 'AVAILABLE',
           }),
         );
@@ -181,7 +185,7 @@ export default function MyPetsPage() {
               </p>
 
               <Link
-                to={routes.pets.detail.build(pet.id)}
+                to={routes.pets.detail.build(getPetRouteId(pet.id))}
                 className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
               >
                 Ver perfil

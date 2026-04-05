@@ -100,8 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const availableUsers = await strategy.getUsers();
           setUsers(availableUsers);
         }
-      } finally {
+
+        // Só tenta recuperar o usuário atual após initialize() completar
+        // Isso garante que em modo mock, o userId já estará no localStorage
         await refreshCurrentUser();
+      } catch {
+        setCurrentUser(null);
+      } finally {
         setIsLoading(false);
       }
     };

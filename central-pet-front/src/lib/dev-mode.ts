@@ -12,7 +12,6 @@ export function isDevelopment(): boolean {
 }
 
 export function shouldDisplayMockUsers() {
-  console.log('VITE_AUTH_STRATEGY', import.meta.env.VITE_AUTH_STRATEGY);
   return isDevelopment() && import.meta.env.VITE_AUTH_STRATEGY == 'mock';
 }
 

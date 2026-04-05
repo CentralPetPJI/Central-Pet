@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
 import type { ReceivedAdoptionRequest } from '@/Models/pet';
 import { routes } from '@/routes';
+import { getLocalId } from '@/storage/pets';
 
 const statusLabelMap: Record<ReceivedAdoptionRequest['status'], string> = {
   PENDING: 'Pendente',
@@ -21,21 +22,29 @@ const statusClassNameMap: Record<ReceivedAdoptionRequest['status'], string> = {
   REJECTED: 'bg-rose-100 text-rose-800',
 };
 
+import { getLocalId } from '@/storage/pets';
+
+/**
+ * Retorna o ID apropriado para uso em rotas locais.
+ * Para pets que vieram do backend com UUID, tenta encontrar o localId.
+ * Para pets mock (que já têm ID numérico), retorna o próprio ID.
+ */
+function getPetRouteId(petId: string | number): string | number {
+  // Se já é numérico, usa direto
+  if (typeof petId === 'number') {
+    return petId;
+  }
+
+  // Se é string, tenta converter para localId
+  const localId = getLocalId(petId);
+  return localId ?? petId;
+}
+
 function formatRequestDate(date: string) {
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(new Date(date));
-}
-
-function normalizePetRouteId(petId: string | number): string | number {
-  const numericId = Number(petId);
-
-  if (Number.isFinite(numericId)) {
-    return numericId;
-  }
-
-  return petId;
 }
 
 export default function AdoptionRequestsReceivedPage() {
@@ -202,7 +211,7 @@ export default function AdoptionRequestsReceivedPage() {
                 </div>
 
                 <Link
-                  to={routes.pets.detail.build(normalizePetRouteId(request.pet.id))}
+                  to={routes.pets.detail.build(getPetRouteId(request.pet.id))}
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
                 >
                   <PawPrint className="h-4 w-4 text-cyan-700" />
