@@ -1,43 +1,5 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
-
-const API_BASE_URL = "http://localhost:3000/api";
-const SENHA_PADRAO = "Senha123!";
-
-type UsuarioE2E = {
-  fullName: string;
-  email: string;
-  password: string;
-  cpf: string;
-};
-
-function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
-  const sufixo = `${Date.now()}${Math.floor(Math.random() * 1_000_000)}`;
-  const cpf = sufixo.replace(/\D/g, "").padStart(11, "0").slice(-11);
-
-  return {
-    fullName: `Usuário ${prefixo} ${sufixo.slice(-6)}`,
-    email: `${prefixo}.${sufixo}@example.com.br`,
-    password: SENHA_PADRAO,
-    cpf,
-  };
-}
-
-async function criarUsuarioViaApi(
-  request: APIRequestContext,
-  usuario: UsuarioE2E,
-): Promise<void> {
-  const resposta = await request.post(`${API_BASE_URL}/users`, {
-    data: {
-      fullName: usuario.fullName,
-      email: usuario.email,
-      password: usuario.password,
-      role: "PESSOA_FISICA",
-      cpf: usuario.cpf,
-    },
-  });
-
-  expect(resposta.ok()).toBeTruthy();
-}
+import { expect, test } from "@playwright/test";
+import { criarUsuarioViaApi, gerarUsuarioUnico } from "../utils/user-helpers";
 
 test.describe("Fluxo de autenticação", () => {
   test("deve autenticar com sucesso usando credenciais válidas", async ({

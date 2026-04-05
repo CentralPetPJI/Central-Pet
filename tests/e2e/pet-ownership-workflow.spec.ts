@@ -1,27 +1,26 @@
 import { expect, test } from "@playwright/test";
-import { userStorageKey } from "../../central-pet-front/src/storage/auth";
+import {
+  criarUsuarioViaApi,
+  fazerLogin,
+  gerarUsuarioUnico,
+} from "../utils/user-helpers";
 
 /**
  * Teste E2E: Fluxo crítico de cadastro e visualização de pets
- * Testa: Cadastro de pet → Aparece na lista "Meus Pets"
+ * Testa: Registro de usuário → Login → Cadastro de pet → Aparece na lista "Meus Pets"
  */
 test.describe("Fluxo de Cadastro de Pets", () => {
-  const TEST_USER_ID = "550e8400-e29b-41d4-a716-446655440001";
-
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(
-      ({ key, userId }) => {
-        localStorage.setItem(key, userId);
-      },
-      { key: userStorageKey, userId: TEST_USER_ID },
-    );
+  test.beforeEach(async ({ page, request }) => {
+    // Criar usuário e fazer login antes de cada teste
+    const usuario = gerarUsuarioUnico("pet-workflow");
+    await criarUsuarioViaApi(request, usuario);
+    await fazerLogin(page, usuario);
   });
 
   test("deve cadastrar pet no backend e exibir na lista Meus Pets", async ({
     page,
   }) => {
-    // Passo 1: Ir para home e clicar em "Cadastrar pet"
-    await page.goto("/");
+    // Passo 1: Já estamos na home após login, verificar e clicar em "Cadastrar pet"
     await expect(
       page.getByRole("heading", {
         level: 1,
