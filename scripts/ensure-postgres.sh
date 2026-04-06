@@ -31,6 +31,12 @@ check_postgres_port() {
   return 1  # Porta livre
 }
 
+# Primeiro, valida se PostgreSQL já está rodando localmente (Docker ou não)
+if check_postgres_port; then
+  echo "${GREEN}✓ PostgreSQL já está rodando na porta 5432${NC}"
+  exit 0
+fi
+
 # Verifica se Docker está instalado
 if ! command -v docker &> /dev/null; then
   echo "${RED}❌ Docker não está instalado${NC}"
@@ -38,12 +44,6 @@ if ! command -v docker &> /dev/null; then
 fi
 
 echo "${GREEN}✓ Docker está instalado${NC}"
-
-# Primeiro, valida se PostgreSQL já está rodando localmente (Docker ou não)
-if check_postgres_port; then
-  echo "${GREEN}✓ PostgreSQL já está rodando na porta 5432${NC}"
-  exit 0
-fi
 
 # Se não estiver, tenta via Docker
 if ! docker info > /dev/null 2>&1; then
