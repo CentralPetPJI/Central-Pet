@@ -39,5 +39,6 @@ export {
   getBackendIdFromPublic,
   getPublicIdFromBackend,
   clearPublicIdMappings,
+  initializeCounterWithLocalPets,
   type PublicIdMapping,
 } from './public-id-mapping';

@@ -1,5 +1,18 @@
 import type { Pet, PetApiResponse } from '@/Models/pet';
-import { ensurePublicId, getBackendIdFromPublic } from './public-id-mapping';
+import {
+  ensurePublicId,
+  getBackendIdFromPublic,
+  saveBatchPublicIdMappings,
+} from './public-id-mapping';
+
+/**
+ * Sincroniza múltiplos pets do backend em batch
+ * Garante que todos recebam IDs públicos sem colisões, mesmo entre múltiplas abas
+ */
+export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
+  const backendIds = apiPets.map((pet) => pet.id);
+  saveBatchPublicIdMappings(backendIds);
+};
 
 /**
  * Converte PetApiResponse do backend para formato Pet do frontend

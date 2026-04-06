@@ -191,26 +191,31 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         onMouseLeave={onMouseLeave}
         className={`flex gap-6 overflow-x-hidden pb-4 cursor-grab ${isDragging ? 'cursor-grabbing' : ''}`}
       >
-        {items.map((pet, idx) => (
-          <div
-            key={`${pet.id}-${idx}`}
-            className="min-w-[250px] max-w-[250px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0 cursor-pointer"
-            onClick={() => setSelectedPet(pet)}
-          >
-            <img
-              src={pet.photo}
-              alt={pet.name}
-              draggable={false}
-              className="h-48 w-full object-cover rounded-t-lg"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800">{pet.name}</h3>
-              <p className="mt-2 text-sm text-gray-600 line-clamp-3">
-                {pet.physicalCharacteristics}
-              </p>
+        {items.map((pet, idx) => {
+          // Normaliza pet ao original para evitar seleção de duplicatas no loop
+          const originalPet = petsData[idx % petsData.length];
+
+          return (
+            <div
+              key={`${pet.id}-${idx}`}
+              className="min-w-[250px] max-w-[250px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0 cursor-pointer"
+              onClick={() => setSelectedPet(originalPet)}
+            >
+              <img
+                src={pet.photo}
+                alt={pet.name}
+                draggable={false}
+                className="h-48 w-full object-cover rounded-t-lg"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-800">{pet.name}</h3>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+                  {pet.physicalCharacteristics}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {selectedPet && <PetModal petData={selectedPet} onClick={() => setSelectedPet(null)} />}
     </section>

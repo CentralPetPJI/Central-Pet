@@ -4,6 +4,11 @@ set -eu
 
 cd "$(git rev-parse --show-toplevel)"
 
+# Garante que PostgreSQL está rodando antes de executar testes
+echo "Validando infraestrutura..."
+sh ./scripts/ensure-postgres.sh
+echo ""
+
 empty_tree="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 changed_files="$(mktemp)"
 trap 'rm -f "$changed_files"' EXIT
