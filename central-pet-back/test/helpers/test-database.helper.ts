@@ -50,7 +50,7 @@ export class TestDatabaseHelper {
   async setup(): Promise<void> {
     try {
       // Executa migrations no banco de teste
-      execSync('npx prisma migrate deploy', {
+      execSync('pnpm exec prisma migrate deploy', {
         env: { ...process.env, DATABASE_URL: this.testDatabaseUrl },
         stdio: 'inherit',
       });
