@@ -8,7 +8,7 @@ async function globalSetup() {
   // eslint-disable-next-line no-console
   console.log("🔍 Verificando se o banco de dados está rodando...");
 
-  const backendUrl = "http://localhost:3000/api/health";
+  const backendUrl = "http://localhost:3001/api/health";
   const maxRetries = 10;
   const retryDelay = 2000;
 

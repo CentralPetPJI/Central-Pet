@@ -143,4 +143,40 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await expect(petCard.getByText("Inteligência Artificial")).toBeVisible();
     await expect(petCard.getByText("Sao Paulo - SP")).toBeVisible();
   });
+
+  test("deve cadastrar pet sem duplicar no carousel", async ({ page }) => {
+    // Passo 1: Navegar para cadastro de pet
+    await page.goto("/pets/new");
+
+    // Passo 2: Preencher o formulário
+    const timestamp = Date.now();
+    const petName = `No Duplicate ${timestamp}`;
+
+    await page.getByRole("textbox", { name: "Nome" }).fill(petName);
+    await page.getByRole("textbox", { name: "Tutor" }).fill("Test Tutor");
+    await page.getByRole("textbox", { name: "Abrigo" }).fill("Test Shelter");
+    await page.getByRole("textbox", { name: "Cidade" }).fill("Test City");
+    await page.getByRole("textbox", { name: "Contato" }).fill("11999999999");
+
+    // Passo 3: Salvar o pet
+    await page.getByRole("button", { name: "Salvar pet" }).click();
+
+    // Passo 4: Aguardar redirecionamento para o perfil
+    await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });
+    await expect(
+      page.getByRole("heading", { level: 1, name: petName }),
+    ).toBeVisible();
+
+    // Passo 5: Navegar para home para verificar o carousel
+    await page.goto("/");
+
+    // Passo 6: Contar quantas vezes o pet aparece no carousel
+    // O carousel duplica o array para loop infinito, então aparece 2x (original + duplicado)
+    // Mas o pet NÃO deve aparecer 4x (que seria: pet duplicado no array + duplicação do carousel)
+    const petCards = await page.locator(`text=${petName}`).all();
+
+    // Esperado: 2 (carousel duplica array para loop)
+    // Bug seria: 4 (pet duplicado no array + carousel duplica)
+    expect(petCards.length).toBe(2);
+  });
 });

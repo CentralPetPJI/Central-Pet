@@ -11,15 +11,15 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "pnpm dev:back",
-      url: "http://localhost:3000/api/health",
+      command: "pnpm dev:back:test",
+      url: "http://localhost:3001/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       cwd: "..",
     },
     {
       command:
-        "VITE_API_URL=http://localhost:3000/api VITE_AUTH_STRATEGY=jwt pnpm dev:front",
+        "VITE_API_URL=http://localhost:3001/api VITE_AUTH_STRATEGY=jwt pnpm dev:front",
       url: "http://localhost:5173",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

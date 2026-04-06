@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "http://localhost:3001/api";
 const SENHA_PADRAO = "Senha123!";
 
 export type UsuarioE2E = {

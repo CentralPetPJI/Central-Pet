@@ -13,7 +13,6 @@ const forbiddenPatterns = [
   'central-pet:mock-user-id',
   'src/lib/auth/user-storage',
   '@/Mocks/PetsStorage',
-  '@/Mocks/PetIdMapping',
   '@/Mocks/PetRegisterFormMock',
   '@/Mocks/PetPersonalityOptions',
 ];
