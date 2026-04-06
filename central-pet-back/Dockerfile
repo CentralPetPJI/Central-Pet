@@ -20,7 +20,8 @@ ENV DATABASE_URL=${DATABASE_URL}
 
 RUN pnpm --filter central-pet-back exec prisma generate \
     && pnpm --filter central-pet-back build \
-    && pnpm --config.inject-workspace-packages=true --filter central-pet-back deploy --prod --ignore-scripts /prod/central-pet-back
+    && pnpm --config.inject-workspace-packages=true --filter central-pet-back deploy --prod --ignore-scripts /prod/central-pet-back \
+    && cp -r central-pet-back/dist /prod/central-pet-back/dist
 
 FROM node:24.12.0-alpine AS runner
 
