@@ -18,7 +18,9 @@ O Central-Pet organiza a jornada de adocao e apoio a animais resgatados, oferece
 ## Stack
 
 - **Frontend:** React 18+, TypeScript (strict), Tailwind CSS, Zustand, React Hook Form + Zod, Vite
--
+- **Backend:** NestJS, TypeScript, Prisma ORM, PostgreSQL
+- **DevOps:** Docker, Docker Compose, Husky + lint-staged
+- **Testes:** Jest (backend), Playwright E2E, vitest (frontend)
 
 ## Estrutura de Pastas
 
@@ -42,20 +44,83 @@ central-pet-front/
 
 ## Como rodar localmente
 
-1. Instale o `pnpm`.
-2. Clone o repositorio:
+### Pré-requisitos
+
+- Node.js 24
+- pnpm
+- Docker (para PostgreSQL)
+
+### Setup inicial
+
+1. Clone o repositório:
+
    ```zsh
    git clone https://github.com/CentralPetPJI/Central-Pet
-   ```
-3. Instale as dependencias:
-   ```zsh
    cd Central-Pet
+   ```
+
+2. Instale as dependências:
+
+   ```zsh
    pnpm install
    ```
-4. Inicie o projeto:
+
+3. Inicie o PostgreSQL:
+
    ```zsh
+   docker compose -f docker-compose.dev.yml up postgres -d
+   ```
+
+4. Configure o banco de dados:
+
+   ```zsh
+   cd central-pet-back
+   pnpm prisma migrate deploy
+   ```
+
+5. Inicie o projeto em modo desenvolvimento:
+
+   ```zsh
+   cd ..
    pnpm dev
    ```
+
+   - Frontend: `http://localhost:5173`
+   - Backend: `http://localhost:3000/api`
+
+### Ambientes
+
+O backend possui dois ambientes configurados:
+
+- **Desenvolvimento** (`.env`):
+  - Porta: 3000
+  - Banco: `centralpetdb`
+  - Comando: `pnpm dev:back`
+
+- **Testes** (`.env.test`):
+  - Porta: 3001
+  - Banco: `centralpetdb_test`
+  - Comando: `pnpm dev:back:test`
+  - Usado automaticamente pelos testes E2E (Playwright)
+
+### Comandos úteis
+
+```zsh
+# Desenvolvimento
+pnpm dev:front          # Inicia frontend (porta 5173)
+pnpm dev:back           # Inicia backend em dev (porta 3000)
+pnpm dev:back:test      # Inicia backend em teste (porta 3001)
+
+# Testes
+pnpm test:front         # Testes unitários frontend (Vitest)
+pnpm test:back          # Testes unitários backend (Jest)
+pnpm test:e2e           # Testes E2E (Playwright)
+pnpm test:all           # Todos os testes
+
+# Lint
+pnpm lint:front         # ESLint frontend
+pnpm lint:back          # ESLint backend
+```
 
 ## Como rodar com Docker
 
