@@ -2,18 +2,17 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   buildPetFromRegisterForm,
   buildRegisterFormDataFromPet,
-  getBackendId,
-  getLocalId,
   getPetById,
   getPetProfileById,
   getStoredPets,
   initialPetRegisterFormData,
-  isPetSynced,
   normalizePetRegisterFormData,
   petRegisterFormSchema,
   petsStorageKey,
-  saveIdMapping,
   savePet,
+  getBackendIdFromPublic,
+  updatePublicIdMapping,
+  initializeCounterWithLocalPets,
 } from '@/storage/pets';
 
 describe('pet storage helpers', () => {
@@ -57,7 +56,7 @@ describe('pet storage helpers', () => {
     });
   });
 
-  it('salva e recupera pet, perfil e mapeamento de id', () => {
+  it('salva e recupera pet, perfil e mapeamento de id com novo sistema', () => {
     const pet = buildPetFromRegisterForm(
       {
         ...initialPetRegisterFormData,
@@ -81,7 +80,13 @@ describe('pet storage helpers', () => {
       }),
       selectedPersonalities: ['playful'],
     });
-    saveIdMapping(123, 'backend-123');
+
+    // Usa o novo sistema de public-id-mapping
+    // Primeiro precisa inicializar o mapeamento para o ID 123 existir
+    initializeCounterWithLocalPets([123]);
+
+    // Agora atualiza com o backendId
+    updatePublicIdMapping(123, 'backend-uuid-123');
 
     expect(getPetById(123)).toMatchObject({
       id: 123,
@@ -92,9 +97,9 @@ describe('pet storage helpers', () => {
       id: 123,
       selectedPersonalities: ['playful'],
     });
-    expect(getBackendId(123)).toBe('backend-123');
-    expect(getLocalId('backend-123')).toBe(123);
-    expect(isPetSynced(123)).toBe(true);
+
+    // Verifica o mapeamento no novo sistema
+    expect(getBackendIdFromPublic(123)).toBe('backend-uuid-123');
   });
 
   it('reconstrói o form data de um pet existente', () => {

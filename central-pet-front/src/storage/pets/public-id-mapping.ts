@@ -90,8 +90,42 @@ export const savePublicIdMapping = (backendId?: string, slug?: string): number =
 };
 
 /**
+ * Atualiza um mapeamento existente para adicionar backendId
+ * Útil para quando um pet local é sincronizado com o backend
+ */
+export const updatePublicIdMapping = (publicId: number, backendId: string, slug?: string): void => {
+  const mappings = getPublicIdMappings();
+
+  // Verifica se já existe outro mapeamento com este backendId
+  const existingWithBackendId = mappings.find((m) => m.backendId === backendId);
+  if (existingWithBackendId && existingWithBackendId.publicId !== publicId) {
+    // Há duplicação: remover o mapeamento antigo sem backendId
+    const index = mappings.findIndex(
+      (m) => m.publicId === existingWithBackendId.publicId && !m.backendId,
+    );
+    if (index !== -1) {
+      mappings.splice(index, 1);
+    }
+  }
+
+  // Atualiza o mapeamento específico
+  const mapping = mappings.find((m) => m.publicId === publicId);
+  if (mapping) {
+    mapping.backendId = backendId;
+    if (slug) {
+      mapping.slug = slug;
+    }
+  }
+
+  window.localStorage.setItem(PUBLIC_ID_MAPPING_KEY, JSON.stringify(mappings));
+};
+
+/**
  * Salva múltiplos mapeamentos de uma só vez (útil para sincronizar com backend)
  * Útil quando recebemos múltiplos pets do backend e queremos atualizar em batch
+ *
+ * Agora também procura por pets locais (sem backendId) que já têm um publicId
+ * e os atualiza com o backendId em vez de criar duplicatas
  */
 export const saveBatchPublicIdMappings = (backendIds: string[]): void => {
   const mappings = getPublicIdMappings();
@@ -99,10 +133,20 @@ export const saveBatchPublicIdMappings = (backendIds: string[]): void => {
 
   backendIds.forEach((backendId) => {
     if (!existingIds.has(backendId)) {
-      // Calcula novo publicId dinamicamente
-      const publicId = getNextPublicId();
-      const newMapping: PublicIdMapping = { publicId, backendId };
-      mappings.push(newMapping);
+      // Verifica se há mapeamento local (sem backendId) que pode ser atualizado
+      // Isto evita duplicação quando um pet local é sincronizado com o backend
+      const localMapping = mappings.find((m) => !m.backendId);
+
+      if (localMapping) {
+        // Atualiza o mapeamento existente
+        localMapping.backendId = backendId;
+      } else {
+        // Cria novo mapeamento se não houver local disponível
+        const publicId = getNextPublicId();
+        const newMapping: PublicIdMapping = { publicId, backendId };
+        mappings.push(newMapping);
+      }
+
       existingIds.add(backendId);
     }
   });

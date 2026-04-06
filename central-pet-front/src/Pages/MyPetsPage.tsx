@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
-import { getLocalId, getPetProfileById, getStoredPets } from '@/storage/pets';
+import { getPublicIdFromBackend, getPetProfileById, getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
 import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
 import type { PetApiResponse, PetListItem } from '@/Models/pet';
@@ -17,12 +17,12 @@ const statusLabelMap: Record<string, string> = {
 
 /**
  * Retorna o ID apropriado para uso em rotas locais.
- * Se houver mapeamento (pet cadastrado via frontend), usa o localId.
+ * Se houver mapeamento (pet cadastrado via frontend), usa o publicId.
  * Caso contrário, retorna o ID do backend como está.
  */
 function getPetRouteId(backendId: string): string | number {
-  const localId = getLocalId(backendId);
-  return localId ?? backendId;
+  const publicId = getPublicIdFromBackend(backendId);
+  return publicId ?? backendId;
 }
 
 export default function MyPetsPage() {

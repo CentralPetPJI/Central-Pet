@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
 import type { ReceivedAdoptionRequest } from '@/Models/pet';
 import { routes } from '@/routes';
-import { getLocalId } from '@/storage/pets';
+import { getPublicIdFromBackend } from '@/storage/pets';
 
 const statusLabelMap: Record<ReceivedAdoptionRequest['status'], string> = {
   PENDING: 'Pendente',
@@ -24,7 +24,7 @@ const statusClassNameMap: Record<ReceivedAdoptionRequest['status'], string> = {
 
 /**
  * Retorna o ID apropriado para uso em rotas locais.
- * Para pets que vieram do backend com UUID, tenta encontrar o localId.
+ * Para pets que vieram do backend com UUID, tenta encontrar o publicId.
  * Para pets mock (que já têm ID numérico), retorna o próprio ID.
  */
 function getPetRouteId(petId: string | number): string | number {
@@ -33,9 +33,9 @@ function getPetRouteId(petId: string | number): string | number {
     return petId;
   }
 
-  // Se é string, tenta converter para localId
-  const localId = getLocalId(petId);
-  return localId ?? petId;
+  // Se é string (UUID), tenta converter para publicId
+  const publicId = getPublicIdFromBackend(petId);
+  return publicId ?? petId;
 }
 
 function formatRequestDate(date: string) {

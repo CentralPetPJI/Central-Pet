@@ -10,7 +10,7 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
-import { saveIdMapping } from '@/storage/pets';
+import { updatePublicIdMapping } from '@/storage/pets';
 import { petPersonalityStorageKey } from '@/storage/pets';
 import {
   initialPetRegisterFormData,
@@ -247,11 +247,16 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       const backendId = response.data.data.id;
 
       // Backend retorna UUID, mas frontend usa IDs numéricos
-      // Gera ID local e salva o mapeamento para sincronização
+      // Gera ID local e sincroniza o mapeamento no novo sistema publicId
       const currentPets = getStoredPets();
       savedPetId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
 
-      saveIdMapping(savedPetId, backendId);
+      // IMPORTANTE: Primeiro inicializa o mapeamento vazio para este ID
+      // Depois atualiza com o backendId
+      // Isso garante que quando usePets() carregar, o pet não é duplicado
+      const { initializeCounterWithLocalPets } = await import('@/storage/pets');
+      initializeCounterWithLocalPets([savedPetId]);
+      updatePublicIdMapping(savedPetId, backendId);
 
       savedOnBackend = true;
     } catch (_error) {
@@ -265,6 +270,9 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       savedPetId,
       resolvedUserId,
     );
+
+    // Sempre salva no localStorage para navegação imediata
+    // O usePets() filtrará duplicatas baseado no mapeamento publicId <-> backendId
     savePet(petToSave, {
       id: petToSave.id,
       formData: validationResult.data,

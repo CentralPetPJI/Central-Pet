@@ -22,7 +22,6 @@ export class CreatePetDto {
   @ArrayMaxSize(10)
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  @MaxLength(5000, { each: true })
   galleryPhotos?: string[];
 
   @IsString()

@@ -46,9 +46,12 @@ export const usePets = (): UsePetsResult => {
       // Mapeia para Pet com IDs públicos
       const backendPets = response.data.data.map(mapApiResponseToPet);
 
-      // Mescla: pets do backend + pets locais únicos
+      // Mescla: pets do backend + pets locais únicos (não sincronizados)
+      // Um pet local está sincronizado se tem um backendId no mapeamento
       const backendPublicIds = new Set(backendPets.map((p) => p.id));
       const uniqueLocalPets = localPets.filter((localPet) => {
+        // Se o pet local tem o mesmo publicId que um pet do backend,
+        // significa que foi sincronizado - não incluir
         return !backendPublicIds.has(localPet.id);
       });
 

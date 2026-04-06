@@ -10,14 +10,6 @@ export {
   type PetProfileRecord,
 } from './pets-storage';
 export {
-  getBackendId,
-  getIdMappings,
-  getLocalId,
-  isPetSynced,
-  saveIdMapping,
-  type PetIdMapping,
-} from './pet-id-mapping';
-export {
   initialPetRegisterFormData,
   isPetRegisterFormDataLike,
   normalizePetRegisterFormData,
@@ -40,5 +32,6 @@ export {
   getPublicIdFromBackend,
   clearPublicIdMappings,
   initializeCounterWithLocalPets,
+  updatePublicIdMapping,
   type PublicIdMapping,
 } from './public-id-mapping';
