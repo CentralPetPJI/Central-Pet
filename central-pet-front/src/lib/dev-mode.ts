@@ -15,6 +15,10 @@ export function shouldDisplayMockUsers() {
   return isDevelopment() && import.meta.env.VITE_AUTH_STRATEGY == 'mock';
 }
 
+export function shouldDisplayMockChoiceGates() {
+  return import.meta.env.VITE_DISPLAY_MOCK_CHOICE_GATE === 'true';
+}
+
 /**
  * Verifica se a aplicação está rodando em modo produção
  * @returns true se em produção, false caso contrário

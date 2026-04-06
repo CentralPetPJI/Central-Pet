@@ -6,6 +6,7 @@ import { getStoredPets } from '@/storage/pets';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes } from '@/routes';
+import { shouldDisplayMockChoiceGates } from '@/lib/dev-mode.ts';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -31,7 +32,8 @@ const App: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
-      <MockUserChoiceGate />
+
+      {shouldDisplayMockChoiceGates() ? <MockUserChoiceGate /> : null}
 
       <div className="flex-1">
         <div className="grid h-full w-full grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">
