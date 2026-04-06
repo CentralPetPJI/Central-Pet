@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
 import type { Pet } from '@/Models/pet';
+import { getPetRouteId } from '@/storage/pets/pet-helpers';
 
 interface PetModalProps {
   petData: Pet;
@@ -9,6 +10,8 @@ interface PetModalProps {
 }
 
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
+  const routeId = getPetRouteId(petData);
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
@@ -44,7 +47,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         </p>
 
         <Link
-          to={routes.pets.detail.build(petData.id)}
+          to={routes.pets.detail.build(routeId)}
           className="mt-6 block w-full rounded-xl bg-[#1ed6ea] py-3 text-center font-semibold text-white transition hover:bg-[#6de9f7]"
         >
           Quero adotar

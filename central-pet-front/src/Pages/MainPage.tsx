@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
-import { getStoredPets } from '@/storage/pets';
 import { routes } from '@/routes';
+import { usePets } from '@/lib/pets';
 
 const MainPage: React.FC = () => {
-  const petsData = getStoredPets();
+  const { pets, isLoading, error } = usePets();
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
@@ -28,7 +28,15 @@ const MainPage: React.FC = () => {
         </Link>
       </div>
 
-      <Carousel petsData={petsData} />
+      {isLoading ? (
+        <div className="text-center py-8 text-gray-600">Carregando pets...</div>
+      ) : error ? (
+        <div className="text-center py-8 text-gray-600">
+          Mostrando pets salvos localmente. Não foi possível conectar ao servidor.
+        </div>
+      ) : null}
+
+      <Carousel petsData={pets} />
     </section>
   );
 };

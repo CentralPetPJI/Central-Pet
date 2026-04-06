@@ -1,5 +1,5 @@
 export interface Pet {
-  id: number;
+  id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
   name: string;
   species: string;
   physicalCharacteristics: string;

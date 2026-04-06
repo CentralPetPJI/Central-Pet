@@ -33,3 +33,11 @@ export {
   petPersonalityStorageKey,
   type PetPersonalityOption,
 } from './pet-personality-options';
+export { getPetRouteId, isBackendPet, mapApiResponseToPet, resolveBackendId } from './pet-helpers';
+export {
+  ensurePublicId,
+  getBackendIdFromPublic,
+  getPublicIdFromBackend,
+  clearPublicIdMappings,
+  type PublicIdMapping,
+} from './public-id-mapping';
