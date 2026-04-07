@@ -46,11 +46,46 @@ $ pnpm run start:prod
 
 ## Run tests
 
+### Setup do banco de teste
+
+Antes de rodar os testes E2E, você precisa criar o banco de dados de teste.
+
+O comando `pnpm test:setup` é **cross-platform** e funciona em Linux, macOS e Windows:
+
+```bash
+$ cd central-pet-back
+$ pnpm test:setup
+```
+
+Alternativamente, você pode executar o script diretamente:
+
+**Qualquer plataforma (Node.js):**
+
+```bash
+$ node scripts/setup-test-db.js
+```
+
+**Linux/macOS (Bash):**
+
+```bash
+$ ./scripts/setup-test-db.sh
+```
+
+**Windows (PowerShell):**
+
+```powershell
+$ .\scripts\setup-test-db.ps1
+```
+
+> **Nota:** Certifique-se de que o arquivo `.env.test` existe e contém a `DATABASE_URL` correta.
+
+### Executar testes
+
 ```bash
 # unit tests
 $ pnpm run test
 
-# e2e tests
+# e2e tests (já configura o banco automaticamente)
 $ pnpm run test:e2e
 
 # test coverage
