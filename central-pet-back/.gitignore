@@ -40,8 +40,8 @@ lerna-debug.log*
 .env.*
 !.env.example
 !.env.test.example
+!.env.test
 .env.development.local
-.env.test.local
 .env.production.local
 .env.local
 

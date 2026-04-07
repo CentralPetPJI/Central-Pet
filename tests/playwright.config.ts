@@ -6,7 +6,7 @@ export default defineConfig({
   retries: 0,
   globalSetup: "./global-setup.ts",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:5174",
     trace: "retain-on-failure",
   },
   webServer: [
@@ -19,8 +19,8 @@ export default defineConfig({
     },
     {
       command:
-        "VITE_API_URL=http://localhost:3001/api VITE_AUTH_STRATEGY=jwt pnpm dev:front",
-      url: "http://localhost:5173",
+        "VITE_API_URL=http://localhost:3001/api VITE_AUTH_STRATEGY=jwt pnpm dev:front --host 0.0.0.0 --port 5174",
+      url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       cwd: "..",
