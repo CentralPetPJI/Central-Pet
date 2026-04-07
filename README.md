@@ -44,13 +44,57 @@ central-pet-front/
 
 ## Como rodar localmente
 
-### Pré-requisitos
+### Opção 1: Docker (RECOMENDADO) 🐳
+
+**Um único comando para tudo funcionar:**
+
+```zsh
+# Clone e rode
+git clone https://github.com/CentralPetPJI/Central-Pet
+cd Central-Pet
+
+# Opção A: usando pnpm
+pnpm dev:docker
+
+# Opção B: usando make
+make dev
+```
+
+**Pronto!** O ambiente configura automaticamente:
+
+- ✅ Cria `.env` do backend
+- ✅ Instala dependências
+- ✅ Aplica migrations do Prisma
+- ✅ Aguarda PostgreSQL estar pronto
+- ✅ Inicia frontend e backend
+
+Acesse:
+
+- **Frontend:** http://localhost:5173
+- **Backend:** http://localhost:3000/api
+
+**Outros comandos Docker:**
+
+```zsh
+pnpm dev:docker:down    # Parar containers
+pnpm dev:docker:logs    # Ver logs em tempo real
+pnpm dev:docker:clean   # Limpar tudo (incluindo banco)
+
+# Ou com make:
+make dev-down
+make dev-logs
+make dev-clean
+```
+
+### Opção 2: Desenvolvimento sem Docker
+
+**Pré-requisitos:**
 
 - Node.js 24
 - pnpm
-- Docker (para PostgreSQL)
+- PostgreSQL rodando (pode ser via Docker)
 
-### Setup inicial
+**Setup manual:**
 
 1. Clone o repositório:
 
@@ -65,28 +109,40 @@ central-pet-front/
    pnpm install
    ```
 
-3. Inicie o PostgreSQL:
+3. Configure o backend (crie `central-pet-back/.env`):
 
-   ```zsh
-   docker compose -f docker-compose.dev.yml up postgres -d
+   ```env
+   PORT=3000
+   FRONTEND_URL=http://localhost:5173
+   DATABASE_URL=postgresql://centralpet:centralpet123@localhost:5432/centralpetdb
+   THROTTLE_TTL=60000
+   THROTTLE_LIMIT=60
    ```
 
-4. Configure o banco de dados:
+4. Inicie o PostgreSQL (se não tiver local):
 
    ```zsh
-   cd central-pet-back
-   pnpm prisma migrate deploy
+   docker run -d -p 5432:5432 \
+     -e POSTGRES_DB=centralpetdb \
+     -e POSTGRES_USER=centralpet \
+     -e POSTGRES_PASSWORD=centralpet123 \
+     postgres:17-alpine
    ```
 
-5. Inicie o projeto em modo desenvolvimento:
+5. Rode migrations:
 
    ```zsh
-   cd ..
+   pnpm --filter central-pet-back exec prisma migrate deploy
+   ```
+
+6. Inicie em modo dev:
+
+   ```zsh
    pnpm dev
    ```
 
-   - Frontend: `http://localhost:5173`
-   - Backend: `http://localhost:3000/api`
+   - Frontend: http://localhost:5173
+   - Backend: http://localhost:3000/api
 
 ### Ambientes
 
@@ -105,40 +161,65 @@ O backend possui dois ambientes configurados:
 
 ### Comandos úteis
 
+**Desenvolvimento:**
+
 ```zsh
-# Desenvolvimento
-pnpm dev:front          # Inicia frontend (porta 5173)
-pnpm dev:back           # Inicia backend em dev (porta 3000)
-pnpm dev:back:test      # Inicia backend em teste (porta 3001)
+# Docker (recomendado)
+pnpm dev:docker          # Inicia tudo em containers
+pnpm dev:docker:down     # Para containers
+pnpm dev:docker:logs     # Logs em tempo real
+pnpm dev:docker:clean    # Limpa tudo (volumes + containers)
 
-# Testes
+# Local (sem Docker)
+pnpm dev                 # Inicia front + back em paralelo
+pnpm dev:front           # Só frontend (porta 5173)
+pnpm dev:back            # Só backend dev (porta 3000)
+pnpm dev:back:test       # Backend em teste (porta 3001)
+```
+
+**Testes:**
+
+```zsh
 pnpm test:front         # Testes unitários frontend (Vitest)
-pnpm test:back          # Testes unitários backend (Jest)
-pnpm test:e2e           # Testes E2E (Playwright)
+pnpm test:back          # Testes unitários + E2E backend (Jest)
+pnpm test:e2e           # Testes E2E completos (Playwright)
 pnpm test:all           # Todos os testes
+```
 
-# Lint
-pnpm lint:front         # ESLint frontend
-pnpm lint:back          # ESLint backend
+**Build:**
+
+```zsh
+pnpm build:front        # Build de produção frontend
+pnpm build:back         # Build de produção backend
 ```
 
 ## Como rodar com Docker
 
-### Desenvolvimento
+### Modo desenvolvimento (com hot-reload)
 
 ```zsh
-docker compose -f docker-compose.dev.yml up
+# Jeito mais simples:
+pnpm dev:docker
+# ou
+make dev
+
+# Parar:
+pnpm dev:docker:down
+# ou
+make dev-down
 ```
 
-Aplicacao disponivel em `http://localhost:5173`.
+O ambiente dev monta os volumes locais, então mudanças no código refletem automaticamente.
 
-### Producao
+### Modo produção (otimizado)
+
+### Modo produção (otimizado)
 
 ```zsh
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-Aplicacao disponivel em `http://localhost:8080`.
+Aplicação disponível em http://localhost:8080.
 
 Os arquivos `docker-compose` ficam na raiz para orquestrar o monorepo, e cada aplicacao mantem seu proprio `Dockerfile`: [central-pet-front/Dockerfile](./central-pet-front/Dockerfile) e [central-pet-back/Dockerfile](./central-pet-back/Dockerfile).
 
