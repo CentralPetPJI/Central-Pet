@@ -55,7 +55,12 @@ describe('Security (e2e)', () => {
       })
       .expect(400);
 
-    expect(response.body.message).toContain('property role should not exist');
+    const body = response.body as {
+      message?: string;
+      data?: unknown;
+      __clearSessionCookie?: boolean;
+    };
+    expect(body.message).toContain('property role should not exist');
   });
 
   it('blocks non-whitelisted fields in user creation payload', async () => {
@@ -72,7 +77,13 @@ describe('Security (e2e)', () => {
       })
       .expect(400);
 
-    expect(response.body.message).toContain('property passwordHash should not exist');
+    const body = response.body as {
+      message?: string;
+      data?: unknown;
+      __clearSessionCookie?: boolean;
+    };
+
+    expect(body.message).toContain('property passwordHash should not exist');
   });
 
   it('enforces authentication for /auth/me without session cookie', async () => {
@@ -84,7 +95,7 @@ describe('Security (e2e)', () => {
   it('sets secure session cookie attributes and hides sessionId on login', async () => {
     // Criar usuário para o teste
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
-    
+
     await request(httpServer)
       .post('/api/users')
       .send({
@@ -112,7 +123,14 @@ describe('Security (e2e)', () => {
           ? rawSetCookie
           : [rawSetCookie];
 
-    expect(response.body.data.sessionId).toBeUndefined();
+    const body = response.body as {
+      message?: string;
+      data?: {
+        sessionId?: string;
+      };
+      __clearSessionCookie?: boolean;
+    };
+    expect(body.data?.sessionId).toBeUndefined();
     expect(setCookie).toBeDefined();
     expect(setCookie?.[0]).toContain('central_pet_session=');
     expect(setCookie?.[0]).toContain('HttpOnly');
@@ -122,7 +140,7 @@ describe('Security (e2e)', () => {
   it('clears session cookie and keeps internal control fields private on logout', async () => {
     // Criar usuário e fazer login primeiro
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
-    
+
     await request(httpServer)
       .post('/api/users')
       .send({
@@ -158,7 +176,12 @@ describe('Security (e2e)', () => {
           ? rawSetCookie
           : [rawSetCookie];
 
-    expect(response.body.__clearSessionCookie).toBeUndefined();
+    const body = response.body as {
+      message?: string;
+      data?: unknown;
+      __clearSessionCookie?: boolean;
+    };
+    expect(body.__clearSessionCookie).toBeUndefined();
     expect(setCookie).toBeDefined();
     expect(setCookie?.[0]).toContain('central_pet_session=;');
     expect(setCookie?.[0]).toContain('HttpOnly');

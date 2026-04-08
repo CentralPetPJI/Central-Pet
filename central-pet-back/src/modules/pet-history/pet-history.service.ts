@@ -1,68 +1,167 @@
-import { Injectable } from '@nestjs/common';
-import { mockPets, mockUsers, mockUserIds } from '@/mocks';
-import {
-  mapToPetHistoryRecord,
-  resolvePetHistoryPetName,
-  resolvePetHistoryUser,
-  type PetHistoryRecord,
-} from './models/pet-history-record';
-
-const trackedPetId = 'b2b5c4b8-c6f7-4b63-82c1-5cbb5bfeb001';
-const trackedUserId = mockUserIds.ONG_PATAS_DO_CENTRO;
-
-const buddy = mockPets.find((pet) => pet.id === 1);
-const luna = mockPets.find((pet) => pet.id === 2);
-const rafael = mockUsers.find((user) => user.fullName === 'Rafael Lima');
-const juliana = mockUsers.find((user) => user.fullName === 'Juliana Martins');
-
-const historyRecords: PetHistoryRecord[] = [
-  mapToPetHistoryRecord({
-    id: 'hist-001',
-    petId: trackedPetId,
-    petName: resolvePetHistoryPetName(buddy, 'Buddy'),
-    userId: trackedUserId,
-    fullName: 'ONG Patas do Centro',
-    eventName: 'PET_REGISTERED',
-    createdAt: '2026-03-10T10:00:00.000Z',
-  }),
-  mapToPetHistoryRecord({
-    id: 'hist-002',
-    petId: 'pet-history-002',
-    petName: resolvePetHistoryPetName(luna, 'Luna'),
-    userId: trackedUserId,
-    fullName: 'ONG Patas do Centro',
-    eventName: 'RETURNED',
-    createdAt: '2026-03-12T10:00:00.000Z',
-  }),
-  mapToPetHistoryRecord({
-    id: 'hist-003',
-    petId: trackedPetId,
-    petName: resolvePetHistoryPetName(buddy, 'Buddy'),
-    userId: resolvePetHistoryUser(rafael, 'user-raf', 'Rafael Lima').id,
-    fullName: resolvePetHistoryUser(rafael, 'user-raf', 'Rafael Lima').fullName,
-    eventName: 'ADOPTION',
-    createdAt: '2026-03-15T10:00:00.000Z',
-  }),
-  mapToPetHistoryRecord({
-    id: 'hist-004',
-    petId: trackedPetId,
-    petName: resolvePetHistoryPetName(buddy, 'Buddy'),
-    userId: resolvePetHistoryUser(juliana, 'user-jul', 'Juliana Martins').id,
-    fullName: resolvePetHistoryUser(juliana, 'user-jul', 'Juliana Martins').fullName,
-    eventName: 'RETURNED',
-    createdAt: '2026-03-18T10:00:00.000Z',
-  }),
-];
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreatePetHistoryDto } from './dto/create-pet-history.dto';
 
 @Injectable()
 export class PetHistoryService {
-  findAll(userId?: string, petId?: string) {
-    const data = historyRecords
-      .filter((record) => (userId ? record.user.id === userId : true))
-      .filter((record) => (petId ? record.pet.id === petId : true))
-      .sort(
-        (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
-      );
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createPetHistoryDto: CreatePetHistoryDto) {
+    const pet = await this.prisma.pet.findUnique({
+      where: { id: createPetHistoryDto.petId },
+      select: { id: true },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with id "${createPetHistoryDto.petId}" not found`);
+    }
+
+    if (createPetHistoryDto.performedByUserId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: createPetHistoryDto.performedByUserId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException(
+          `User with id "${createPetHistoryDto.performedByUserId}" not found`,
+        );
+      }
+    }
+
+    const data = await this.prisma.petHistory.create({
+      data: {
+        petId: createPetHistoryDto.petId,
+        eventType: createPetHistoryDto.eventType as
+          | 'CREATED'
+          | 'TRANSFERRED'
+          | 'ADOPTION_APPROVED'
+          | 'RETURNED'
+          | 'STATUS_CHANGED'
+          | 'UPDATED',
+        description: createPetHistoryDto.description,
+        fromResponsible: createPetHistoryDto.fromResponsible,
+        toResponsible: createPetHistoryDto.toResponsible,
+        fromLocation: createPetHistoryDto.fromLocation,
+        toLocation: createPetHistoryDto.toLocation,
+        performedByUserId: createPetHistoryDto.performedByUserId,
+      },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        performedByUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return {
+      message: 'Pet history created successfully',
+      data,
+    };
+  }
+
+  async findAll(userId?: string, petId?: string) {
+    const data = await this.prisma.petHistory.findMany({
+      where: {
+        ...(userId ? { performedByUserId: userId } : {}),
+        ...(petId ? { petId } : {}),
+      },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        performedByUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    return {
+      message: 'Pet history retrieved successfully',
+      data,
+    };
+  }
+
+  async findOne(id: string) {
+    const data = await this.prisma.petHistory.findUnique({
+      where: { id },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        performedByUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!data) {
+      throw new NotFoundException(`Pet history with id "${id}" not found`);
+    }
+
+    return {
+      message: 'Pet history record retrieved successfully',
+      data,
+    };
+  }
+
+  async findByPetId(petId: string) {
+    const pet = await this.prisma.pet.findUnique({
+      where: { id: petId },
+      select: { id: true },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with id "${petId}" not found`);
+    }
+
+    const data = await this.prisma.petHistory.findMany({
+      where: { petId },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        performedByUser: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
 
     return {
       message: 'Pet history retrieved successfully',
