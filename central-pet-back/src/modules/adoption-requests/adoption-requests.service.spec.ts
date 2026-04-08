@@ -118,13 +118,4 @@ describe('AdoptionRequestsService - Prisma methods', () => {
       }),
     ).rejects.toThrow(NotFoundException);
   });
-
-  it('should return all adoption requests', async () => {
-    adoptionRequestFindManyMock.mockResolvedValue([]);
-
-    const result = await prismaService.findAll();
-
-    expect(result.message).toBe('Adoption requests retrieved successfully');
-    expect(result.data).toEqual([]);
-  });
 });

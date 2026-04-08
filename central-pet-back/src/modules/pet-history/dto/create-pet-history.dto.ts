@@ -5,7 +5,7 @@ export class CreatePetHistoryDto {
   petId: string;
 
   @IsString()
-  @IsIn(['CREATED', 'TRANSFERRED', 'ADOPTION_APPROVED', 'RETURNED', 'STATUS_CHANGED', 'UPDATED'])
+  @IsIn(['CREATED', 'TRANSFERRED', 'ADOPTION_APPROVED', 'RETURNED', 'UPDATED'])
   eventType: string;
 
   @IsString()
@@ -22,16 +22,6 @@ export class CreatePetHistoryDto {
   @IsString()
   @MaxLength(255)
   toResponsible?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  fromLocation?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  toLocation?: string;
 
   @IsOptional()
   @IsUUID()

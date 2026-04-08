@@ -37,13 +37,10 @@ export class PetHistoryService {
           | 'TRANSFERRED'
           | 'ADOPTION_APPROVED'
           | 'RETURNED'
-          | 'STATUS_CHANGED'
           | 'UPDATED',
         description: createPetHistoryDto.description,
         fromResponsible: createPetHistoryDto.fromResponsible,
         toResponsible: createPetHistoryDto.toResponsible,
-        fromLocation: createPetHistoryDto.fromLocation,
-        toLocation: createPetHistoryDto.toLocation,
         performedByUserId: createPetHistoryDto.performedByUserId,
       },
       include: {

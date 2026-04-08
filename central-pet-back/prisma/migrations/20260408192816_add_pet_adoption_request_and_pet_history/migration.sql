@@ -14,7 +14,7 @@ CREATE TYPE "PetStatus" AS ENUM ('AVAILABLE', 'PENDING_ADOPTION', 'ADOPTED', 'UN
 CREATE TYPE "AdoptionRequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "PetHistoryEventType" AS ENUM ('CREATED', 'TRANSFERRED', 'ADOPTION_APPROVED', 'RETURNED', 'STATUS_CHANGED', 'UPDATED');
+CREATE TYPE "PetHistoryEventType" AS ENUM ('CREATED', 'TRANSFERRED', 'ADOPTION_APPROVED', 'RETURNED', 'UPDATED');
 
 -- CreateTable
 CREATE TABLE "Pet" (
@@ -67,8 +67,6 @@ CREATE TABLE "PetHistory" (
     "description" TEXT NOT NULL,
     "fromResponsible" TEXT,
     "toResponsible" TEXT,
-    "fromLocation" TEXT,
-    "toLocation" TEXT,
     "performedByUserId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

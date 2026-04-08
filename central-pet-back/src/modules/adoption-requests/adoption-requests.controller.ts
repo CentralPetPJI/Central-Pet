@@ -24,11 +24,6 @@ export class AdoptionRequestsController {
     return this.adoptionRequestsService.findReceived(userId);
   }
 
-  @Get('all')
-  findAll() {
-    return this.adoptionRequestsService.findAll();
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.adoptionRequestsService.findOne(id);

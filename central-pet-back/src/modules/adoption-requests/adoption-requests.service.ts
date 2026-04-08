@@ -111,39 +111,6 @@ export class AdoptionRequestsService {
     };
   }
 
-  async findAll() {
-    if (!this.prisma) {
-      throw new Error('PrismaService is not available');
-    }
-
-    const data = await this.prisma.adoptionRequest.findMany({
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
-        },
-        requester: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return {
-      message: 'Adoption requests retrieved successfully',
-      data,
-    };
-  }
-
   async findOne(id: string) {
     if (!this.prisma) {
       throw new Error('PrismaService is not available');
