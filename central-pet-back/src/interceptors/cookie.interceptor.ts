@@ -1,8 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Response } from 'express';
 import { Observable, map } from 'rxjs';
-
-const SESSION_COOKIE_NAME = 'central_pet_session';
+import { SESSION_COOKIE_NAME } from '@/utils/session-cookie';
 
 type InterceptorResponse = {
   data?: {

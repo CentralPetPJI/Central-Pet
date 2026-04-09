@@ -10,7 +10,7 @@ describe('Servico de autenticacao mock', () => {
     service = new MockAuthService();
   });
 
-  it('deve lançar erro quando nenhum header de usuario for informado', () => {
+  it('deve lançar erro quando nenhum id de usuario for informado', () => {
     expect(() => service.getCurrentUser()).toThrow(UnauthorizedException);
   });
 

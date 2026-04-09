@@ -10,6 +10,12 @@ type UsersResponse = {
   };
 };
 
+type SelectUserResponse = {
+  data: {
+    user: AuthUser;
+  };
+};
+
 /**
  * Estratégia de autenticação mock.
  *
@@ -40,14 +46,21 @@ export class MockAuthStrategy implements AuthStrategy {
       clearStoredUserId();
     }
 
+    let selectedUserId: string | null = hasStoredUser ? (storedId ?? null) : null;
+
     // Seleciona automaticamente o usuário padrão em desenvolvimento se não houver um salvo
-    if (!hasStoredUser && !storedId && isDevelopment()) {
+    if (!selectedUserId && isDevelopment()) {
+      selectedUserId = defaultUserId;
       setStoredUserId(defaultUserId);
+    }
+
+    if (selectedUserId) {
+      await this.activateMockSession(selectedUserId);
     }
   }
 
   /**
-   * Obtém o usuário atual do endpoint /auth/me.
+   * Obtém o usuário atual do endpoint /mock-auth/me.
    * Retorna null se não estiver autenticado (nenhum usuário mock selecionado).
    */
   async getCurrentUser(): Promise<AuthUser | null> {
@@ -71,6 +84,7 @@ export class MockAuthStrategy implements AuthStrategy {
    * O logout remove o ID do usuário mock salvo.
    */
   async logout(): Promise<void> {
+    await api.post('/auth/logout');
     clearStoredUserId();
   }
 
@@ -98,7 +112,16 @@ export class MockAuthStrategy implements AuthStrategy {
     if (!user) {
       throw new Error(`User not found: ${userId}`);
     }
+    await this.activateMockSession(userId);
     setStoredUserId(userId);
     return user;
+  }
+
+  /**
+   * Ativa o modo mock e cria sessão mock no cookie da aplicação.
+   */
+  private async activateMockSession(userId: string): Promise<void> {
+    await api.post('/auth/mode', { mode: 'mock' });
+    await api.post<SelectUserResponse>('/mock-auth/select-user', { userId });
   }
 }

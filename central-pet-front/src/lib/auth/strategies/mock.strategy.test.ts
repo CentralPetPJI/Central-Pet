@@ -10,6 +10,7 @@ const { isDevelopmentMock } = vi.hoisted(() => ({
 vi.mock('../../api', () => ({
   api: {
     get: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
@@ -18,11 +19,13 @@ vi.mock('../../dev-mode', () => ({
 }));
 
 const apiGetMock = vi.mocked(api.get);
+const apiPostMock = vi.mocked(api.post);
 
 describe('Estrategia MockAuthStrategy', () => {
   beforeEach(() => {
     window.localStorage.clear();
     apiGetMock.mockReset();
+    apiPostMock.mockReset();
     isDevelopmentMock.mockReset();
   });
 
@@ -47,9 +50,14 @@ describe('Estrategia MockAuthStrategy', () => {
     });
 
     const strategy = new MockAuthStrategy();
+    apiPostMock.mockResolvedValue({});
     await strategy.initialize();
 
     expect(window.localStorage.getItem(userStorageKey)).toBe('mock-user-1');
+    expect(apiPostMock).toHaveBeenNthCalledWith(1, '/auth/mode', { mode: 'mock' });
+    expect(apiPostMock).toHaveBeenNthCalledWith(2, '/mock-auth/select-user', {
+      userId: 'mock-user-1',
+    });
     await expect(strategy.getUsers()).resolves.toHaveLength(1);
   });
 
@@ -70,6 +78,7 @@ describe('Estrategia MockAuthStrategy', () => {
     });
 
     const strategy = new MockAuthStrategy();
+    apiPostMock.mockResolvedValue({});
 
     window.localStorage.setItem(userStorageKey, 'mock-user-2');
 
@@ -80,6 +89,7 @@ describe('Estrategia MockAuthStrategy', () => {
 
     await strategy.logout();
 
+    expect(apiPostMock).toHaveBeenCalledWith('/auth/logout');
     expect(window.localStorage.getItem(userStorageKey)).toBeNull();
   });
 
@@ -104,10 +114,15 @@ describe('Estrategia MockAuthStrategy', () => {
     });
 
     const strategy = new MockAuthStrategy();
+    apiPostMock.mockResolvedValue({});
     await strategy.initialize();
 
     await expect(strategy.selectUser('mock-user-3')).resolves.toMatchObject({
       id: 'mock-user-3',
+    });
+    expect(apiPostMock).toHaveBeenNthCalledWith(1, '/auth/mode', { mode: 'mock' });
+    expect(apiPostMock).toHaveBeenNthCalledWith(2, '/mock-auth/select-user', {
+      userId: 'mock-user-3',
     });
     expect(window.localStorage.getItem(userStorageKey)).toBe('mock-user-3');
 
