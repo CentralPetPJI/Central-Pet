@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mockUserIds } from '@/mocks';
 import { AdoptionRequestsService } from './adoption-requests.service';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 describe('Servico de solicitacoes de adocao', () => {
@@ -117,5 +117,20 @@ describe('AdoptionRequestsService - Prisma methods', () => {
         requesterId: '22222222-2222-2222-2222-222222222222',
       }),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw when pet is not available on create', async () => {
+    petFindUniqueMock.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+      name: 'Luna',
+      status: 'ADOPTED',
+    });
+
+    await expect(
+      prismaService.create({
+        petId: '11111111-1111-1111-1111-111111111111',
+        requesterId: '22222222-2222-2222-2222-222222222222',
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 });

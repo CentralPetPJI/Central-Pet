@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { CreatePetHistoryDto } from './dto/create-pet-history.dto';
 import { PetHistoryService } from './pet-history.service';
 
@@ -17,12 +17,12 @@ export class PetHistoryController {
   }
 
   @Get('pet/:petId')
-  findByPetId(@Param('petId') petId: string) {
+  findByPetId(@Param('petId', ParseUUIDPipe) petId: string) {
     return this.petHistoryService.findByPetId(petId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.petHistoryService.findOne(id);
   }
 }

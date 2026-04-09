@@ -1,5 +1,6 @@
 import { IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+type AdoptionRequestStatusType = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 export class CreateAdoptionRequestDto {
   @IsUUID()
   petId: string;
@@ -14,6 +15,6 @@ export class CreateAdoptionRequestDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'])
-  status?: string;
+  @IsIn([])
+  status?: AdoptionRequestStatusType;
 }

@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePetHistoryDto } from './dto/create-pet-history.dto';
+import { PetHistoryEventType } from 'generated/prisma/enums';
 
 @Injectable()
 export class PetHistoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createPetHistoryDto: CreatePetHistoryDto) {
+  async create(createPetHistoryDto: CreatePetHistoryDto, performedByUserId?: string) {
     const pet = await this.prisma.pet.findUnique({
       where: { id: createPetHistoryDto.petId },
       select: { id: true },
@@ -16,32 +17,25 @@ export class PetHistoryService {
       throw new NotFoundException(`Pet with id "${createPetHistoryDto.petId}" not found`);
     }
 
-    if (createPetHistoryDto.performedByUserId) {
+    if (performedByUserId) {
       const user = await this.prisma.user.findUnique({
-        where: { id: createPetHistoryDto.performedByUserId },
+        where: { id: performedByUserId },
         select: { id: true },
       });
 
       if (!user) {
-        throw new NotFoundException(
-          `User with id "${createPetHistoryDto.performedByUserId}" not found`,
-        );
+        throw new NotFoundException(`User with id "${performedByUserId}" not found`);
       }
     }
 
     const data = await this.prisma.petHistory.create({
       data: {
         petId: createPetHistoryDto.petId,
-        eventType: createPetHistoryDto.eventType as
-          | 'CREATED'
-          | 'TRANSFERRED'
-          | 'ADOPTION_APPROVED'
-          | 'RETURNED'
-          | 'UPDATED',
+        eventType: createPetHistoryDto.eventType as PetHistoryEventType,
         description: createPetHistoryDto.description,
         fromResponsible: createPetHistoryDto.fromResponsible,
         toResponsible: createPetHistoryDto.toResponsible,
-        performedByUserId: createPetHistoryDto.performedByUserId,
+        performedByUserId: performedByUserId,
       },
       include: {
         pet: {

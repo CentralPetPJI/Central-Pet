@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import {
   mockAdoptionRequests,
   mockPets,
@@ -20,7 +20,7 @@ export class AdoptionRequestsService {
   private readonly pets: MockPet[] = [...mockPets];
   private readonly users: MockUser[] = [...mockUsers];
 
-  constructor(@Optional() private readonly prisma?: PrismaService) {}
+  constructor(private readonly prisma?: PrismaService) {}
 
   findReceived(responsibleUserId?: string): { message: string; data: ReceivedAdoptionRequest[] } {
     const data = this.adoptionRequests
@@ -63,6 +63,12 @@ export class AdoptionRequestsService {
       throw new NotFoundException(`Pet with id "${createAdoptionRequestDto.petId}" not found`);
     }
 
+    if (pet.status !== 'AVAILABLE') {
+      throw new BadRequestException(
+        `Adoption request cannot be created for pet with status "${pet.status}"`,
+      );
+    }
+
     const requester = await this.prisma.user.findUnique({
       where: { id: createAdoptionRequestDto.requesterId },
       select: { id: true, fullName: true, email: true },
@@ -79,13 +85,7 @@ export class AdoptionRequestsService {
         petId: createAdoptionRequestDto.petId,
         requesterId: createAdoptionRequestDto.requesterId,
         message: createAdoptionRequestDto.message,
-        status:
-          (createAdoptionRequestDto.status as
-            | 'PENDING'
-            | 'APPROVED'
-            | 'REJECTED'
-            | 'CANCELLED'
-            | undefined) ?? 'PENDING',
+        status: 'PENDING',
       },
       include: {
         pet: {

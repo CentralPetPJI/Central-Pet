@@ -1,12 +1,16 @@
 import { IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import {
+  petHistoryEventTypes,
+  type PetHistoryEventTypeValue,
+} from '../constants/pet-histpry-event-types';
 
 export class CreatePetHistoryDto {
   @IsUUID()
   petId: string;
 
   @IsString()
-  @IsIn(['CREATED', 'TRANSFERRED', 'ADOPTION_APPROVED', 'RETURNED', 'UPDATED'])
-  eventType: string;
+  @IsIn(petHistoryEventTypes)
+  eventType: PetHistoryEventTypeValue;
 
   @IsString()
   @IsNotEmpty()
@@ -22,8 +26,4 @@ export class CreatePetHistoryDto {
   @IsString()
   @MaxLength(255)
   toResponsible?: string;
-
-  @IsOptional()
-  @IsUUID()
-  performedByUserId?: string;
 }

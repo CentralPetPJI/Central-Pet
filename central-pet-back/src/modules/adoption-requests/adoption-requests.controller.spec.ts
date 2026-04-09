@@ -5,15 +5,20 @@ import { AdoptionRequestsService } from './adoption-requests.service';
 
 describe('AdoptionRequestsController', () => {
   let controller: AdoptionRequestsController;
-
-  const adoptionRequestsServiceMock = {
-    create: jest.fn(),
-    findReceived: jest.fn(),
-    findAll: jest.fn(),
-    findOne: jest.fn(),
+  let adoptionRequestsServiceMock: {
+    create: jest.Mock;
+    findReceived: jest.Mock;
+    findAll: jest.Mock;
+    findOne: jest.Mock;
   };
 
   beforeEach(async () => {
+    adoptionRequestsServiceMock = {
+      create: jest.fn(),
+      findReceived: jest.fn(),
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdoptionRequestsController],
       providers: [

@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Query,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
 import { AdoptionRequestsService } from './adoption-requests.service';
 
@@ -14,18 +25,18 @@ export class AdoptionRequestsController {
   @Get()
   findReceived(@Query('type') type?: 'received' | 'sent', @Headers('x-user-id') userId?: string) {
     if (!userId) {
-      throw new Error('User ID is required');
+      throw new UnauthorizedException('User ID is required');
     }
 
     if (type && type !== 'received') {
-      throw new Error('Only "received" type is currently supported');
+      throw new BadRequestException('Only "received" type is currently supported');
     }
 
     return this.adoptionRequestsService.findReceived(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adoptionRequestsService.findOne(id);
   }
 }

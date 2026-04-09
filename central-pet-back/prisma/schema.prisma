@@ -145,7 +145,7 @@ model PetHistory {
   performedByUserId String?
   createdAt         DateTime            @default(now())
 
-  pet               Pet                 @relation(fields: [petId], references: [id], onDelete: Cascade)
+  pet               Pet                 @relation(fields: [petId], references: [id], onDelete: Restrict)
   performedByUser   User?               @relation("PerformedPetHistory", fields: [performedByUserId], references: [id], onDelete: SetNull)
 
   @@index([petId])
