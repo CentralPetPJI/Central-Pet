@@ -6,13 +6,7 @@ Os testes E2E usam um banco de dados PostgreSQL **separado** para garantir isola
 
 ### Configuração
 
-1. **Copie o arquivo de exemplo** (se ainda não existir `.env.test`):
-
-   ```bash
-   cp .env.example .env.test
-   ```
-
-2. **Configure o banco de teste** no `.env.test`:
+1. **Configure o banco de teste** no `.env.test` (arquivo já versionado no projeto):
 
    ```env
    DATABASE_URL=postgresql://centralpet:centralpet123@localhost:5432/centralpetdb_test?schema=public
@@ -20,7 +14,7 @@ Os testes E2E usam um banco de dados PostgreSQL **separado** para garantir isola
 
    ⚠️ **Importante**: O banco DEVE ter sufixo `_test` no nome.
 
-3. **Execute o script de setup** (cria o banco e roda migrations):
+2. **Execute o script de setup** (cria o banco e roda migrations):
    ```bash
    pnpm test:setup
    ```
