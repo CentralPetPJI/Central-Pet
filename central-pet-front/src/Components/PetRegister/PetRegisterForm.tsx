@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { isDevelopment } from '@/lib/dev-mode';
+import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
+import type { PetApiResponse } from '@/Models/pet';
 import PetRegisterActions from '@/Components/PetRegister/PetRegisterActions';
 import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBehaviorSection';
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
@@ -10,21 +11,13 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
-import { updatePublicIdMapping } from '@/storage/pets';
+import { ensurePublicId, resolveBackendId } from '@/storage/pets';
 import { petPersonalityStorageKey } from '@/storage/pets';
 import {
   initialPetRegisterFormData,
   petRegisterFormSchema,
   petRegisterStorageKey,
   type PetRegisterFormData,
-} from '@/storage/pets';
-import {
-  buildPetFromRegisterForm,
-  buildRegisterFormDataFromPet,
-  getPetById,
-  getPetProfileById,
-  getStoredPets,
-  savePet,
 } from '@/storage/pets';
 import { routes } from '@/routes';
 
@@ -34,59 +27,64 @@ type ValidationIssue = {
   message: string;
 };
 
-interface RegisterPageInitialState {
-  formData: PetRegisterFormData;
-  selectedPersonalities: string[];
-}
-
-const getInitialRegisterPageState = (petId?: number): RegisterPageInitialState => {
-  if (typeof petId === 'number' && Number.isFinite(petId)) {
-    const savedProfile = getPetProfileById(petId);
-
-    if (savedProfile) {
-      return {
-        formData: savedProfile.formData,
-        selectedPersonalities: savedProfile.selectedPersonalities,
-      };
-    }
-
-    const petSummary = getPetById(petId);
-
-    if (petSummary) {
-      return {
-        formData: buildRegisterFormDataFromPet(petSummary),
-        selectedPersonalities: [],
-      };
-    }
-  }
-
-  window.localStorage.removeItem(petRegisterStorageKey);
-  window.localStorage.removeItem(petPersonalityStorageKey);
-
-  return {
-    formData: initialPetRegisterFormData,
-    selectedPersonalities: [],
-  };
-};
-
 interface PetRegisterFormProps {
-  petId?: number;
+  petId?: string;
 }
 
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const initialState = getInitialRegisterPageState(petId);
-  const [formData, setFormData] = useState<PetRegisterFormData>(initialState.formData);
-  const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>(
-    initialState.selectedPersonalities,
-  );
+  const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
+  const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const latestPetPath = getStoredPets()[0]
-    ? routes.pets.detail.build(getStoredPets()[0].id)
-    : routes.pets.new.path;
-  const isEditMode = typeof petId === 'number' && Number.isFinite(petId);
+  const isEditMode = Boolean(petId);
+  const latestPetPath = isEditMode && petId ? routes.pets.detail.build(petId) : '';
+
+  useEffect(() => {
+    window.localStorage.removeItem(petRegisterStorageKey);
+    window.localStorage.removeItem(petPersonalityStorageKey);
+
+    if (!isEditMode || !petId) {
+      setFormData(initialPetRegisterFormData);
+      setSelectedPersonalities([]);
+      return;
+    }
+
+    let isMounted = true;
+    const loadPetForEdit = async () => {
+      setIsInitializing(true);
+      setSaveMessage('');
+
+      try {
+        const backendId = resolveBackendId(petId);
+        const response = await api.get<{ data: PetApiResponse }>(`/pets/${String(backendId)}`);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setFormData(mapPetApiResponseToRegisterFormData(response.data.data));
+        setSelectedPersonalities(response.data.data.selectedPersonalities ?? []);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setSaveMessage('Nao foi possivel carregar o pet para edicao.');
+      } finally {
+        if (isMounted) {
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    void loadPetForEdit();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode, petId]);
 
   const updateField = <K extends keyof PetRegisterFormData>(
     field: K,
@@ -180,13 +178,12 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     }, {});
 
   const handleSavePet = async () => {
-    if (isAuthLoading) {
+    if (isAuthLoading || isInitializing) {
       setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
       return;
     }
 
-    const resolvedUserId = currentUser?.id ?? (isDevelopment() ? 'dev-user' : undefined);
-    if (!resolvedUserId) {
+    if (!currentUser?.id) {
       setSaveMessage('Nao foi possivel identificar o usuario atual.');
       return;
     }
@@ -210,8 +207,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     }
 
     setFormErrors({});
-    let savedPetId: number | undefined;
-    let savedOnBackend = false;
 
     try {
       const backendPayload = {
@@ -236,61 +231,37 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
         visualLimitation: validationResult.data.visualLimitation,
         hearingLimitation: validationResult.data.hearingLimitation,
         selectedPersonalities: selectedPersonalities,
-        responsibleUserId: resolvedUserId,
       };
 
-      const response = await api.post<{ message: string; data: { id: string } }>(
-        '/pets',
-        backendPayload,
-      );
+      let response: { data: { message: string; data: PetApiResponse } };
 
-      const backendId = response.data.data.id;
+      if (isEditMode && petId) {
+        const backendId = resolveBackendId(petId);
+        response = await api.patch<{ message: string; data: PetApiResponse }>(
+          `/pets/${String(backendId)}`,
+          backendPayload,
+        );
+      } else {
+        response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
+          ...backendPayload,
+          responsibleUserId: currentUser.id,
+        });
+      }
 
-      // Backend retorna UUID, mas frontend usa IDs numéricos
-      // Gera ID local e sincroniza o mapeamento no novo sistema publicId
-      const currentPets = getStoredPets();
-      savedPetId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
+      const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
 
-      // IMPORTANTE: Primeiro inicializa o mapeamento vazio para este ID
-      // Depois atualiza com o backendId
-      // Isso garante que quando usePets() carregar, o pet não é duplicado
-      const { initializeCounterWithLocalPets } = await import('@/storage/pets');
-      initializeCounterWithLocalPets([savedPetId]);
-      updatePublicIdMapping(savedPetId, backendId);
+      setFormData(validationResult.data);
+      window.localStorage.removeItem(petRegisterStorageKey);
+      window.localStorage.removeItem(petPersonalityStorageKey);
 
-      savedOnBackend = true;
-    } catch (_error) {
-      // Erro ao salvar no backend - continua com salvamento local
-      savedPetId = undefined;
+      navigate(routes.pets.detail.build(publicId), {
+        state: {
+          successMessage: isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.',
+        },
+      });
+    } catch {
+      setSaveMessage('Nao foi possivel salvar o pet no momento.');
     }
-
-    const petToSave = buildPetFromRegisterForm(
-      validationResult.data,
-      selectedPersonalities,
-      savedPetId,
-      resolvedUserId,
-    );
-
-    // Sempre salva no localStorage para navegação imediata
-    // O usePets() filtrará duplicatas baseado no mapeamento publicId <-> backendId
-    savePet(petToSave, {
-      id: petToSave.id,
-      formData: validationResult.data,
-      selectedPersonalities,
-    });
-
-    setFormData(validationResult.data);
-    window.localStorage.removeItem(petRegisterStorageKey);
-    window.localStorage.removeItem(petPersonalityStorageKey);
-    const successMessage = isEditMode
-      ? 'Pet atualizado com sucesso.'
-      : savedOnBackend
-        ? 'Pet salvo com sucesso.'
-        : 'Pet salvo localmente com sucesso.';
-
-    navigate(routes.pets.detail.build(petToSave.id), {
-      state: { successMessage },
-    });
   };
 
   return (

@@ -1,4 +1,3 @@
-import defaultPetsData from './default-pets';
 import type { Pet } from '@/Models/pet';
 import {
   initialPetRegisterFormData,
@@ -64,7 +63,7 @@ export const getStoredPets = (): Pet[] => {
   const rawPets = window.localStorage.getItem(petsStorageKey);
 
   if (!rawPets) {
-    return defaultPetsData;
+    return [];
   }
 
   try {
@@ -72,14 +71,14 @@ export const getStoredPets = (): Pet[] => {
 
     if (!Array.isArray(parsedPets)) {
       window.localStorage.removeItem(petsStorageKey);
-      return defaultPetsData;
+      return [];
     }
 
     const validPets = parsedPets.filter(isPetLike);
-    return validPets.length > 0 ? validPets : defaultPetsData;
+    return validPets;
   } catch {
     window.localStorage.removeItem(petsStorageKey);
-    return defaultPetsData;
+    return [];
   }
 };
 

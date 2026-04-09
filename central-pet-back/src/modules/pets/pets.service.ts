@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { mockPets } from '@/mocks';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -18,6 +19,7 @@ type PetRecord = {
   tutor: string;
   shelter: string;
   city: string;
+  state?: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -28,6 +30,8 @@ type PetRecord = {
   hearingLimitation: boolean;
   selectedPersonalities: string[];
   responsibleUserId: string;
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
+  sourceName?: string;
   adoptionStatus: 'AVAILABLE';
   createdAt: string;
   updatedAt: string;
@@ -35,7 +39,37 @@ type PetRecord = {
 
 @Injectable()
 export class PetsService {
-  private readonly pets: PetRecord[] = [];
+  private readonly pets: PetRecord[] = mockPets.map((mockPet) => ({
+    id: String(mockPet.id),
+    profilePhoto: mockPet.photo ?? '',
+    galleryPhotos: [],
+    name: mockPet.name,
+    age: mockPet.ageMonths ? `${mockPet.ageMonths} meses` : 'Idade não informada',
+    species: mockPet.species.toLowerCase().includes('gato') ? 'cat' : 'dog',
+    breed: mockPet.breed ?? 'SRD',
+    sex: mockPet.sex === 'FEMEA' ? 'Femea' : 'Macho',
+    size: mockPet.size === 'PEQUENO' ? 'Pequeno' : mockPet.size === 'GRANDE' ? 'Grande' : 'Medio',
+    microchipped: false,
+    tutor: mockPet.sourceName ?? 'Tutor não informado',
+    shelter: mockPet.sourceName ?? 'Origem não informada',
+    city: mockPet.city ?? 'Cidade não informada',
+    state: mockPet.state,
+    contact: 'Contato não informado',
+    vaccinated: mockPet.vaccinated,
+    neutered: mockPet.neutered,
+    dewormed: mockPet.dewormed,
+    needsHealthCare: false,
+    physicalLimitation: false,
+    visualLimitation: false,
+    hearingLimitation: false,
+    selectedPersonalities: [],
+    responsibleUserId: mockPet.responsibleUserId,
+    sourceType: mockPet.sourceType,
+    sourceName: mockPet.sourceName,
+    adoptionStatus: 'AVAILABLE',
+    createdAt: mockPet.createdAt,
+    updatedAt: mockPet.updatedAt,
+  }));
 
   constructor(private readonly personalityTraitsService: PersonalityTraitsService) {}
 
@@ -75,6 +109,7 @@ export class PetsService {
       tutor: createPetDto.tutor,
       shelter: createPetDto.shelter,
       city: createPetDto.city,
+      state: createPetDto.state,
       contact: createPetDto.contact,
       vaccinated: createPetDto.vaccinated,
       neutered: createPetDto.neutered,
@@ -85,6 +120,8 @@ export class PetsService {
       hearingLimitation: createPetDto.hearingLimitation,
       selectedPersonalities,
       responsibleUserId: createPetDto.responsibleUserId,
+      sourceType: undefined,
+      sourceName: undefined,
       adoptionStatus: 'AVAILABLE',
       createdAt: now,
       updatedAt: now,

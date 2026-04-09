@@ -65,6 +65,11 @@ export class CreatePetDto {
   @IsNotEmpty()
   city: string;
 
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  state?: string;
+
   @IsString()
   @IsNotEmpty()
   contact: string;

@@ -20,12 +20,12 @@ describe('pet storage helpers', () => {
     window.localStorage.clear();
   });
 
-  it('recupera os pets padrao e limpa dados invalidos', () => {
+  it('retorna lista vazia e limpa dados invalidos', () => {
     window.localStorage.setItem(petsStorageKey, 'not-json');
 
     const pets = getStoredPets();
 
-    expect(pets.length).toBeGreaterThan(0);
+    expect(pets).toEqual([]);
     expect(window.localStorage.getItem(petsStorageKey)).toBeNull();
   });
 

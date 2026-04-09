@@ -98,13 +98,14 @@ describe('PetsService', () => {
   });
 
   it('deve listar todos os pets criados', async () => {
+    const initialPets = service.findAll().data.length;
     const dto = await validateCreateDto(makeCreateDto());
     service.create(dto);
 
     const result = service.findAll();
 
     expect(result.message).toBe('Pets retrieved successfully');
-    expect(result.data.length).toBe(1);
+    expect(result.data.length).toBe(initialPets + 1);
   });
 
   it('deve listar apenas os pets do usuario informado', async () => {

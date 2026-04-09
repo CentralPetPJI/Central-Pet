@@ -32,7 +32,7 @@ const MainPage: React.FC = () => {
         <div className="text-center py-8 text-gray-600">Carregando pets...</div>
       ) : error ? (
         <div className="text-center py-8 text-gray-600">
-          Mostrando pets salvos localmente. Não foi possível conectar ao servidor.
+          Não foi possível conectar ao servidor para carregar os pets.
         </div>
       ) : null}
 

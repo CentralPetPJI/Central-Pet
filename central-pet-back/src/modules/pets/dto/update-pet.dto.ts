@@ -79,6 +79,11 @@ export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
+  state?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  @IsNotEmpty()
   contact?: string;
 
   @ValidateIf((_, value) => value !== undefined)
