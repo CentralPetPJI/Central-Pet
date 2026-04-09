@@ -1,11 +1,14 @@
-import type { MockAdoptionRequest } from '@/mocks';
-import type { MockPet } from '@/mocks';
-import type { MockUser } from '@/mocks';
+import type { AdoptionRequest } from './adoption-request';
+import type {
+  AdoptionRequestPetSnapshot,
+  AdoptionRequestAdopterSnapshot,
+  MockAdoptionRequest,
+} from '@/mocks';
 
 export type ReceivedAdoptionRequest = {
   id: string;
   pet: {
-    id: number;
+    id: number | string;
     name: string;
     species: string;
     city: string;
@@ -22,13 +25,15 @@ export type ReceivedAdoptionRequest = {
   };
   message: string;
   status: MockAdoptionRequest['status'];
+  rejectionReason?: string;
   requestedAt: string;
+  updatedAt: string;
 };
 
 type ReceivedAdoptionRequestSource = {
   request: MockAdoptionRequest;
-  pet: MockPet;
-  adopter: MockUser;
+  pet: AdoptionRequestPetSnapshot;
+  adopter: AdoptionRequestAdopterSnapshot;
 };
 
 export const mapToReceivedAdoptionRequest = ({
@@ -41,19 +46,21 @@ export const mapToReceivedAdoptionRequest = ({
     id: pet.id,
     name: pet.name,
     species: pet.species,
-    city: pet.city ?? 'UNKNOWN_CITY',
-    state: pet.state ?? 'UNKNOWN_STATE',
+    city: pet.city,
+    state: pet.state,
     responsibleUserId: pet.responsibleUserId,
-    sourceType: pet.sourceType ?? 'ONG',
-    sourceName: pet.sourceName ?? 'UNKNOWN_SOURCE',
+    sourceType: pet.sourceType,
+    sourceName: pet.sourceName,
   },
   adopter: {
     id: adopter.id,
-    name: adopter.fullName,
-    city: adopter.city ?? 'UNKNOWN_CITY',
-    state: adopter.state ?? 'UNKNOWN_STATE',
+    name: adopter.name,
+    city: adopter.city,
+    state: adopter.state,
   },
   message: request.message,
   status: request.status,
+  rejectionReason: request.rejectionReason,
   requestedAt: request.requestedAt,
+  updatedAt: request.updatedAt,
 });

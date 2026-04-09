@@ -60,7 +60,13 @@ export interface PetListItem {
   adoptionStatus: string;
 }
 
-export type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+export type AdoptionRequestStatus =
+  | 'PENDING'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'contact_shared'
+  | 'rejected';
 
 export interface ReceivedAdoptionRequest {
   id: string;
@@ -82,5 +88,7 @@ export interface ReceivedAdoptionRequest {
   };
   message: string;
   status: AdoptionRequestStatus;
+  rejectionReason?: string;
   requestedAt: string;
+  updatedAt: string;
 }

@@ -1,6 +1,6 @@
 /**
- * Mock de solicitações de adoção para desenvolvimento
- * Vinculadas aos mock users e mock pets
+ * Modelo interno de adoption request
+ * Não depende dos mocks, apenas armazena snapshots do pet e adotante
  */
 
 export type AdoptionRequestStatus =
@@ -29,7 +29,7 @@ export type AdoptionRequestAdopterSnapshot = {
   state: string;
 };
 
-export type MockAdoptionRequest = {
+export type AdoptionRequest = {
   id: string;
   petId: number | string;
   petSnapshot?: AdoptionRequestPetSnapshot;
@@ -41,9 +41,3 @@ export type MockAdoptionRequest = {
   requestedAt: string;
   updatedAt: string;
 };
-
-/**
- * Array de solicitações de adoção
- * Inicia vazio - requests são criados via simulação ou endpoint real
- */
-export const mockAdoptionRequests: MockAdoptionRequest[] = [];
