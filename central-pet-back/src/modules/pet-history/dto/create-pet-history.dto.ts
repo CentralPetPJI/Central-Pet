@@ -2,7 +2,7 @@ import { IsIn, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class
 import {
   petHistoryEventTypes,
   type PetHistoryEventTypeValue,
-} from '../constants/pet-histpry-event-types';
+} from '../constants/pet-history-event-types';
 
 export class CreatePetHistoryDto {
   @IsUUID()
