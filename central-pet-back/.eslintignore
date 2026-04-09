@@ -1,0 +1,17 @@
+# Dependências
+node_modules
+dist
+generated
+
+# Scripts Node.js puros (não TypeScript)
+scripts/*.js
+
+# Arquivos de build
+*.js.map
+*.d.ts
+
+# Configuração
+.env
+.env.*
+!.env.example
+!.env.test.example

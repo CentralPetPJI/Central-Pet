@@ -33,7 +33,7 @@
     "dev:back": "pnpm --filter central-pet-back dev",
     "dev:back:test": "pnpm --filter central-pet-back dev:test",
     "dev": "pnpm -r --parallel --if-present run dev",
-    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build -d",
     "dev:docker:down": "docker compose -f docker-compose.dev.yml down",
     "dev:docker:logs": "docker compose -f docker-compose.dev.yml logs -f",
     "dev:docker:clean": "docker compose -f docker-compose.dev.yml down -v",
@@ -42,7 +42,7 @@
     "test:front": "pnpm --filter central-pet-front test:run",
     "test:e2e": "pnpm --filter central-pet-e2e-tests test",
     "test:e2e:install": "pnpm --filter central-pet-e2e-tests install-browsers",
-    "test:back": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
+    "test:back": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
     "test:all": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e && pnpm --filter central-pet-front test:run && pnpm --filter central-pet-e2e-tests test"
   },
   "packageManager": "pnpm@10.30.1"
