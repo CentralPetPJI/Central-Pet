@@ -12,9 +12,4 @@ export class CreateAdoptionRequestDto {
   @IsString()
   @MaxLength(1000)
   message?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsIn([])
-  status?: AdoptionRequestStatusType;
 }

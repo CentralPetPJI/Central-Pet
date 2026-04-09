@@ -61,7 +61,7 @@ describe('AdoptionRequestsService - Prisma methods', () => {
   type AdoptionRequestFindMany = (args: unknown) => Promise<unknown[]>;
   type AdoptionRequestFindUnique = (args: unknown) => Promise<Record<string, unknown> | null>;
 
-  let prismaService: AdoptionRequestsService;
+  let service: AdoptionRequestsService;
   let petFindUniqueMock: jest.MockedFunction<PetFindUnique>;
   let userFindUniqueMock: jest.MockedFunction<UserFindUnique>;
   let adoptionRequestCreateMock: jest.MockedFunction<AdoptionRequestCreate>;
@@ -89,14 +89,14 @@ describe('AdoptionRequestsService - Prisma methods', () => {
       },
     };
 
-    prismaService = new AdoptionRequestsService(prismaMock as unknown as PrismaService);
+    service = new AdoptionRequestsService(prismaMock as unknown as PrismaService);
   });
 
   it('should throw when pet does not exist on create', async () => {
     petFindUniqueMock.mockResolvedValue(null);
 
     await expect(
-      prismaService.create({
+      service.create({
         petId: '11111111-1111-1111-1111-111111111111',
         requesterId: '22222222-2222-2222-2222-222222222222',
       }),
@@ -112,7 +112,7 @@ describe('AdoptionRequestsService - Prisma methods', () => {
     userFindUniqueMock.mockResolvedValue(null);
 
     await expect(
-      prismaService.create({
+      service.create({
         petId: '11111111-1111-1111-1111-111111111111',
         requesterId: '22222222-2222-2222-2222-222222222222',
       }),
@@ -127,7 +127,7 @@ describe('AdoptionRequestsService - Prisma methods', () => {
     });
 
     await expect(
-      prismaService.create({
+      service.create({
         petId: '11111111-1111-1111-1111-111111111111',
         requesterId: '22222222-2222-2222-2222-222222222222',
       }),

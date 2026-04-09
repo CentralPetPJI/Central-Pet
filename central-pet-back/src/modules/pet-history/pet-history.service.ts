@@ -3,6 +3,21 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePetHistoryDto } from './dto/create-pet-history.dto';
 import { PetHistoryEventType } from 'generated/prisma/enums';
 
+const PET_HISTORY_INCLUDE = {
+  pet: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  performedByUser: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+    },
+  },
+} as const;
 @Injectable()
 export class PetHistoryService {
   constructor(private readonly prisma: PrismaService) {}
@@ -37,21 +52,7 @@ export class PetHistoryService {
         toResponsible: createPetHistoryDto.toResponsible,
         performedByUserId: performedByUserId,
       },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        performedByUser: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
+      include: PET_HISTORY_INCLUDE,
     });
 
     return {
@@ -66,21 +67,7 @@ export class PetHistoryService {
         ...(userId ? { performedByUserId: userId } : {}),
         ...(petId ? { petId } : {}),
       },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        performedByUser: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
+      include: PET_HISTORY_INCLUDE,
       orderBy: {
         createdAt: 'asc',
       },
@@ -95,21 +82,7 @@ export class PetHistoryService {
   async findOne(id: string) {
     const data = await this.prisma.petHistory.findUnique({
       where: { id },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        performedByUser: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
+      include: PET_HISTORY_INCLUDE,
     });
 
     if (!data) {
@@ -134,21 +107,7 @@ export class PetHistoryService {
 
     const data = await this.prisma.petHistory.findMany({
       where: { petId },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        performedByUser: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
+      include: PET_HISTORY_INCLUDE,
       orderBy: {
         createdAt: 'asc',
       },
