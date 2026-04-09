@@ -18,7 +18,7 @@ services:
     command: >
       sh -c "
       corepack enable &&
-      pnpm install --frozen-lockfile &&
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 HUSKY=0 pnpm install --frozen-lockfile --ignore-scripts &&
       pnpm --filter central-pet-front dev --host 0.0.0.0 --port 5173
       "
 
@@ -44,7 +44,7 @@ services:
     command: >
       sh -c "
       corepack enable &&
-      pnpm install --frozen-lockfile &&
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 HUSKY=0 pnpm install --frozen-lockfile --ignore-scripts &&
       pnpm --filter central-pet-back exec prisma generate &&
       pnpm --filter central-pet-back exec prisma migrate deploy &&
       pnpm --filter central-pet-back dev

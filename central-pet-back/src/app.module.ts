@@ -18,7 +18,7 @@ import { PersonalityTraitsModule } from './modules/personality-traits/personalit
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: [`.env.${process.env.NODE_ENV ?? 'development'}`, '.env'],
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
