@@ -11,7 +11,7 @@
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report",
     "install-browsers": "playwright install chromium",
-    "postinstall": "playwright install chromium --with-deps"
+    "postinstall": "playwright install chromium"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
