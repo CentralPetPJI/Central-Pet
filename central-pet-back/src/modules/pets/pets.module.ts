@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from '../auth/auth.module';
+import { PrismaModule } from '@/prisma/prisma.module';
 import { PersonalityTraitsModule } from '../personality-traits/personality-traits.module';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 
 @Module({
-  imports: [PersonalityTraitsModule],
+  imports: [PrismaModule, PersonalityTraitsModule],
   controllers: [PetsController],
   providers: [PetsService],
   exports: [PetsService],

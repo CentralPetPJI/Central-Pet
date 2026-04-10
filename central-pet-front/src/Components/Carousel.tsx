@@ -8,6 +8,7 @@ type CarouselProps = {
 
 // Velocidade alvo do auto-scroll em pixels/segundo para manter consistencia entre diferentes taxas de refresh.
 const AUTO_SCROLL_PX_PER_SECOND = 60;
+const MIN_PETS_FOR_LOOP = 3;
 
 const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,11 +22,11 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const startX = useRef(0);
   const scrollLeftStart = useRef(0);
 
-  // Duplicamos apenas 1x (Total: 2 conjuntos de dados)
-  // TODO: Pensar em uma solução mais elegante para evitar duplicação de chaves (id) e garantir unicidade
-  const items = [...petsData, ...petsData];
+  const shouldLoop = petsData.length >= MIN_PETS_FOR_LOOP;
+  const items = shouldLoop ? [...petsData, ...petsData] : petsData;
 
   const handleLoop = useCallback(() => {
+    if (!shouldLoop) return;
     const container = containerRef.current;
     if (!container) return;
 
@@ -38,9 +39,10 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
     if (container.scrollLeft >= halfWidth || container.scrollLeft <= 0) {
       container.scrollLeft = ((container.scrollLeft % halfWidth) + halfWidth) % halfWidth;
     }
-  }, []);
+  }, [shouldLoop]);
 
   const startAutoScroll = useCallback(() => {
+    if (!shouldLoop) return;
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     isPaused.current = false;
     let lastTimestamp: number | null = null;
@@ -59,7 +61,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
       animationRef.current = requestAnimationFrame(step);
     };
     animationRef.current = requestAnimationFrame(step);
-  }, [handleLoop]);
+  }, [handleLoop, shouldLoop]);
 
   const stopAutoScroll = useCallback(() => {
     isPaused.current = true;
@@ -128,15 +130,25 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
     const container = containerRef.current;
     if (!container) return;
 
+    if (!shouldLoop) {
+      container.scrollLeft = 0;
+      return;
+    }
+
     // Start at the duplicated midpoint so the first visible frame is stable
     // and users can drag backward without immediately hitting the loop boundary.
     container.scrollLeft = container.scrollWidth / 2;
-  }, [petsData.length]);
+  }, [petsData.length, shouldLoop]);
 
   useEffect(() => {
+    if (!shouldLoop) {
+      stopAutoScroll();
+      return;
+    }
+
     startAutoScroll();
     return () => stopAutoScroll();
-  }, [startAutoScroll, stopAutoScroll]);
+  }, [shouldLoop, startAutoScroll, stopAutoScroll]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -192,8 +204,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
         className={`flex gap-6 overflow-x-hidden pb-4 cursor-grab ${isDragging ? 'cursor-grabbing' : ''}`}
       >
         {items.map((pet, idx) => {
-          // Normaliza pet ao original para evitar seleção de duplicatas no loop
-          const originalPet = petsData[idx % petsData.length];
+          const originalPet = shouldLoop ? petsData[idx % petsData.length] : pet;
 
           return (
             <div

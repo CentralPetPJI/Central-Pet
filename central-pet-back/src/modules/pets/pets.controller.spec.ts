@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from '@jest/globals';
+import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
@@ -10,7 +11,22 @@ describe('Controlador de pets', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PetsController],
-      providers: [PetsService, PersonalityTraitsService],
+      providers: [
+        PetsService,
+        {
+          provide: PrismaService,
+          useValue: {
+            pet: {},
+            user: {},
+          },
+        },
+        {
+          provide: PersonalityTraitsService,
+          useValue: {
+            getTraitIds: () => [],
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<PetsController>(PetsController);

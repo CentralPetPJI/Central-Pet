@@ -70,6 +70,7 @@ model User {
   updatedAt            DateTime           @updatedAt
 
   sessions             Session[]
+  responsiblePets      Pet[]               @relation("ResponsibleUserPets")
   responsibleAdoptionRequests AdoptionRequest[] @relation("ResponsibleUserAdoptionRequests")
   adopterAdoptionRequests     AdoptionRequest[] @relation("AdopterAdoptionRequests")
   performedPetHistory  PetHistory[]       @relation("PerformedPetHistory")
@@ -106,17 +107,24 @@ model Pet {
   tutor              String
   shelter            String
   city               String
+  state              String?
   contact            String
+  selectedPersonalitiesJson String         @default("[]")
+  responsibleUserId  String?
+  sourceType         UserRole?
+  sourceName         String?
   status             PetStatus          @default(AVAILABLE)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
+  responsibleUser    User?              @relation("ResponsibleUserPets", fields: [responsibleUserId], references: [id], onDelete: Restrict)
   adoptionRequests   AdoptionRequest[]
   history            PetHistory[]
 
   @@index([status])
   @@index([species])
   @@index([city])
+  @@index([responsibleUserId])
 }
 
 model AdoptionRequest {

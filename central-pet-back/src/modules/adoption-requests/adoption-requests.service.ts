@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
+import { PetHistoryService } from '../pet-history/pet-history.service';
 import { PetsService } from '../pets/pets.service';
 import {
   mapToReceivedAdoptionRequest,
@@ -36,6 +37,8 @@ type AdoptionRequestActionResult = {
   notification?: AdoptionRequestNotification;
 };
 
+const MOCK_PASSWORD_HASH = 'mock-password-hash';
+
 @Injectable()
 export class AdoptionRequestsService {
   private readonly notifications: AdoptionRequestNotification[] = [];
@@ -46,6 +49,7 @@ export class AdoptionRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly petsService: PetsService,
+    private readonly petHistoryService: PetHistoryService,
   ) {}
 
   private toRecord(request: {
@@ -93,22 +97,109 @@ export class AdoptionRequestsService {
       return mockUser;
     }
 
-    const fallbackAdopter = mockUsers.find(
+    const eligibleAdopters = mockUsers.filter(
       (user) => user.role === 'PESSOA_FISICA' && user.id !== ownerUserId,
     );
 
-    if (!fallbackAdopter) {
+    if (eligibleAdopters.length === 0) {
       throw new NotFoundException('No eligible mock adopter was found');
     }
 
-    return fallbackAdopter;
+    const randomIndex = Math.floor(Math.random() * eligibleAdopters.length);
+    const randomAdopter = eligibleAdopters[randomIndex];
+
+    if (!randomAdopter) {
+      throw new NotFoundException('No eligible mock adopter was found');
+    }
+
+    return randomAdopter;
   }
 
-  private resolvePetForResponse(
+  private async ensureSingleRequestPerDonor(adopterId: string, responsibleUserId: string) {
+    const existingRequest = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        adopterId,
+        responsibleUserId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingRequest) {
+      throw new BadRequestException(
+        'Você já possui uma solicitação para este doador. Aguarde o andamento da solicitação atual.',
+      );
+    }
+  }
+
+  private async ensurePersistedUserExists(userId: string) {
+    const mockUser = this.mockUsersById.get(userId);
+
+    if (!mockUser) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
+
+      if (!existingUser) {
+        throw new NotFoundException(`User with id "${userId}" not found`);
+      }
+
+      return;
+    }
+
+    await this.prisma.user.upsert({
+      where: { id: mockUser.id },
+      update: {
+        fullName: mockUser.fullName,
+        email: mockUser.email,
+        role: mockUser.role,
+      },
+      create: {
+        id: mockUser.id,
+        fullName: mockUser.fullName,
+        email: mockUser.email,
+        role: mockUser.role,
+        birthDate: mockUser.birthDate ?? null,
+        cpf: null,
+        organizationName: mockUser.organizationName ?? null,
+        cnpj: null,
+        passwordHash: MOCK_PASSWORD_HASH,
+      },
+    });
+  }
+
+  private async ensurePersistedUsersForSimulation(responsibleUserId: string, adopterId: string) {
+    await this.ensurePersistedUserExists(responsibleUserId);
+    await this.ensurePersistedUserExists(adopterId);
+  }
+
+  private async ensurePetCanReceiveRequests(petId: string, responsibleUserId: string) {
+    const pet = await this.petsService.findByIdForAdoption(petId);
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with id "${petId}" not found`);
+    }
+
+    if (pet.responsibleUserId !== responsibleUserId) {
+      throw new BadRequestException('The provided responsible user does not match the pet owner');
+    }
+
+    if (pet.adoptionStatus === 'ADOPTED') {
+      throw new BadRequestException(
+        'Este pet já foi adotado e não pode receber novas solicitações de adoção.',
+      );
+    }
+
+    return pet;
+  }
+
+  private async resolvePetForResponse(
     petId: string,
     responsibleUserId: string,
-  ): ReceivedAdoptionRequestPet {
-    const pet = this.petsService.findByIdForAdoption(petId);
+  ): Promise<ReceivedAdoptionRequestPet> {
+    const pet = await this.petsService.findByIdForAdoption(petId);
 
     if (pet) {
       return {
@@ -197,12 +288,14 @@ export class AdoptionRequestsService {
       requests.map((request) => request.adopterId),
     );
 
-    const data = requests.map((request) =>
-      mapToReceivedAdoptionRequest({
-        request: this.toRecord(request),
-        pet: this.resolvePetForResponse(request.petId, request.responsibleUserId),
-        adopter: this.resolveAdopterForResponse(request.adopterId, persistedUsersById),
-      }),
+    const data = await Promise.all(
+      requests.map(async (request) =>
+        mapToReceivedAdoptionRequest({
+          request: this.toRecord(request),
+          pet: await this.resolvePetForResponse(request.petId, request.responsibleUserId),
+          adopter: this.resolveAdopterForResponse(request.adopterId, persistedUsersById),
+        }),
+      ),
     );
 
     return {
@@ -221,7 +314,10 @@ export class AdoptionRequestsService {
       throw new BadRequestException('You can only simulate requests for your own pets');
     }
 
+    await this.ensurePetCanReceiveRequests(dto.petId, dto.petResponsibleUserId);
     const mockAdopter = this.getSimulationAdopter(dto.petResponsibleUserId, dto.adopterId);
+    await this.ensurePersistedUsersForSimulation(dto.petResponsibleUserId, mockAdopter.id);
+    await this.ensureSingleRequestPerDonor(mockAdopter.id, dto.petResponsibleUserId);
 
     const request = await this.prisma.adoptionRequest.create({
       data: {
@@ -238,7 +334,7 @@ export class AdoptionRequestsService {
       message: 'Adoption request simulated successfully',
       data: mapToReceivedAdoptionRequest({
         request: this.toRecord(request),
-        pet: this.resolvePetForResponse(request.petId, request.responsibleUserId),
+        pet: await this.resolvePetForResponse(request.petId, request.responsibleUserId),
         adopter: {
           id: mockAdopter.id,
           name: mockAdopter.fullName,
@@ -275,6 +371,10 @@ export class AdoptionRequestsService {
         throw new BadRequestException('Only requests with shared contact can be approved');
       }
 
+      await this.ensurePetCanReceiveRequests(
+        currentRequest.petId,
+        currentRequest.responsibleUserId,
+      );
       const updatedRequest = await this.prisma.adoptionRequest.update({
         where: { id: requestId },
         data: {
@@ -298,6 +398,22 @@ export class AdoptionRequestsService {
         },
       });
 
+      const { previousResponsibleUserId } = await this.petsService.finalizeAdoption(
+        updatedRequest.petId,
+        updatedRequest.adopterId,
+      );
+
+      await this.petHistoryService.create(
+        {
+          petId: updatedRequest.petId,
+          eventType: 'ADOPTION_APPROVED',
+          description: 'Adoção concluída e responsabilidade transferida para o adotante.',
+          fromResponsible: previousResponsibleUserId,
+          toResponsible: updatedRequest.adopterId,
+        },
+        userId,
+      );
+
       const persistedUsersById = await this.buildPersistedUserMap([updatedRequest.adopterId]);
 
       return {
@@ -307,7 +423,10 @@ export class AdoptionRequestsService {
             : 'Solicitação de adoção aprovada com sucesso',
         data: mapToReceivedAdoptionRequest({
           request: this.toRecord(updatedRequest),
-          pet: this.resolvePetForResponse(updatedRequest.petId, updatedRequest.responsibleUserId),
+          pet: await this.resolvePetForResponse(
+            updatedRequest.petId,
+            updatedRequest.responsibleUserId,
+          ),
           adopter: this.resolveAdopterForResponse(updatedRequest.adopterId, persistedUsersById),
         }),
       };
@@ -369,7 +488,10 @@ export class AdoptionRequestsService {
         : 'Contato compartilhado com sucesso',
       data: mapToReceivedAdoptionRequest({
         request: this.toRecord(updatedRequest),
-        pet: this.resolvePetForResponse(updatedRequest.petId, updatedRequest.responsibleUserId),
+        pet: await this.resolvePetForResponse(
+          updatedRequest.petId,
+          updatedRequest.responsibleUserId,
+        ),
         adopter: this.resolveAdopterForResponse(updatedRequest.adopterId, persistedUsersById),
       }),
       notification,
