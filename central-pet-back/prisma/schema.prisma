@@ -70,6 +70,8 @@ model User {
   updatedAt            DateTime           @updatedAt
 
   sessions             Session[]
+  responsibleAdoptionRequests AdoptionRequest[] @relation("ResponsibleUserAdoptionRequests")
+  adopterAdoptionRequests     AdoptionRequest[] @relation("AdopterAdoptionRequests")
   performedPetHistory  PetHistory[]       @relation("PerformedPetHistory")
 }
 
@@ -109,6 +111,7 @@ model Pet {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
+  adoptionRequests   AdoptionRequest[]
   history            PetHistory[]
 
   @@index([status])
@@ -127,6 +130,10 @@ model AdoptionRequest {
   note                       String?
   requestedAt                DateTime              @default(now())
   updatedAt                  DateTime              @updatedAt
+
+  pet                        Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  responsibleUser            User                  @relation("ResponsibleUserAdoptionRequests", fields: [responsibleUserId], references: [id], onDelete: Cascade)
+  adopter                    User                  @relation("AdopterAdoptionRequests", fields: [adopterId], references: [id], onDelete: Cascade)
 
   @@index([responsibleUserId, requestedAt])
   @@index([adopterId])
