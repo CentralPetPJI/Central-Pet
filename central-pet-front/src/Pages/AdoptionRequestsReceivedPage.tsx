@@ -6,25 +6,14 @@ import { useAuth } from '@/lib/auth-context';
 import { isDevelopment } from '@/lib/dev-mode';
 import { formatPetSpecies } from '@/lib/formatters';
 import type { PetApiResponse, ReceivedAdoptionRequest } from '@/Models/pet';
+import { AdoptionApprovalModal } from '@/Components/AdoptionRequests/adoption-approval-modal';
+import { AdoptionRejectionModal } from '@/Components/AdoptionRequests/adoption-rejection-modal';
+import {
+  canManageDecision,
+  canShareContact,
+  getAdoptionRequestStatusPresentation,
+} from '@/Models/adoption-request-status';
 import { getPublicIdFromBackend } from '@/storage/pets';
-
-const statusLabelMap: Record<ReceivedAdoptionRequest['status'], string> = {
-  PENDING: 'Pendente',
-  UNDER_REVIEW: 'Em análise',
-  APPROVED: 'Aprovada',
-  REJECTED: 'Recusada',
-  contact_shared: 'Contato compartilhado',
-  rejected: 'Recusada',
-};
-
-const statusClassNameMap: Record<ReceivedAdoptionRequest['status'], string> = {
-  PENDING: 'bg-amber-100 text-amber-800',
-  UNDER_REVIEW: 'bg-sky-100 text-sky-800',
-  APPROVED: 'bg-emerald-100 text-emerald-800',
-  REJECTED: 'bg-rose-100 text-rose-800',
-  contact_shared: 'bg-emerald-100 text-emerald-800',
-  rejected: 'bg-rose-100 text-rose-800',
-};
 
 /**
  * Retorna o ID apropriado para uso em rotas locais.
@@ -62,11 +51,30 @@ export default function AdoptionRequestsReceivedPage() {
   const [isSimulationPanelOpen, setIsSimulationPanelOpen] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState('');
   const [isSimulating, setIsSimulating] = useState(false);
+  const [simulateWithSharedContact, setSimulateWithSharedContact] = useState(true);
+  const [simulateContactShareConsent, setSimulateContactShareConsent] = useState(true);
   const [rejectionModalData, setRejectionModalData] = useState<{
     requestId: string;
     petName: string;
   } | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [approvalModalData, setApprovalModalData] = useState<{
+    requestId: string;
+    petName: string;
+  } | null>(null);
+  const [approvalNote, setApprovalNote] = useState('');
+  const [approvalConfirmed, setApprovalConfirmed] = useState(false);
+
+  const closeRejectionModal = () => {
+    setRejectionModalData(null);
+    setRejectionReason('');
+  };
+
+  const closeApprovalModal = () => {
+    setApprovalModalData(null);
+    setApprovalNote('');
+    setApprovalConfirmed(false);
+  };
 
   const loadRequests = useCallback(async (userId: string) => {
     setIsLoading(true);
@@ -135,8 +143,8 @@ export default function AdoptionRequestsReceivedPage() {
 
   const manageRequest = async (
     requestId: string,
-    action: 'share_contact' | 'reject',
-    rejectionReason?: string,
+    action: 'approve' | 'share_contact' | 'reject',
+    note?: string,
   ) => {
     setManagedRequestId(requestId);
     setErrorMessage(null);
@@ -147,7 +155,7 @@ export default function AdoptionRequestsReceivedPage() {
         `/adoption-requests/${requestId}`,
         {
           action,
-          rejectionReason,
+          note,
         },
       );
 
@@ -164,6 +172,28 @@ export default function AdoptionRequestsReceivedPage() {
     } finally {
       setManagedRequestId(null);
     }
+  };
+
+  const confirmRejection = () => {
+    if (!rejectionModalData) {
+      return;
+    }
+
+    void manageRequest(rejectionModalData.requestId, 'reject', rejectionReason.trim() || undefined);
+    closeRejectionModal();
+  };
+
+  const confirmApproval = () => {
+    if (!approvalModalData) {
+      return;
+    }
+
+    void manageRequest(
+      approvalModalData.requestId,
+      'approve',
+      approvalNote.trim() || undefined,
+    );
+    closeApprovalModal();
   };
 
   const simulateRequest = async () => {
@@ -183,13 +213,9 @@ export default function AdoptionRequestsReceivedPage() {
         '/adoption-requests/simulate',
         {
           petId: pet.id,
-          petName: pet.name,
-          petSpecies: pet.species,
-          petCity: pet.city,
-          petState: pet.state,
           petResponsibleUserId: pet.responsibleUserId,
-          petSourceType: pet.sourceType ?? 'ONG',
-          petSourceName: pet.sourceName ?? 'Pet cadastrado',
+          initialStatus: simulateWithSharedContact ? 'contact_shared' : 'pending',
+          adopterContactShareConsent: simulateContactShareConsent,
         },
       );
 
@@ -290,6 +316,28 @@ export default function AdoptionRequestsReceivedPage() {
               {isLoadingOwnPets ? 'Carregando pets...' : `${ownPets.length} pet(s) disponiveis`}
             </div>
           </div>
+
+          <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-4 text-sm text-slate-700 ring-1 ring-slate-200">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={simulateWithSharedContact}
+                onChange={(event) => setSimulateWithSharedContact(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+              />
+              Criar simulacao com contato ja compartilhado
+            </label>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={simulateContactShareConsent}
+                onChange={(event) => setSimulateContactShareConsent(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+              />
+              Adotante autoriza compartilhamento de contato
+            </label>
+          </div>
         </div>
       ) : null}
 
@@ -312,18 +360,21 @@ export default function AdoptionRequestsReceivedPage() {
 
       {!isLoading && !errorMessage && requests.length > 0 ? (
         <div className="grid gap-4">
-          {requests.map((request) => (
-            <article
-              key={request.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
+          {requests.map((request) => {
+            const statusPresentation = getAdoptionRequestStatusPresentation(request.status);
+
+            return (
+              <article
+                key={request.id}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClassNameMap[request.status]}`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusPresentation.className}`}
                     >
-                      {statusLabelMap[request.status]}
+                      {statusPresentation.label}
                     </span>
                     <span className="text-sm text-slate-500">
                       Recebida em {formatRequestDate(request.requestedAt)}
@@ -370,10 +421,15 @@ export default function AdoptionRequestsReceivedPage() {
                   <p className="mt-2 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
                     {request.message}
                   </p>
-                  {request.rejectionReason ? (
-                    <p className="mt-3 rounded-2xl bg-rose-50 p-4 text-sm leading-6 text-rose-700 ring-1 ring-rose-200">
-                      <span className="font-semibold">Motivo da recusa: </span>
-                      {request.rejectionReason}
+                  {request.note ? (
+                    <p className="mt-3 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
+                      <span className="font-semibold">Observação: </span>
+                      {request.note}
+                    </p>
+                  ) : null}
+                  {canShareContact(request.status) && !request.adopterContactShareConsent ? (
+                    <p className="mt-3 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800 ring-1 ring-amber-200">
+                      O adotante ainda nao autorizou o compartilhamento de contato.
                     </p>
                   ) : null}
                 </div>
@@ -387,15 +443,35 @@ export default function AdoptionRequestsReceivedPage() {
                     Ver perfil do pet
                   </Link>
 
-                  {request.status === 'PENDING' || request.status === 'UNDER_REVIEW' ? (
+                  {canShareContact(request.status) ? (
                     <div className="grid gap-2">
                       <button
                         type="button"
-                        disabled={managedRequestId === request.id}
+                        disabled={managedRequestId === request.id || !request.adopterContactShareConsent}
                         onClick={() => void manageRequest(request.id, 'share_contact')}
                         className="inline-flex items-center justify-center rounded-full bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Compartilhar contato
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {canManageDecision(request.status) ? (
+                    <div className="grid gap-2">
+                      <button
+                        type="button"
+                        disabled={managedRequestId === request.id}
+                        onClick={() => {
+                          setApprovalModalData({
+                            requestId: request.id,
+                            petName: request.pet.name,
+                          });
+                          setApprovalNote('');
+                          setApprovalConfirmed(false);
+                        }}
+                        className="inline-flex items-center justify-center rounded-full bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Aprovar solicitacao
                       </button>
                       <button
                         type="button"
@@ -409,82 +485,37 @@ export default function AdoptionRequestsReceivedPage() {
                         }}
                         className="inline-flex items-center justify-center rounded-full border border-rose-300 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        Rejeitar
+                        Rejeitar solicitacao
                       </button>
                     </div>
                   ) : null}
                 </div>
               </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       ) : null}
 
-      {rejectionModalData ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div
-            className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rejection-modal-title"
-          >
-            <h2 id="rejection-modal-title" className="text-xl font-bold text-slate-900">
-              Rejeitar solicitação
-            </h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Você está prestes a rejeitar a solicitação de adoção do pet{' '}
-              <span className="font-semibold text-slate-900">{rejectionModalData.petName}</span>.
-            </p>
+      <AdoptionApprovalModal
+        modalData={approvalModalData}
+        approvalNote={approvalNote}
+        approvalConfirmed={approvalConfirmed}
+        isSubmitting={managedRequestId === approvalModalData?.requestId}
+        onApprovalNoteChange={setApprovalNote}
+        onApprovalConfirmedChange={setApprovalConfirmed}
+        onCancel={closeApprovalModal}
+        onConfirm={confirmApproval}
+      />
 
-            <div className="mt-5">
-              <label htmlFor="rejection-reason" className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">
-                  Motivo da recusa (opcional)
-                </span>
-                <textarea
-                  id="rejection-reason"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Ex: Já encontramos um lar para este pet..."
-                  className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
-                  rows={4}
-                />
-              </label>
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setRejectionModalData(null);
-                  setRejectionReason('');
-                }}
-                className="flex-1 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                disabled={managedRequestId === rejectionModalData.requestId}
-                onClick={() => {
-                  void manageRequest(
-                    rejectionModalData.requestId,
-                    'reject',
-                    rejectionReason.trim() || undefined,
-                  );
-                  setRejectionModalData(null);
-                  setRejectionReason('');
-                }}
-                className="flex-1 inline-flex items-center justify-center rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {managedRequestId === rejectionModalData.requestId
-                  ? 'Rejeitando...'
-                  : 'Confirmar rejeição'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AdoptionRejectionModal
+        modalData={rejectionModalData}
+        rejectionReason={rejectionReason}
+        isSubmitting={managedRequestId === rejectionModalData?.requestId}
+        onRejectionReasonChange={setRejectionReason}
+        onCancel={closeRejectionModal}
+        onConfirm={confirmRejection}
+      />
     </section>
   );
 }

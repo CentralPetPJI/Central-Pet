@@ -1,3 +1,5 @@
+import type { AdoptionRequestStatus } from './adoption-request-status';
+
 export interface Pet {
   id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
   name: string;
@@ -60,18 +62,10 @@ export interface PetListItem {
   adoptionStatus: string;
 }
 
-export type AdoptionRequestStatus =
-  | 'PENDING'
-  | 'UNDER_REVIEW'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'contact_shared'
-  | 'rejected';
-
 export interface ReceivedAdoptionRequest {
   id: string;
   pet: {
-    id: number;
+    id: number | string;
     name: string;
     species: string;
     city: string;
@@ -87,8 +81,9 @@ export interface ReceivedAdoptionRequest {
     state: string;
   };
   message: string;
+  adopterContactShareConsent: boolean;
   status: AdoptionRequestStatus;
-  rejectionReason?: string;
+  note?: string;
   requestedAt: string;
   updatedAt: string;
 }
