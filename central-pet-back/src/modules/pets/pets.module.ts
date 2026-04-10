@@ -8,5 +8,6 @@ import { PetsService } from './pets.service';
   imports: [PersonalityTraitsModule],
   controllers: [PetsController],
   providers: [PetsService],
+  exports: [PetsService],
 })
 export class PetsModule {}

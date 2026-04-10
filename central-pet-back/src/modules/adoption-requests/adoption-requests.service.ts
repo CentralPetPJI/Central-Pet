@@ -1,12 +1,20 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { mockAdoptionRequests, type MockAdoptionRequest } from '@/mocks';
-import { randomUUID } from 'crypto';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
+import { mockUsers, type MockUser } from '@/mocks';
+import { PrismaService } from '@/prisma/prisma.service';
+import { PetsService } from '../pets/pets.service';
 import {
   mapToReceivedAdoptionRequest,
   type ReceivedAdoptionRequest,
+  type ReceivedAdoptionRequestAdopter,
+  type ReceivedAdoptionRequestPet,
 } from './models/received-adoption-request';
+import {
+  canApproveForStatus,
+  canRejectForStatus,
+  canShareContactForStatus,
+  type AdoptionRequestStatus,
+} from './models/adoption-request-status';
+import type { AdoptionRequestRecord } from './models/adoption-request-record';
 import {
   manageAdoptionRequestActions,
   type ManageAdoptionRequestDto,
@@ -30,36 +38,169 @@ type AdoptionRequestActionResult = {
 
 @Injectable()
 export class AdoptionRequestsService {
-  private readonly adoptionRequests: MockAdoptionRequest[] = [...mockAdoptionRequests];
   private readonly notifications: AdoptionRequestNotification[] = [];
+  private readonly mockUsersById = new Map<string, MockUser>(
+    mockUsers.map((user) => [user.id, user] as const),
+  );
 
-  constructor(private readonly prisma?: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly petsService: PetsService,
+  ) {}
 
-  findReceived(responsibleUserId?: string): { message: string; data: ReceivedAdoptionRequest[] } {
-    const data = this.adoptionRequests
-      .map((request) => {
-        // Snapshots sao obrigatorios - requests sem snapshot sao invalidos
-        if (!request.petSnapshot || !request.adopterSnapshot) {
-          return null;
-        }
+  private toRecord(request: {
+    id: string;
+    petId: string;
+    responsibleUserId: string;
+    adopterId: string;
+    adopterContactShareConsent: boolean;
+    message: string;
+    status: AdoptionRequestStatus;
+    note: string | null;
+    requestedAt: Date;
+    updatedAt: Date;
+  }): AdoptionRequestRecord {
+    return {
+      id: request.id,
+      petId: request.petId,
+      responsibleUserId: request.responsibleUserId,
+      adopterId: request.adopterId,
+      adopterContactShareConsent: request.adopterContactShareConsent,
+      message: request.message,
+      status: request.status,
+      note: request.note,
+      requestedAt: request.requestedAt,
+      updatedAt: request.updatedAt,
+    };
+  }
 
-        const petSnapshot = request.petSnapshot;
-        const adopterSnapshot = request.adopterSnapshot;
+  private getSimulationAdopter(ownerUserId: string, adopterId?: string): MockUser {
+    if (adopterId) {
+      const mockUser = this.mockUsersById.get(adopterId);
 
-        return mapToReceivedAdoptionRequest({
-          request,
-          pet: petSnapshot,
-          adopter: adopterSnapshot,
-        });
-      })
-      .filter((request): request is ReceivedAdoptionRequest => request !== null)
-      .filter((request) =>
-        responsibleUserId ? request.pet.responsibleUserId === responsibleUserId : true,
-      )
-      .sort(
-        (left, right) =>
-          new Date(right.requestedAt).getTime() - new Date(left.requestedAt).getTime(),
-      );
+      if (!mockUser) {
+        throw new NotFoundException(`Mock user with id "${adopterId}" not found`);
+      }
+
+      if (mockUser.role !== 'PESSOA_FISICA') {
+        throw new BadRequestException('Only mock users with role PESSOA_FISICA can adopt pets');
+      }
+
+      if (mockUser.id === ownerUserId) {
+        throw new BadRequestException('The adopter cannot be the pet owner');
+      }
+
+      return mockUser;
+    }
+
+    const fallbackAdopter = mockUsers.find(
+      (user) => user.role === 'PESSOA_FISICA' && user.id !== ownerUserId,
+    );
+
+    if (!fallbackAdopter) {
+      throw new NotFoundException('No eligible mock adopter was found');
+    }
+
+    return fallbackAdopter;
+  }
+
+  private resolvePetForResponse(petId: string, responsibleUserId: string): ReceivedAdoptionRequestPet {
+    const pet = this.petsService.findByIdForAdoption(petId);
+
+    if (pet) {
+      return {
+        id: pet.id,
+        name: pet.name,
+        species: pet.species,
+        city: pet.city,
+        state: pet.state ?? 'UF',
+        responsibleUserId: pet.responsibleUserId,
+        sourceType: pet.sourceType ?? 'ONG',
+        sourceName: pet.sourceName ?? 'Origem não informada',
+      };
+    }
+
+    return {
+      id: petId,
+      name: 'Pet não encontrado',
+      species: 'UNKNOWN',
+      city: 'Cidade não informada',
+      state: 'UF',
+      responsibleUserId,
+      sourceType: 'ONG',
+      sourceName: 'Origem não informada',
+    };
+  }
+
+  private async buildPersistedUserMap(adopterIds: string[]) {
+    const missingIds = adopterIds.filter((adopterId) => !this.mockUsersById.has(adopterId));
+
+    if (missingIds.length === 0) {
+      return new Map<string, { id: string; fullName: string }>();
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: [...new Set(missingIds)] } },
+      select: { id: true, fullName: true },
+    });
+
+    return new Map(users.map((user) => [user.id, user] as const));
+  }
+
+  private resolveAdopterForResponse(
+    adopterId: string,
+    persistedUsersById: Map<string, { id: string; fullName: string }>,
+  ): ReceivedAdoptionRequestAdopter {
+    const mockUser = this.mockUsersById.get(adopterId);
+
+    if (mockUser) {
+      return {
+        id: mockUser.id,
+        name: mockUser.fullName,
+        city: mockUser.city ?? 'Cidade não informada',
+        state: mockUser.state ?? 'UF',
+      };
+    }
+
+    const persistedUser = persistedUsersById.get(adopterId);
+
+    if (persistedUser) {
+      return {
+        id: persistedUser.id,
+        name: persistedUser.fullName,
+        city: 'Cidade não informada',
+        state: 'UF',
+      };
+    }
+
+    return {
+      id: adopterId,
+      name: 'Usuário não encontrado',
+      city: 'Cidade não informada',
+      state: 'UF',
+    };
+  }
+
+  async findReceived(responsibleUserId?: string): Promise<{
+    message: string;
+    data: ReceivedAdoptionRequest[];
+  }> {
+    const requests = await this.prisma.adoptionRequest.findMany({
+      where: responsibleUserId ? { responsibleUserId } : undefined,
+      orderBy: { requestedAt: 'desc' },
+    });
+
+    const persistedUsersById = await this.buildPersistedUserMap(
+      requests.map((request) => request.adopterId),
+    );
+
+    const data = requests.map((request) =>
+      mapToReceivedAdoptionRequest({
+        request: this.toRecord(request),
+        pet: this.resolvePetForResponse(request.petId, request.responsibleUserId),
+        adopter: this.resolveAdopterForResponse(request.adopterId, persistedUsersById),
+      }),
+    );
 
     return {
       message: 'Received adoption requests retrieved successfully',
@@ -67,237 +208,147 @@ export class AdoptionRequestsService {
     };
   }
 
-  async create(createAdoptionRequestDto: CreateAdoptionRequestDto) {
-    if (!this.prisma) {
-      throw new Error('PrismaService is not available');
-    }
-
-    const pet = await this.prisma.pet.findUnique({
-      where: { id: createAdoptionRequestDto.petId },
-      select: { id: true, name: true, status: true },
-    });
-
-    if (!pet) {
-      throw new NotFoundException(`Pet with id "${createAdoptionRequestDto.petId}" not found`);
-    }
-
-    if (pet.status !== 'AVAILABLE') {
-      throw new BadRequestException(
-        `Adoption request cannot be created for pet with status "${pet.status}"`,
-      );
-    }
-
-    const requester = await this.prisma.user.findUnique({
-      where: { id: createAdoptionRequestDto.requesterId },
-      select: { id: true, fullName: true, email: true },
-    });
-
-    if (!requester) {
-      throw new NotFoundException(
-        `User with id "${createAdoptionRequestDto.requesterId}" not found`,
-      );
-    }
-
-    const data = await this.prisma.adoptionRequest.create({
-      data: {
-        petId: createAdoptionRequestDto.petId,
-        requesterId: createAdoptionRequestDto.requesterId,
-        message: createAdoptionRequestDto.message,
-        status: 'PENDING',
-      },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
-        },
-        requester: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    return {
-      message: 'Adoption request created successfully',
-      data,
-    };
-  }
-
-  async findOne(id: string) {
-    if (!this.prisma) {
-      throw new Error('PrismaService is not available');
-    }
-
-    const data = await this.prisma.adoptionRequest.findUnique({
-      where: { id },
-      include: {
-        pet: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
-        },
-        requester: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    if (!data) {
-      throw new NotFoundException(`Adoption request with id "${id}" not found`);
-    }
-
-    return {
-      message: 'Adoption request retrieved successfully',
-      data,
-    };
-  }
-
-  simulateReceived(userId: string, dto: SimulateAdoptionRequestDto): AdoptionRequestActionResult {
+  async simulateReceived(
+    userId: string,
+    dto: SimulateAdoptionRequestDto,
+  ): Promise<AdoptionRequestActionResult> {
     const isDev = process.env.NODE_ENV !== 'production';
 
     if (!isDev && dto.petResponsibleUserId !== userId) {
       throw new BadRequestException('You can only simulate requests for your own pets');
     }
 
-    const simulatedAdopterId = randomUUID();
-    const adopterSnapshot = {
-      id: simulatedAdopterId,
-      name: 'João Silva (Adotante Simulado)',
-      city: dto.petCity || 'São Paulo',
-      state: dto.petState || 'SP',
-    };
+    const mockAdopter = this.getSimulationAdopter(dto.petResponsibleUserId, dto.adopterId);
 
-    const now = new Date().toISOString();
-    const request: MockAdoptionRequest = {
-      id: randomUUID(),
-      petId: dto.petId,
-      petSnapshot: {
-        id: dto.petId,
-        name: dto.petName,
-        species: dto.petSpecies,
-        city: dto.petCity ?? 'Cidade não informada',
-        state: dto.petState ?? 'UF',
+    const request = await this.prisma.adoptionRequest.create({
+      data: {
+        petId: dto.petId,
         responsibleUserId: dto.petResponsibleUserId,
-        sourceType: dto.petSourceType,
-        sourceName: dto.petSourceName,
+        adopterId: mockAdopter.id,
+        adopterContactShareConsent: dto.adopterContactShareConsent ?? false,
+        message: dto.message ?? 'Olá! Tenho interesse em adotar este pet.',
+        status: dto.initialStatus ?? 'pending',
       },
-      adopterId: simulatedAdopterId,
-      adopterSnapshot,
-      message:
-        dto.message ??
-        `Olá! Tenho interesse em adotar ${dto.petName}. Gostaria de conhecer melhor o pet.`,
-      status: 'PENDING',
-      requestedAt: now,
-      updatedAt: now,
-    };
-
-    this.adoptionRequests.unshift(request);
+    });
 
     return {
       message: 'Adoption request simulated successfully',
       data: mapToReceivedAdoptionRequest({
-        request,
-        pet: request.petSnapshot!,
-        adopter: adopterSnapshot,
+        request: this.toRecord(request),
+        pet: this.resolvePetForResponse(request.petId, request.responsibleUserId),
+        adopter: {
+          id: mockAdopter.id,
+          name: mockAdopter.fullName,
+          city: mockAdopter.city ?? 'Cidade não informada',
+          state: mockAdopter.state ?? 'UF',
+        },
       }),
     };
   }
 
-  manageReceived(
+  async manageReceived(
     requestId: string,
     userId: string,
     dto: ManageAdoptionRequestDto,
-  ): AdoptionRequestActionResult {
-    const index = this.adoptionRequests.findIndex((request) => request.id === requestId);
+  ): Promise<AdoptionRequestActionResult> {
+    const currentRequest = await this.prisma.adoptionRequest.findUnique({
+      where: { id: requestId },
+    });
 
-    if (index === -1) {
+    if (!currentRequest) {
       throw new NotFoundException(`Adoption request with id "${requestId}" not found`);
     }
 
-    const currentRequest = this.adoptionRequests[index];
-
-    if (!currentRequest.petSnapshot || !currentRequest.adopterSnapshot) {
-      throw new NotFoundException(`Adoption request with id "${requestId}" has invalid data`);
-    }
-
-    const pet = currentRequest.petSnapshot;
-    const adopter = currentRequest.adopterSnapshot;
-
-    if (pet.responsibleUserId !== userId) {
+    if (currentRequest.responsibleUserId !== userId) {
       throw new BadRequestException('You cannot manage requests for pets you do not own');
-    }
-
-    const canBeManaged =
-      currentRequest.status === 'PENDING' || currentRequest.status === 'UNDER_REVIEW';
-
-    if (!canBeManaged) {
-      throw new BadRequestException('This adoption request has already been managed');
     }
 
     if (!manageAdoptionRequestActions.includes(dto.action)) {
       throw new BadRequestException('Invalid adoption request action');
     }
 
-    const isRejectAction = dto.action === 'reject';
-    const nextStatus: MockAdoptionRequest['status'] = isRejectAction
-      ? 'rejected'
-      : 'contact_shared';
+    if (dto.action === 'approve') {
+      if (!canApproveForStatus(currentRequest.status)) {
+        throw new BadRequestException('Only requests with shared contact can be approved');
+      }
 
-    if (isRejectAction && dto.rejectionReason?.trim()) {
-      this.adoptionRequests[index] = {
-        ...currentRequest,
-        status: nextStatus,
-        rejectionReason: dto.rejectionReason.trim(),
-        updatedAt: new Date().toISOString(),
-      };
-    } else {
-      const { rejectionReason: _ignored, ...rest } = currentRequest;
-      this.adoptionRequests[index] = {
-        ...rest,
-        status: nextStatus,
-        updatedAt: new Date().toISOString(),
+      const updatedRequest = await this.prisma.adoptionRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'approved',
+          note: dto.note?.trim() || null,
+        },
+      });
+
+      const persistedUsersById = await this.buildPersistedUserMap([updatedRequest.adopterId]);
+
+      return {
+        message: 'Solicitação de adoção aprovada com sucesso',
+        data: mapToReceivedAdoptionRequest({
+          request: this.toRecord(updatedRequest),
+          pet: this.resolvePetForResponse(updatedRequest.petId, updatedRequest.responsibleUserId),
+          adopter: this.resolveAdopterForResponse(updatedRequest.adopterId, persistedUsersById),
+        }),
       };
     }
 
-    const updatedRequest = this.adoptionRequests[index];
+    const isRejectAction = dto.action === 'reject';
+
+    if (isRejectAction && !canRejectForStatus(currentRequest.status)) {
+      throw new BadRequestException('This adoption request cannot be rejected in the current status');
+    }
+
+    if (!isRejectAction && !canShareContactForStatus(currentRequest.status)) {
+      throw new BadRequestException('You can only share contact for pending requests');
+    }
+
+    if (!isRejectAction && !currentRequest.adopterContactShareConsent) {
+      throw new BadRequestException(
+        'The adopter must authorize contact sharing before this step can be completed',
+      );
+    }
+
+    const nextStatus: AdoptionRequestStatus = isRejectAction ? 'rejected' : 'contact_shared';
+    const updatedRequest = await this.prisma.adoptionRequest.update({
+      where: { id: requestId },
+      data: {
+        status: nextStatus,
+        note: dto.note?.trim() || null,
+      },
+    });
+
     const notification =
       nextStatus === 'contact_shared'
         ? {
             id: `${requestId}-notification-contact-shared`,
             requestId,
-            recipientId: adopter.id,
+            recipientId: updatedRequest.adopterId,
             type: 'contact_shared' as const,
-            message: `O tutor compartilhou o contato referente ao pet ${pet.name}.`,
-            createdAt: updatedRequest.updatedAt,
+            message: `O tutor compartilhou o contato referente ao pet ${updatedRequest.petId}.`,
+            createdAt: updatedRequest.updatedAt.toISOString(),
           }
         : {
             id: `${requestId}-notification-rejected`,
             requestId,
-            recipientId: adopter.id,
+            recipientId: updatedRequest.adopterId,
             type: 'rejected' as const,
-            message: `Sua solicitacao para ${pet.name} foi recusada.`,
-            createdAt: updatedRequest.updatedAt,
+            message: `Sua solicitação para o pet ${updatedRequest.petId} foi recusada.`,
+            createdAt: updatedRequest.updatedAt.toISOString(),
           };
 
     this.notifications.push(notification);
+
+    const persistedUsersById = await this.buildPersistedUserMap([updatedRequest.adopterId]);
 
     return {
       message: isRejectAction
         ? 'Solicitação de adoção recusada com sucesso'
         : 'Contato compartilhado com sucesso',
-      data: mapToReceivedAdoptionRequest({ request: updatedRequest, pet, adopter }),
+      data: mapToReceivedAdoptionRequest({
+        request: this.toRecord(updatedRequest),
+        pet: this.resolvePetForResponse(updatedRequest.petId, updatedRequest.responsibleUserId),
+        adopter: this.resolveAdopterForResponse(updatedRequest.adopterId, persistedUsersById),
+      }),
       notification,
     };
   }

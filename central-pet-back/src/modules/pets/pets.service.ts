@@ -37,6 +37,11 @@ type PetRecord = {
   updatedAt: string;
 };
 
+export type PetForAdoptionRequest = Pick<
+  PetRecord,
+  'id' | 'name' | 'species' | 'city' | 'state' | 'responsibleUserId' | 'sourceType' | 'sourceName'
+>;
+
 @Injectable()
 export class PetsService {
   private readonly pets: PetRecord[] = mockPets.map((mockPet) => ({
@@ -157,6 +162,11 @@ export class PetsService {
       message: 'Pet retrieved successfully',
       data: pet,
     };
+  }
+
+  findByIdForAdoption(id: string): PetForAdoptionRequest | null {
+    const pet = this.pets.find((item) => item.id === id);
+    return pet ?? null;
   }
 
   update(id: string, updatePetDto: UpdatePetDto) {

@@ -68,6 +68,7 @@ export class TestDatabaseHelper {
    */
   async cleanup(): Promise<void> {
     // Limpa dados de teste na ordem correta para respeitar constraints
+    await this.prisma.adoptionRequest.deleteMany();
     await this.prisma.session.deleteMany();
     await this.prisma.user.deleteMany();
   }
