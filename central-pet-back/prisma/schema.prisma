@@ -18,26 +18,138 @@ enum UserRole {
   ONG
 }
 
+enum PetSpecies {
+  DOG
+  CAT
+}
+
+enum PetSex {
+  FEMALE
+  MALE
+}
+
+enum PetSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum PetStatus {
+  AVAILABLE
+  PENDING_ADOPTION
+  ADOPTED
+  UNAVAILABLE
+}
+
+enum AdoptionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PetHistoryEventType {
+  CREATED
+  TRANSFERRED
+  ADOPTION_APPROVED
+  RETURNED
+  UPDATED
+}
+
 model User {
-  id               String    @id @default(uuid())
-  fullName         String
-  email            String    @unique
-  role             UserRole
-  birthDate        String?
-  cpf              String?   @unique
-  organizationName String?
-  cnpj             String?   @unique
-  passwordHash     String
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  sessions         Session[]
+  id                   String             @id @default(uuid())
+  fullName             String
+  email                String             @unique
+  role                 UserRole
+  birthDate            String?
+  cpf                  String?            @unique
+  organizationName     String?
+  cnpj                 String?            @unique
+  passwordHash         String
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  sessions             Session[]
+  adoptionRequests     AdoptionRequest[]
+  performedPetHistory  PetHistory[]       @relation("PerformedPetHistory")
 }
 
 model Session {
   id        String   @id @default(uuid())
   userId    String
   createdAt DateTime @default(now())
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Pet {
+  id                 String             @id @default(uuid())
+  name               String
+  ageText            String
+  species            PetSpecies
+  breed              String
+  sex                PetSex
+  size               PetSize
+  profilePhoto       String
+  galleryPhotosJson  String?
+  microchipped       Boolean            @default(false)
+  vaccinated         Boolean            @default(false)
+  neutered           Boolean            @default(false)
+  dewormed           Boolean            @default(false)
+  needsHealthCare    Boolean            @default(false)
+  physicalLimitation Boolean            @default(false)
+  visualLimitation   Boolean            @default(false)
+  hearingLimitation  Boolean            @default(false)
+  tutor              String
+  shelter            String
+  city               String
+  contact            String
+  status             PetStatus          @default(AVAILABLE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  adoptionRequests   AdoptionRequest[]
+  history            PetHistory[]
+
+  @@index([status])
+  @@index([species])
+  @@index([city])
+}
+
+model AdoptionRequest {
+  id          String                @id @default(uuid())
+  petId       String
+  requesterId String
+  message     String?
+  status      AdoptionRequestStatus @default(PENDING)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  pet         Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  requester   User                  @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@index([requesterId])
+  @@index([status])
+}
+
+model PetHistory {
+  id                String              @id @default(uuid())
+  petId             String
+  eventType         PetHistoryEventType
+  description       String
+  fromResponsible   String?
+  toResponsible     String?
+  performedByUserId String?
+  createdAt         DateTime            @default(now())
+
+  pet               Pet                 @relation(fields: [petId], references: [id], onDelete: Restrict)
+  performedByUser   User?               @relation("PerformedPetHistory", fields: [performedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([petId])
+  @@index([performedByUserId])
+  @@index([eventType])
+  @@index([createdAt])
 }

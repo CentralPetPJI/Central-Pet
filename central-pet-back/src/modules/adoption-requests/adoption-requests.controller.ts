@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  ParseUUIDPipe,
   Param,
   Patch,
   Post,
@@ -13,6 +14,7 @@ import { CurrentUser } from '@/decorators/current-user.decorator';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import type { MockUser } from '@/mocks';
 import type { PublicUser } from '@/modules/users/users.service';
+import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
 import { AdoptionRequestsService } from './adoption-requests.service';
 import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
 import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
@@ -20,6 +22,11 @@ import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto'
 @Controller('adoption-requests')
 export class AdoptionRequestsController {
   constructor(private readonly adoptionRequestsService: AdoptionRequestsService) {}
+
+  @Post()
+  create(@Body() createAdoptionRequestDto: CreateAdoptionRequestDto) {
+    return this.adoptionRequestsService.create(createAdoptionRequestDto);
+  }
 
   @Get()
   @UseGuards(SessionGuard)
@@ -45,5 +52,10 @@ export class AdoptionRequestsController {
   @UseGuards(SessionGuard)
   simulate(@Body() dto: SimulateAdoptionRequestDto, @CurrentUser() user: MockUser | PublicUser) {
     return this.adoptionRequestsService.simulateReceived(user.id, dto);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adoptionRequestsService.findOne(id);
   }
 }

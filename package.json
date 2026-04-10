@@ -10,11 +10,22 @@
     "prettier": "3.8.1"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "central-pet-front/**/*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "pnpm --filter central-pet-front exec eslint --fix"
     ],
-    "*.{css,json,md}": "prettier --write"
+    "central-pet-back/{src,test}/**/*.{js,ts}": [
+      "prettier --write",
+      "pnpm --filter central-pet-back exec eslint --fix"
+    ],
+    "central-pet-back/scripts/**/*.js": [
+      "prettier --write"
+    ],
+    "tests/**/*.{js,ts}": [
+      "prettier --write"
+    ],
+    "*.{css,json,md}": "prettier --write",
+    "scripts/**/*.{js}": "prettier --write"
   },
   "scripts": {
     "prepare": "husky",
@@ -22,7 +33,7 @@
     "dev:back": "pnpm --filter central-pet-back dev",
     "dev:back:test": "pnpm --filter central-pet-back dev:test",
     "dev": "pnpm -r --parallel --if-present run dev",
-    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build -d",
     "dev:docker:down": "docker compose -f docker-compose.dev.yml down",
     "dev:docker:logs": "docker compose -f docker-compose.dev.yml logs -f",
     "dev:docker:clean": "docker compose -f docker-compose.dev.yml down -v",
@@ -30,7 +41,8 @@
     "build:back": "pnpm --filter central-pet-back build",
     "test:front": "pnpm --filter central-pet-front test:run",
     "test:e2e": "pnpm --filter central-pet-e2e-tests test",
-    "test:back": "pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
+    "test:e2e:install": "pnpm --filter central-pet-e2e-tests install-browsers",
+    "test:back": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
     "test:all": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e && pnpm --filter central-pet-front test:run && pnpm --filter central-pet-e2e-tests test"
   },
   "packageManager": "pnpm@10.30.1"

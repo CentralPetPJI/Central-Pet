@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { mockAdoptionRequests, type MockAdoptionRequest } from '@/mocks';
 import { randomUUID } from 'crypto';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
 import {
   mapToReceivedAdoptionRequest,
   type ReceivedAdoptionRequest,
@@ -31,15 +33,16 @@ export class AdoptionRequestsService {
   private readonly adoptionRequests: MockAdoptionRequest[] = [...mockAdoptionRequests];
   private readonly notifications: AdoptionRequestNotification[] = [];
 
+  constructor(private readonly prisma?: PrismaService) {}
+
   findReceived(responsibleUserId?: string): { message: string; data: ReceivedAdoptionRequest[] } {
     const data = this.adoptionRequests
       .map((request) => {
-        // Snapshots são obrigatórios - requests sem snapshot são inválidos
+        // Snapshots sao obrigatorios - requests sem snapshot sao invalidos
         if (!request.petSnapshot || !request.adopterSnapshot) {
           return null;
         }
 
-        // Aqui sabemos que os snapshots existem
         const petSnapshot = request.petSnapshot;
         const adopterSnapshot = request.adopterSnapshot;
 
@@ -64,16 +67,110 @@ export class AdoptionRequestsService {
     };
   }
 
+  async create(createAdoptionRequestDto: CreateAdoptionRequestDto) {
+    if (!this.prisma) {
+      throw new Error('PrismaService is not available');
+    }
+
+    const pet = await this.prisma.pet.findUnique({
+      where: { id: createAdoptionRequestDto.petId },
+      select: { id: true, name: true, status: true },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with id "${createAdoptionRequestDto.petId}" not found`);
+    }
+
+    if (pet.status !== 'AVAILABLE') {
+      throw new BadRequestException(
+        `Adoption request cannot be created for pet with status "${pet.status}"`,
+      );
+    }
+
+    const requester = await this.prisma.user.findUnique({
+      where: { id: createAdoptionRequestDto.requesterId },
+      select: { id: true, fullName: true, email: true },
+    });
+
+    if (!requester) {
+      throw new NotFoundException(
+        `User with id "${createAdoptionRequestDto.requesterId}" not found`,
+      );
+    }
+
+    const data = await this.prisma.adoptionRequest.create({
+      data: {
+        petId: createAdoptionRequestDto.petId,
+        requesterId: createAdoptionRequestDto.requesterId,
+        message: createAdoptionRequestDto.message,
+        status: 'PENDING',
+      },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        },
+        requester: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return {
+      message: 'Adoption request created successfully',
+      data,
+    };
+  }
+
+  async findOne(id: string) {
+    if (!this.prisma) {
+      throw new Error('PrismaService is not available');
+    }
+
+    const data = await this.prisma.adoptionRequest.findUnique({
+      where: { id },
+      include: {
+        pet: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        },
+        requester: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!data) {
+      throw new NotFoundException(`Adoption request with id "${id}" not found`);
+    }
+
+    return {
+      message: 'Adoption request retrieved successfully',
+      data,
+    };
+  }
+
   simulateReceived(userId: string, dto: SimulateAdoptionRequestDto): AdoptionRequestActionResult {
-    // Em desenvolvimento, permite simulação mesmo que o userId não corresponda
-    // Isso é útil quando testamos com pets de diferentes usuários
     const isDev = process.env.NODE_ENV !== 'production';
 
     if (!isDev && dto.petResponsibleUserId !== userId) {
       throw new BadRequestException('You can only simulate requests for your own pets');
     }
 
-    // Adotante simulado para desenvolvimento
     const simulatedAdopterId = randomUUID();
     const adopterSnapshot = {
       id: simulatedAdopterId,
@@ -131,7 +228,6 @@ export class AdoptionRequestsService {
 
     const currentRequest = this.adoptionRequests[index];
 
-    // Snapshots são obrigatórios
     if (!currentRequest.petSnapshot || !currentRequest.adopterSnapshot) {
       throw new NotFoundException(`Adoption request with id "${requestId}" has invalid data`);
     }
