@@ -6,10 +6,8 @@ type ApprovalModalData = {
 type AdoptionApprovalModalProps = {
   modalData: ApprovalModalData | null;
   approvalNote: string;
-  approvalConfirmed: boolean;
   isSubmitting: boolean;
   onApprovalNoteChange: (value: string) => void;
-  onApprovalConfirmedChange: (value: boolean) => void;
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -17,10 +15,8 @@ type AdoptionApprovalModalProps = {
 export function AdoptionApprovalModal({
   modalData,
   approvalNote,
-  approvalConfirmed,
   isSubmitting,
   onApprovalNoteChange,
-  onApprovalConfirmedChange,
   onCancel,
   onConfirm,
 }: AdoptionApprovalModalProps) {
@@ -60,16 +56,6 @@ export function AdoptionApprovalModal({
           </label>
         </div>
 
-        <label className="mt-4 flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
-          <input
-            type="checkbox"
-            checked={approvalConfirmed}
-            onChange={(event) => onApprovalConfirmedChange(event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
-          />
-          Confirmo que a adoção foi efetivada.
-        </label>
-
         <div className="mt-6 flex gap-3">
           <button
             type="button"
@@ -80,7 +66,7 @@ export function AdoptionApprovalModal({
           </button>
           <button
             type="button"
-            disabled={isSubmitting || !approvalConfirmed}
+            disabled={isSubmitting}
             onClick={onConfirm}
             className="flex-1 inline-flex items-center justify-center rounded-full bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
           >

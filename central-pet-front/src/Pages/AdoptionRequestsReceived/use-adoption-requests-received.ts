@@ -34,7 +34,6 @@ export function useAdoptionRequestsReceived({
   const [rejectionReason, setRejectionReason] = useState('');
   const [approvalModalData, setApprovalModalData] = useState<AdoptionRequestModalData | null>(null);
   const [approvalNote, setApprovalNote] = useState('');
-  const [approvalConfirmed, setApprovalConfirmed] = useState(false);
 
   const closeRejectionModal = useCallback(() => {
     setRejectionModalData(null);
@@ -44,7 +43,6 @@ export function useAdoptionRequestsReceived({
   const closeApprovalModal = useCallback(() => {
     setApprovalModalData(null);
     setApprovalNote('');
-    setApprovalConfirmed(false);
   }, []);
 
   const loadRequests = useCallback(async (userId: string) => {
@@ -135,13 +133,17 @@ export function useAdoptionRequestsReceived({
           ),
         );
         setActionMessage(response.data.message);
+
+        if (action === 'approve' && currentUserId) {
+          await loadRequests(currentUserId);
+        }
       } catch {
         setErrorMessage('Nao foi possivel atualizar a solicitacao no momento.');
       } finally {
         setManagedRequestId(null);
       }
     },
-    [],
+    [currentUserId, loadRequests],
   );
 
   const confirmRejection = useCallback(() => {
@@ -207,7 +209,6 @@ export function useAdoptionRequestsReceived({
       petName: request.pet.name,
     });
     setApprovalNote('');
-    setApprovalConfirmed(false);
   }, []);
 
   const openRejectionModal = useCallback((request: ReceivedAdoptionRequest) => {
@@ -235,13 +236,11 @@ export function useAdoptionRequestsReceived({
     rejectionReason,
     approvalModalData,
     approvalNote,
-    approvalConfirmed,
     setSelectedPetId,
     setSimulateWithSharedContact,
     setSimulateContactShareConsent,
     setRejectionReason,
     setApprovalNote,
-    setApprovalConfirmed,
     loadOwnPets,
     manageRequest,
     simulateRequest,

@@ -29,13 +29,11 @@ export default function AdoptionRequestsReceivedPage() {
     rejectionReason,
     approvalModalData,
     approvalNote,
-    approvalConfirmed,
     setSelectedPetId,
     setSimulateWithSharedContact,
     setSimulateContactShareConsent,
     setRejectionReason,
     setApprovalNote,
-    setApprovalConfirmed,
     loadOwnPets,
     manageRequest,
     simulateRequest,
@@ -121,10 +119,8 @@ export default function AdoptionRequestsReceivedPage() {
       <AdoptionApprovalModal
         modalData={approvalModalData}
         approvalNote={approvalNote}
-        approvalConfirmed={approvalConfirmed}
         isSubmitting={managedRequestId === approvalModalData?.requestId}
         onApprovalNoteChange={setApprovalNote}
-        onApprovalConfirmedChange={setApprovalConfirmed}
         onCancel={closeApprovalModal}
         onConfirm={confirmApproval}
       />

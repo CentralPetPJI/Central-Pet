@@ -28,6 +28,7 @@ describe('Servico de solicitacoes de adocao', () => {
       create: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
+      updateMany: jest.Mock;
     };
     user: {
       findMany: jest.Mock;
@@ -56,7 +57,7 @@ describe('Servico de solicitacoes de adocao', () => {
 
     prismaMock = {
       adoptionRequest: {
-        findMany: jest.fn(async (args?: { where?: { responsibleUserId?: string } }) => {
+        findMany: jest.fn((args?: { where?: { responsibleUserId?: string } }) => {
           const filtered = args?.where?.responsibleUserId
             ? records.filter((record) => record.responsibleUserId === args.where?.responsibleUserId)
             : records;
@@ -65,24 +66,31 @@ describe('Servico de solicitacoes de adocao', () => {
             (left, right) => right.requestedAt.getTime() - left.requestedAt.getTime(),
           );
         }),
-        create: jest.fn(async (args: { data: Omit<DbAdoptionRequest, 'id' | 'requestedAt' | 'updatedAt' | 'note'> & { note?: string | null } }) => {
-          index += 1;
-          const now = new Date();
-          const created: DbAdoptionRequest = {
-            id: `req-${index}`,
-            requestedAt: now,
-            updatedAt: now,
-            note: args.data.note ?? null,
-            ...args.data,
-          };
-          records.unshift(created);
-          return created;
-        }),
-        findUnique: jest.fn(async (args: { where: { id: string } }) =>
-          records.find((record) => record.id === args.where.id) ?? null,
+        create: jest.fn(
+          (args: {
+            data: Omit<DbAdoptionRequest, 'id' | 'requestedAt' | 'updatedAt' | 'note'> & {
+              note?: string | null;
+            };
+          }) => {
+            index += 1;
+            const now = new Date();
+            const created: DbAdoptionRequest = {
+              id: `req-${index}`,
+              requestedAt: now,
+              updatedAt: now,
+              note: args.data.note ?? null,
+              ...args.data,
+            };
+            records.unshift(created);
+            return created;
+          },
+        ),
+        findUnique: jest.fn(
+          (args: { where: { id: string } }) =>
+            records.find((record) => record.id === args.where.id) ?? null,
         ),
         update: jest.fn(
-          async (args: {
+          (args: {
             where: { id: string };
             data: Partial<Pick<DbAdoptionRequest, 'status' | 'note'>>;
           }) => {
@@ -101,9 +109,40 @@ describe('Servico de solicitacoes de adocao', () => {
             return updated;
           },
         ),
+        updateMany: jest.fn(
+          (args: {
+            where: {
+              petId?: string;
+              id?: { not?: string };
+              status?: AdoptionRequestStatus;
+            };
+            data: Partial<Pick<DbAdoptionRequest, 'status' | 'note'>>;
+          }) => {
+            let count = 0;
+
+            records = records.map((record) => {
+              const matchesPetId = args.where.petId ? record.petId === args.where.petId : true;
+              const matchesNotId = args.where.id?.not ? record.id !== args.where.id.not : true;
+              const matchesStatus = args.where.status ? record.status === args.where.status : true;
+
+              if (!matchesPetId || !matchesNotId || !matchesStatus) {
+                return record;
+              }
+
+              count += 1;
+              return {
+                ...record,
+                ...args.data,
+                updatedAt: new Date(),
+              };
+            });
+
+            return { count };
+          },
+        ),
       },
       user: {
-        findMany: jest.fn(async () => []),
+        findMany: jest.fn(() => []),
       },
     };
 
@@ -111,10 +150,7 @@ describe('Servico de solicitacoes de adocao', () => {
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
     } as unknown as PetsService;
 
-    service = new AdoptionRequestsService(
-      prismaMock as unknown as PrismaService,
-      petsServiceMock,
-    );
+    service = new AdoptionRequestsService(prismaMock as unknown as PrismaService, petsServiceMock);
   });
 
   it('deve simular solicitacao usando um usuario mock existente como adotante', async () => {
@@ -165,13 +201,52 @@ describe('Servico de solicitacoes de adocao', () => {
       initialStatus: 'contact_shared',
     });
 
-    const approved = await service.manageReceived(simulated.data.id, mockUserIds.ONG_PATAS_DO_CENTRO, {
-      action: 'approve',
-      note: 'Adocao concluida apos visita presencial.',
-    });
+    const approved = await service.manageReceived(
+      simulated.data.id,
+      mockUserIds.ONG_PATAS_DO_CENTRO,
+      {
+        action: 'approve',
+        note: 'Adocao concluida apos visita presencial.',
+      },
+    );
 
     expect(simulated.data.status).toBe('contact_shared');
     expect(approved.data.status).toBe('approved');
     expect(approved.data.note).toBe('Adocao concluida apos visita presencial.');
+  });
+
+  it('deve recusar automaticamente solicitacoes pendentes do mesmo pet apos aprovacao', async () => {
+    const sharedContact = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
+      petId: 'pet-001',
+      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+      adopterId: mockUserIds.RAFAEL_LIMA,
+      adopterContactShareConsent: true,
+      initialStatus: 'contact_shared',
+    });
+
+    const pendingRequest = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
+      petId: 'pet-001',
+      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+      adopterContactShareConsent: true,
+      initialStatus: 'pending',
+    });
+
+    const approved = await service.manageReceived(
+      sharedContact.data.id,
+      mockUserIds.ONG_PATAS_DO_CENTRO,
+      {
+        action: 'approve',
+        note: 'Adoção concluída com sucesso.',
+      },
+    );
+
+    const allRequests = await service.findReceived(mockUserIds.ONG_PATAS_DO_CENTRO);
+    const autoRejected = allRequests.data.find((request) => request.id === pendingRequest.data.id);
+
+    expect(approved.message).toContain('foram recusadas automaticamente');
+    expect(autoRejected?.status).toBe('rejected');
+    expect(autoRejected?.note).toBe(
+      'Solicitação encerrada automaticamente porque este pet já foi adotado.',
+    );
   });
 });

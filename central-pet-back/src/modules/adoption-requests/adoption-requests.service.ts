@@ -104,7 +104,10 @@ export class AdoptionRequestsService {
     return fallbackAdopter;
   }
 
-  private resolvePetForResponse(petId: string, responsibleUserId: string): ReceivedAdoptionRequestPet {
+  private resolvePetForResponse(
+    petId: string,
+    responsibleUserId: string,
+  ): ReceivedAdoptionRequestPet {
     const pet = this.petsService.findByIdForAdoption(petId);
 
     if (pet) {
@@ -280,10 +283,28 @@ export class AdoptionRequestsService {
         },
       });
 
+      const autoRejectionNote =
+        'Solicitação encerrada automaticamente porque este pet já foi adotado.';
+
+      const { count: autoRejectedCount } = await this.prisma.adoptionRequest.updateMany({
+        where: {
+          petId: updatedRequest.petId,
+          id: { not: updatedRequest.id },
+          status: 'pending',
+        },
+        data: {
+          status: 'rejected',
+          note: autoRejectionNote,
+        },
+      });
+
       const persistedUsersById = await this.buildPersistedUserMap([updatedRequest.adopterId]);
 
       return {
-        message: 'Solicitação de adoção aprovada com sucesso',
+        message:
+          autoRejectedCount > 0
+            ? `Solicitação de adoção aprovada com sucesso. ${autoRejectedCount} solicitação(ões) pendente(s) foram recusadas automaticamente porque o pet já foi adotado.`
+            : 'Solicitação de adoção aprovada com sucesso',
         data: mapToReceivedAdoptionRequest({
           request: this.toRecord(updatedRequest),
           pet: this.resolvePetForResponse(updatedRequest.petId, updatedRequest.responsibleUserId),
@@ -295,7 +316,9 @@ export class AdoptionRequestsService {
     const isRejectAction = dto.action === 'reject';
 
     if (isRejectAction && !canRejectForStatus(currentRequest.status)) {
-      throw new BadRequestException('This adoption request cannot be rejected in the current status');
+      throw new BadRequestException(
+        'This adoption request cannot be rejected in the current status',
+      );
     }
 
     if (!isRejectAction && !canShareContactForStatus(currentRequest.status)) {
