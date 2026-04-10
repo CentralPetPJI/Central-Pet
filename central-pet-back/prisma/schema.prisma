@@ -80,7 +80,7 @@ model Session {
   userId    String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
 }
@@ -131,9 +131,9 @@ model AdoptionRequest {
   requestedAt                DateTime              @default(now())
   updatedAt                  DateTime              @updatedAt
 
-  pet                        Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
-  responsibleUser            User                  @relation("ResponsibleUserAdoptionRequests", fields: [responsibleUserId], references: [id], onDelete: Cascade)
-  adopter                    User                  @relation("AdopterAdoptionRequests", fields: [adopterId], references: [id], onDelete: Cascade)
+  pet                        Pet                   @relation(fields: [petId], references: [id], onDelete: Restrict)
+  responsibleUser            User                  @relation("ResponsibleUserAdoptionRequests", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  adopter                    User                  @relation("AdopterAdoptionRequests", fields: [adopterId], references: [id], onDelete: Restrict)
 
   @@index([responsibleUserId, requestedAt])
   @@index([adopterId])

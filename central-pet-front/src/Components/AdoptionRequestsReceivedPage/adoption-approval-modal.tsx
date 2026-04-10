@@ -40,8 +40,8 @@ export function AdoptionApprovalModal({
           Aprovar adoção
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Confirme que o pet <span className="font-semibold text-slate-900">{modalData.petName}</span> foi
-          adotado.
+          Confirme que o pet{' '}
+          <span className="font-semibold text-slate-900">{modalData.petName}</span> foi adotado.
         </p>
 
         <div className="mt-5">

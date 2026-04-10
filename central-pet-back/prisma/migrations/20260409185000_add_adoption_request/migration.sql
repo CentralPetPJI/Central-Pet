@@ -53,14 +53,14 @@ CREATE INDEX IF NOT EXISTS "AdoptionRequest_adopterId_idx"
 
 ALTER TABLE "AdoptionRequest"
   ADD CONSTRAINT "AdoptionRequest_petId_fkey"
-  FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "AdoptionRequest"
   ADD CONSTRAINT "AdoptionRequest_responsibleUserId_fkey"
-  FOREIGN KEY ("responsibleUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  FOREIGN KEY ("responsibleUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "AdoptionRequest"
   ADD CONSTRAINT "AdoptionRequest_adopterId_fkey"
-  FOREIGN KEY ("adopterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  FOREIGN KEY ("adopterId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 DROP TYPE "AdoptionRequestStatus_legacy";
