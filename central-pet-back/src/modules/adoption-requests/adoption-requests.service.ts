@@ -378,76 +378,71 @@ export class AdoptionRequestsService {
         currentRequest.petId,
         currentRequest.responsibleUserId,
       );
-      // TODO: Wrap entire approval flow in a transaction for atomicity in production
-      // For now, execute in sequence but they should all succeed or all fail together
-      const updatedRequest = await this.prisma.adoptionRequest.update({
-        where: { id: requestId },
-        data: {
-          status: 'approved',
-          note: dto.note?.trim() || null,
-        },
+      const transactionResult = await this.prisma.$transaction(async (tx) => {
+        const updatedReq = await tx.adoptionRequest.update({
+          where: { id: requestId },
+          data: {
+            status: 'approved',
+            note: dto.note?.trim() || null,
+          },
+        });
+
+        const autoRejectionNote =
+          'Solicitação encerrada automaticamente porque este pet já foi adotado.';
+
+        const { count: autoRejectedCount } = await tx.adoptionRequest.updateMany({
+          where: {
+            petId: updatedReq.petId,
+            id: { not: updatedReq.id },
+            status: 'pending',
+          },
+          data: {
+            status: 'rejected',
+            note: autoRejectionNote,
+          },
+        });
+
+        // Update pet ownership and status
+        await tx.pet.update({
+          where: { id: updatedReq.petId },
+          data: {
+            responsibleUserId: updatedReq.adopterId,
+            status: 'ADOPTED',
+          },
+        });
+
+        // Record pet history for adoption approval within transaction
+        await tx.petHistory.create({
+          data: {
+            petId: updatedReq.petId,
+            eventType: 'ADOPTION_APPROVED',
+            description: 'Adoção concluída e responsabilidade transferida para o adotante.',
+            fromResponsible: currentRequest.responsibleUserId,
+            toResponsible: updatedReq.adopterId,
+            performedByUserId: userId,
+          },
+        });
+
+        return { updatedReq, autoRejectedCount };
       });
-
-      const autoRejectionNote =
-        'Solicitação encerrada automaticamente porque este pet já foi adotado.';
-
-      const { count: autoRejectedCount } = await this.prisma.adoptionRequest.updateMany({
-        where: {
-          petId: updatedRequest.petId,
-          id: { not: updatedRequest.id },
-          status: 'pending',
-        },
-        data: {
-          status: 'rejected',
-          note: autoRejectionNote,
-        },
-      });
-
-      // Update pet ownership and status
-      const updatedPet = await this.prisma.pet.update({
-        where: { id: updatedRequest.petId },
-        data: {
-          responsibleUserId: updatedRequest.adopterId,
-          status: 'ADOPTED',
-        },
-      });
-
-      // Record pet history for adoption approval
-      await this.petHistoryService.create(
-        {
-          petId: updatedRequest.petId,
-          eventType: 'ADOPTION_APPROVED',
-          description: 'Adoção concluída e responsabilidade transferida para o adotante.',
-          fromResponsible: currentRequest.responsibleUserId,
-          toResponsible: updatedRequest.adopterId,
-        },
-        userId,
-      );
-
-      const result = {
-        updatedRequest,
-        updatedPet,
-        autoRejectedCount,
-        previousResponsibleUserId: currentRequest.responsibleUserId,
-      };
 
       const persistedUsersById = await this.buildPersistedUserMap([
-        result.updatedRequest.adopterId,
+        transactionResult.updatedReq.adopterId,
       ]);
 
       return {
         message:
-          result.autoRejectedCount > 0
-            ? `Solicitação de adoção aprovada com sucesso. ${result.autoRejectedCount} solicitação(ões) pendente(s) foram recusadas automaticamente porque o pet já foi adotado.`
+          transactionResult.autoRejectedCount > 0
+            ? `Solicitação de adoção aprovada com sucesso. ${transactionResult.autoRejectedCount} solicitação(ões) pendente(s) foram recusadas automaticamente porque o pet já foi adotado.`
             : 'Solicitação de adoção aprovada com sucesso',
         data: mapToReceivedAdoptionRequest({
-          request: this.toRecord(result.updatedRequest),
+          request: this.toRecord(transactionResult.updatedReq),
           pet: await this.resolvePetForResponse(
-            result.updatedRequest.petId,
-            result.updatedRequest.responsibleUserId,
+            transactionResult.updatedReq.petId,
+            transactionResult.updatedReq.responsibleUserId,
           ),
           adopter: this.resolveAdopterForResponse(
-            result.updatedRequest.adopterId,
+            transactionResult.updatedReq.adopterId,
             persistedUsersById,
           ),
         }),
@@ -493,7 +488,7 @@ export class AdoptionRequestsService {
         eventType,
         description,
         fromResponsible: currentRequest.responsibleUserId,
-        toResponsible: null,
+        toResponsible: undefined,
       },
       userId,
     );

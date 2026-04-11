@@ -24,6 +24,7 @@ const PetPersonalityProfilePage = () => {
   const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   // Limpar a mensagem após 3 segundos
   useEffect(() => {
@@ -39,12 +40,14 @@ const PetPersonalityProfilePage = () => {
   useEffect(() => {
     if (!petId) {
       setIsLoading(false);
+      setIsNotFound(true);
       return;
     }
 
     let isMounted = true;
     const loadPet = async () => {
       setIsLoading(true);
+      setIsNotFound(false);
 
       try {
         const backendId = resolveBackendId(petId);
@@ -61,8 +64,7 @@ const PetPersonalityProfilePage = () => {
           return;
         }
 
-        setFormData(initialPetRegisterFormData);
-        setSelectedPersonalities([]);
+        setIsNotFound(true);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -111,6 +113,13 @@ const PetPersonalityProfilePage = () => {
           Carregando perfil do pet...
         </div>
       ) : null}
+      {isNotFound && !isLoading ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+          <p className="text-sm font-medium text-red-700">
+            Pet não encontrado. Verifique se o ID está correto ou tente novamente mais tarde.
+          </p>
+        </div>
+      ) : null}
       {displayMessage && (
         <div
           className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4"
@@ -121,37 +130,39 @@ const PetPersonalityProfilePage = () => {
           <p className="text-sm font-medium text-emerald-700">{displayMessage}</p>
         </div>
       )}
-      <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-        <PetProfileHero formData={formData} />
+      {!isNotFound ? (
+        <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <PetProfileHero formData={formData} />
 
-        <div className="p-5 lg:p-6">
-          <div className="space-y-4">
-            <PetProfileOverview formData={formData} />
-            <PetProfileGallery
-              editPath={editPath}
-              name={formData.name}
-              photos={formData.galleryPhotos}
-            />
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <PetProfileSection title="Saude">
-              <PetProfileFactGrid items={healthItems} />
-            </PetProfileSection>
-
-            <PetProfileSection title="Comportamento">
-              <PetProfilePersonalityList options={activeOptions} />
-            </PetProfileSection>
-
-            <PetProfileSection title="Localizacao">
-              <PetProfileFactGrid
-                columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
-                items={locationItems}
+          <div className="p-5 lg:p-6">
+            <div className="space-y-4">
+              <PetProfileOverview formData={formData} />
+              <PetProfileGallery
+                editPath={editPath}
+                name={formData.name}
+                photos={formData.galleryPhotos}
               />
-            </PetProfileSection>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <PetProfileSection title="Saude">
+                <PetProfileFactGrid items={healthItems} />
+              </PetProfileSection>
+
+              <PetProfileSection title="Comportamento">
+                <PetProfilePersonalityList options={activeOptions} />
+              </PetProfileSection>
+
+              <PetProfileSection title="Localizacao">
+                <PetProfileFactGrid
+                  columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
+                  items={locationItems}
+                />
+              </PetProfileSection>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 };

@@ -260,6 +260,15 @@ describe('Servico de solicitacoes de adocao', () => {
           eventType: 'ADOPTION_APPROVED',
         })),
       },
+
+      $transaction: jest.fn(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (callback: (tx: any) => Promise<any>) => {
+          // Execute the callback with the same prisma mock as the transaction client
+
+          return callback(prismaMock);
+        },
+      ),
     };
 
     petHistoryCreateMock = jest.fn(() => ({
@@ -357,12 +366,14 @@ describe('Servico de solicitacoes de adocao', () => {
     expect(approved.data.note).toBe('Adocao concluida apos visita presencial.');
     expect(petsById.get('pet-001')?.adoptionStatus).toBe('ADOPTED');
     expect(petsById.get('pet-001')?.responsibleUserId).toBe(approved.data.adopter.id);
-    expect(petHistoryCreateMock).toHaveBeenCalledWith(
+    // Verify petHistory was created via the transaction mock
+    expect(prismaMock.petHistory.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        petId: 'pet-001',
-        eventType: 'ADOPTION_APPROVED',
+        data: expect.objectContaining({
+          petId: 'pet-001',
+          eventType: 'ADOPTION_APPROVED',
+        }),
       }),
-      mockUserIds.ONG_PATAS_DO_CENTRO,
     );
   });
 

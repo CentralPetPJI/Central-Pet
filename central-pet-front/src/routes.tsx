@@ -31,7 +31,7 @@ export const routes = {
   } satisfies AppRoute,
   adoptionRequests: {
     received: {
-      path: '/AdoptionRequestsReceivedPage/received',
+      path: '/adoption-requests/received',
       element: <AdoptionRequestsReceivedPage />,
     } satisfies AppRoute,
   },
