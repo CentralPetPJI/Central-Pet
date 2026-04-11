@@ -24,12 +24,14 @@ ALTER TABLE "AdoptionRequest"
   ADD COLUMN "note" TEXT,
   ADD COLUMN "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
-UPDATE "AdoptionRequest"
+UPDATE "AdoptionRequest" ar
 SET
-  "adopterId" = "requesterId",
-  "responsibleUserId" = "requesterId",
-  "message" = COALESCE("message", 'Interesse em adocao'),
-  "requestedAt" = COALESCE("createdAt", CURRENT_TIMESTAMP);
+  "adopterId" = ar."requesterId",
+  "responsibleUserId" = p."responsibleUserId",
+  "message" = COALESCE(ar."message", 'Interesse em adocao'),
+  "requestedAt" = COALESCE(ar."createdAt", CURRENT_TIMESTAMP)
+FROM "Pet" p
+WHERE ar."petId" = p."id";
 
 ALTER TABLE "AdoptionRequest"
   ALTER COLUMN "adopterId" SET NOT NULL,

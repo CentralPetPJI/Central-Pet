@@ -73,6 +73,9 @@ export function useAdoptionRequestsReceived({
     if (!currentUserId) {
       setIsLoading(false);
       setErrorMessage(null);
+      // Clear session-dependent state when no authenticated user
+      setRequests([]);
+      setOwnPets([]);
       return;
     }
 
@@ -146,22 +149,34 @@ export function useAdoptionRequestsReceived({
     [currentUserId, loadRequests],
   );
 
-  const confirmRejection = useCallback(() => {
+  const confirmRejection = useCallback(async () => {
     if (!rejectionModalData) {
       return;
     }
 
-    void manageRequest(rejectionModalData.requestId, 'reject', rejectionReason.trim() || undefined);
-    closeRejectionModal();
+    try {
+      await manageRequest(
+        rejectionModalData.requestId,
+        'reject',
+        rejectionReason.trim() || undefined,
+      );
+      closeRejectionModal();
+    } catch {
+      // Error is handled in manageRequest; modal stays open
+    }
   }, [closeRejectionModal, manageRequest, rejectionModalData, rejectionReason]);
 
-  const confirmApproval = useCallback(() => {
+  const confirmApproval = useCallback(async () => {
     if (!approvalModalData) {
       return;
     }
 
-    void manageRequest(approvalModalData.requestId, 'approve', approvalNote.trim() || undefined);
-    closeApprovalModal();
+    try {
+      await manageRequest(approvalModalData.requestId, 'approve', approvalNote.trim() || undefined);
+      closeApprovalModal();
+    } catch {
+      // Error is handled in manageRequest; modal stays open
+    }
   }, [approvalModalData, approvalNote, closeApprovalModal, manageRequest]);
 
   const simulateRequest = useCallback(async () => {

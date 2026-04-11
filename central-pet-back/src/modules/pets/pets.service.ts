@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { mockPets, mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
@@ -29,7 +34,7 @@ type PetRecord = {
   visualLimitation: boolean;
   hearingLimitation: boolean;
   selectedPersonalities: string[];
-  responsibleUserId: string;
+  responsibleUserId?: string;
   sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName?: string;
   adoptionStatus: 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
@@ -192,7 +197,7 @@ export class PetsService {
       visualLimitation: pet.visualLimitation,
       hearingLimitation: pet.hearingLimitation,
       selectedPersonalities: this.parseJsonArray(pet.selectedPersonalitiesJson),
-      responsibleUserId: pet.responsibleUserId ?? '',
+      responsibleUserId: pet.responsibleUserId ?? undefined,
       sourceType: pet.sourceType ?? undefined,
       sourceName: pet.sourceName ?? undefined,
       adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
@@ -417,8 +422,8 @@ export class PetsService {
       city: pet.city,
       state: pet.state ?? undefined,
       responsibleUserId: pet.responsibleUserId,
-      sourceType: pet.sourceType ?? 'ONG',
-      sourceName: pet.sourceName ?? 'Origem não informada',
+      sourceType: pet.sourceType ?? undefined,
+      sourceName: pet.sourceName ?? undefined,
       adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
     };
   }
@@ -518,14 +523,18 @@ export class PetsService {
     };
   }
 
-  async remove(id: string) {
+  async remove(id: string, requesterId: string) {
     const currentPet = await this.prisma.pet.findUnique({
       where: { id },
-      select: { id: true, deleted: true },
+      select: { id: true, deleted: true, responsibleUserId: true },
     });
 
     if (!currentPet || currentPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
+    }
+
+    if (currentPet.responsibleUserId !== requesterId) {
+      throw new ForbiddenException('You are not the owner of this pet');
     }
 
     const deletedPet = await this.prisma.pet.update({

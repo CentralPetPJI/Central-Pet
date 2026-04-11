@@ -43,6 +43,10 @@ describe('Servico de solicitacoes de adocao', () => {
       findUnique: jest.Mock;
       upsert: jest.Mock;
       updateMany: jest.Mock;
+      update: jest.Mock;
+    };
+    petHistory: {
+      create: jest.Mock;
     };
   };
 
@@ -54,6 +58,20 @@ describe('Servico de solicitacoes de adocao', () => {
           id: 'pet-001',
           name: 'Mimi',
           species: 'CAT',
+          city: 'Sao Paulo',
+          state: 'SP',
+          responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+          sourceType: 'ONG',
+          sourceName: 'ONG Patas do Centro',
+          adoptionStatus: 'AVAILABLE',
+        },
+      ],
+      [
+        'pet-002',
+        {
+          id: 'pet-002',
+          name: 'Rex',
+          species: 'DOG',
           city: 'Sao Paulo',
           state: 'SP',
           responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
@@ -209,7 +227,38 @@ describe('Servico de solicitacoes de adocao', () => {
             status: args.update.status ?? args.create.status,
           }),
         ),
+        update: jest.fn(
+          (args: {
+            where: { id: string };
+            data: { responsibleUserId?: string; status?: string };
+          }) => {
+            const pet = petsById.get(args.where.id);
+            if (pet) {
+              if (args.data.responsibleUserId) {
+                pet.responsibleUserId = args.data.responsibleUserId;
+              }
+              if (args.data.status) {
+                pet.adoptionStatus =
+                  args.data.status === 'ADOPTED'
+                    ? 'ADOPTED'
+                    : (args.data.status as typeof pet.adoptionStatus);
+              }
+            }
+            return {
+              id: args.where.id,
+              responsibleUserId: args.data.responsibleUserId,
+              status: args.data.status,
+            };
+          },
+        ),
         updateMany: jest.fn(() => ({ count: 1 })),
+      },
+      petHistory: {
+        create: jest.fn(() => ({
+          id: 'history-001',
+          petId: 'pet-001',
+          eventType: 'ADOPTION_APPROVED',
+        })),
       },
     };
 
@@ -376,6 +425,7 @@ describe('Servico de solicitacoes de adocao', () => {
   });
 
   it('deve impedir que o mesmo adotante abra mais de uma solicitacao para o mesmo doador', async () => {
+    // Primeira solicitação: Rafael para pet-001 do ONG_PATAS_DO_CENTRO
     await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
@@ -383,9 +433,11 @@ describe('Servico de solicitacoes de adocao', () => {
       adopterContactShareConsent: true,
     });
 
+    // Segunda solicitação: Rafael para pet-002 do MESMO doador (ONG_PATAS_DO_CENTRO)
+    // Isso deve falhar porque Rafael já tem uma solicitação pendente para ONG_PATAS_DO_CENTRO
     await expect(
       service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
-        petId: 'pet-001',
+        petId: 'pet-002',
         petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
         adopterId: mockUserIds.RAFAEL_LIMA,
         adopterContactShareConsent: true,

@@ -16,7 +16,7 @@ import {
   isMockAuthEnabled,
   parseSessionCookieValue,
   SESSION_COOKIE_NAME,
-} from '@/utils//session-cookie';
+} from '@/utils/session-cookie';
 
 @Controller('auth')
 export class AuthController {

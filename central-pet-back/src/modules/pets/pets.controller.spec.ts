@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
+import { AuthService } from '../auth/auth.service';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 
@@ -25,6 +26,10 @@ describe('Controlador de pets', () => {
           useValue: {
             getTraitIds: () => [],
           },
+        },
+        {
+          provide: AuthService,
+          useValue: {},
         },
       ],
     }).compile();

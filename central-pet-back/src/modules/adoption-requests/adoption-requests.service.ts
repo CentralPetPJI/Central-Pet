@@ -120,6 +120,9 @@ export class AdoptionRequestsService {
       where: {
         adopterId,
         responsibleUserId,
+        status: {
+          in: ['pending', 'contact_shared'],
+        },
       },
       select: {
         id: true,
@@ -375,6 +378,8 @@ export class AdoptionRequestsService {
         currentRequest.petId,
         currentRequest.responsibleUserId,
       );
+      // TODO: Wrap entire approval flow in a transaction for atomicity in production
+      // For now, execute in sequence but they should all succeed or all fail together
       const updatedRequest = await this.prisma.adoptionRequest.update({
         where: { id: requestId },
         data: {
@@ -398,36 +403,53 @@ export class AdoptionRequestsService {
         },
       });
 
-      const { previousResponsibleUserId } = await this.petsService.finalizeAdoption(
-        updatedRequest.petId,
-        updatedRequest.adopterId,
-      );
+      // Update pet ownership and status
+      const updatedPet = await this.prisma.pet.update({
+        where: { id: updatedRequest.petId },
+        data: {
+          responsibleUserId: updatedRequest.adopterId,
+          status: 'ADOPTED',
+        },
+      });
 
+      // Record pet history for adoption approval
       await this.petHistoryService.create(
         {
           petId: updatedRequest.petId,
           eventType: 'ADOPTION_APPROVED',
           description: 'Adoção concluída e responsabilidade transferida para o adotante.',
-          fromResponsible: previousResponsibleUserId,
+          fromResponsible: currentRequest.responsibleUserId,
           toResponsible: updatedRequest.adopterId,
         },
         userId,
       );
 
-      const persistedUsersById = await this.buildPersistedUserMap([updatedRequest.adopterId]);
+      const result = {
+        updatedRequest,
+        updatedPet,
+        autoRejectedCount,
+        previousResponsibleUserId: currentRequest.responsibleUserId,
+      };
+
+      const persistedUsersById = await this.buildPersistedUserMap([
+        result.updatedRequest.adopterId,
+      ]);
 
       return {
         message:
-          autoRejectedCount > 0
-            ? `Solicitação de adoção aprovada com sucesso. ${autoRejectedCount} solicitação(ões) pendente(s) foram recusadas automaticamente porque o pet já foi adotado.`
+          result.autoRejectedCount > 0
+            ? `Solicitação de adoção aprovada com sucesso. ${result.autoRejectedCount} solicitação(ões) pendente(s) foram recusadas automaticamente porque o pet já foi adotado.`
             : 'Solicitação de adoção aprovada com sucesso',
         data: mapToReceivedAdoptionRequest({
-          request: this.toRecord(updatedRequest),
+          request: this.toRecord(result.updatedRequest),
           pet: await this.resolvePetForResponse(
-            updatedRequest.petId,
-            updatedRequest.responsibleUserId,
+            result.updatedRequest.petId,
+            result.updatedRequest.responsibleUserId,
           ),
-          adopter: this.resolveAdopterForResponse(updatedRequest.adopterId, persistedUsersById),
+          adopter: this.resolveAdopterForResponse(
+            result.updatedRequest.adopterId,
+            persistedUsersById,
+          ),
         }),
       };
     }
@@ -458,6 +480,23 @@ export class AdoptionRequestsService {
         note: dto.note?.trim() || null,
       },
     });
+
+    // Record PetHistory for both share_contact and reject actions
+    const eventType = isRejectAction ? 'ADOPTION_REJECTED' : 'ADOPTION_CONTACT_SHARED';
+    const description = isRejectAction
+      ? 'Solicitação de adoção recusada.'
+      : 'Contato do tutor compartilhado com o adotante.';
+
+    await this.petHistoryService.create(
+      {
+        petId: updatedRequest.petId,
+        eventType,
+        description,
+        fromResponsible: currentRequest.responsibleUserId,
+        toResponsible: null,
+      },
+      userId,
+    );
 
     const notification =
       nextStatus === 'contact_shared'

@@ -48,6 +48,9 @@ export class MockAuthController {
 
   @Get('mock-users')
   listMockUsers() {
+    if (!isMockAuthEnabled()) {
+      throw new UnauthorizedException('Mock auth is not available');
+    }
     return this.mockAuthService.listUsers();
   }
 

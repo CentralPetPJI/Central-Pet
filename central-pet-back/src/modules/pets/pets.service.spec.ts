@@ -319,8 +319,9 @@ describe('PetsService', () => {
 
   it('deve realizar soft delete e ocultar pet das consultas', async () => {
     const created = await service.create(await validateCreateDto(makeCreateDto()));
+    const requesterId = created.data.responsibleUserId; // Use the pet's owner as requesterId
 
-    const deleted = await service.remove(created.data.id);
+    const deleted = await service.remove(created.data.id, requesterId);
     const listed = await service.findAll();
 
     expect(deleted.message).toBe('Pet deleted successfully');

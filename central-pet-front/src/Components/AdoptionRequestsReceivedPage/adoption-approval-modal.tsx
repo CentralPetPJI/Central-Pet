@@ -42,14 +42,16 @@ export function AdoptionApprovalModal({
 
         <div className="mt-5">
           <label htmlFor="approval-note" className="block">
-            <span className="mb-2 block text-sm font-medium text-slate-700">
-              Observações da aprovação (opcional)
+            <span className="mb-2 flex items-center justify-between text-sm font-medium text-slate-700">
+              <span>Observações da aprovação (opcional)</span>
+              <span className="text-xs text-slate-500">{approvalNote.length}/500</span>
             </span>
             <textarea
               id="approval-note"
               value={approvalNote}
               onChange={(event) => onApprovalNoteChange(event.target.value)}
               placeholder="Ex: Adoção concluída após visita e assinatura do termo..."
+              maxLength={500}
               className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
               rows={4}
             />

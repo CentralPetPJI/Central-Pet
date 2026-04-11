@@ -75,6 +75,12 @@ export const getStoredPets = (): Pet[] => {
     }
 
     const validPets = parsedPets.filter(isPetLike);
+
+    // Persist only valid pets to keep storage clean
+    if (validPets.length < parsedPets.length) {
+      window.localStorage.setItem(petsStorageKey, JSON.stringify(validPets));
+    }
+
     return validPets;
   } catch {
     window.localStorage.removeItem(petsStorageKey);
