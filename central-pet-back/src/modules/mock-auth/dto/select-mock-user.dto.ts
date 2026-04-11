@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class SelectMockUserDto {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   userId!: string;
 }

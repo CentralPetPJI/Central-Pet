@@ -200,6 +200,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
       count = textElements.length;
     }
 
-    expect(count).toBeGreaterThanOrEqual(2);
+    // Strict check: deve ser exatamente 2 (não duplicado, duplicado apenas pelo carousel)
+    expect(count).toBe(2);
   });
 });

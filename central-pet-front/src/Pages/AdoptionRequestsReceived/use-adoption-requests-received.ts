@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import type { PetApiResponse, ReceivedAdoptionRequest } from '@/Models/pet';
 
@@ -35,6 +35,9 @@ export function useAdoptionRequestsReceived({
   const [approvalModalData, setApprovalModalData] = useState<AdoptionRequestModalData | null>(null);
   const [approvalNote, setApprovalNote] = useState('');
 
+  // Request token to ignore stale responses from async loadRequests calls
+  const requestIdRef = useRef<number>(0);
+
   const closeRejectionModal = useCallback(() => {
     setRejectionModalData(null);
     setRejectionReason('');
@@ -49,6 +52,10 @@ export function useAdoptionRequestsReceived({
     setIsLoading(true);
     setErrorMessage(null);
 
+    // Increment request token to invalidate any pending previous requests
+    requestIdRef.current += 1;
+    const currentRequestId = requestIdRef.current;
+
     try {
       const response = await api.get<{ data: ReceivedAdoptionRequest[] }>('/adoption-requests', {
         params: {
@@ -57,11 +64,20 @@ export function useAdoptionRequestsReceived({
         },
       });
 
-      setRequests(response.data.data);
+      // Only update state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        setRequests(response.data.data);
+      }
     } catch {
-      setErrorMessage('Nao foi possivel carregar as solicitacoes recebidas no momento.');
+      // Only update state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        setErrorMessage('Nao foi possivel carregar as solicitacoes recebidas no momento.');
+      }
     } finally {
-      setIsLoading(false);
+      // Only update loading state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -73,9 +89,15 @@ export function useAdoptionRequestsReceived({
     if (!currentUserId) {
       setIsLoading(false);
       setErrorMessage(null);
-      // Clear session-dependent state when no authenticated user
+      // Clear all session-dependent state when no authenticated user
       setRequests([]);
       setOwnPets([]);
+      setSelectedPetId('');
+      setIsSimulationPanelOpen(false);
+      setManagedRequestId(null);
+      setActionMessage(null);
+      setRejectionModalData(null);
+      setApprovalModalData(null);
       return;
     }
 
@@ -114,7 +136,11 @@ export function useAdoptionRequestsReceived({
   }, [currentUserId]);
 
   const manageRequest = useCallback(
-    async (requestId: string, action: 'approve' | 'share_contact' | 'reject', note?: string) => {
+    async (
+      requestId: string,
+      action: 'approve' | 'share_contact' | 'reject',
+      note?: string,
+    ): Promise<boolean> => {
       setManagedRequestId(requestId);
       setErrorMessage(null);
       setActionMessage(null);
@@ -140,8 +166,11 @@ export function useAdoptionRequestsReceived({
         if (action === 'approve' && currentUserId) {
           await loadRequests(currentUserId);
         }
+
+        return true;
       } catch {
         setErrorMessage('Nao foi possivel atualizar a solicitacao no momento.');
+        return false;
       } finally {
         setManagedRequestId(null);
       }
@@ -154,15 +183,14 @@ export function useAdoptionRequestsReceived({
       return;
     }
 
-    try {
-      await manageRequest(
-        rejectionModalData.requestId,
-        'reject',
-        rejectionReason.trim() || undefined,
-      );
+    const success = await manageRequest(
+      rejectionModalData.requestId,
+      'reject',
+      rejectionReason.trim() || undefined,
+    );
+
+    if (success) {
       closeRejectionModal();
-    } catch {
-      // Error is handled in manageRequest; modal stays open
     }
   }, [closeRejectionModal, manageRequest, rejectionModalData, rejectionReason]);
 
@@ -171,11 +199,14 @@ export function useAdoptionRequestsReceived({
       return;
     }
 
-    try {
-      await manageRequest(approvalModalData.requestId, 'approve', approvalNote.trim() || undefined);
+    const success = await manageRequest(
+      approvalModalData.requestId,
+      'approve',
+      approvalNote.trim() || undefined,
+    );
+
+    if (success) {
       closeApprovalModal();
-    } catch {
-      // Error is handled in manageRequest; modal stays open
     }
   }, [approvalModalData, approvalNote, closeApprovalModal, manageRequest]);
 

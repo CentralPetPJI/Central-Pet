@@ -9,7 +9,7 @@ import {
 import { Cookies } from '@/decorators/cookies.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { CookieInterceptor } from '../../interceptors/cookie.interceptor';
+import { CookieInterceptor } from '@/interceptors/cookie.interceptor';
 import { SetAuthModeDto } from './dto/set-auth-mode.dto';
 import {
   buildSessionCookieValue,
@@ -39,6 +39,13 @@ export class AuthController {
   @Post('mode')
   @UseInterceptors(CookieInterceptor)
   setMode(@Body() dto: SetAuthModeDto) {
+    // Two-step authentication flow:
+    // 1. setMode sets the auth mode (mock or jwt) with 'pending' state via session cookie
+    //    - For 'mock' mode: next step is POST /api/mock-auth/select-user with userId
+    //    - For 'jwt' mode: next step is POST /api/auth/login with email/password
+    // 2. The second-step endpoint (select-user or login) will update the session cookie
+    //    with the authenticated state (mode:userId or mode:token)
+    // Using 'pending' state prevents premature authentication while mode is being selected.
     if (dto.mode === 'mock' && !isMockAuthEnabled()) {
       throw new UnauthorizedException('Mock auth is not available');
     }
