@@ -212,8 +212,8 @@ export class AdoptionRequestsService {
         city: pet.city,
         state: pet.state ?? 'UF',
         responsibleUserId: pet.responsibleUserId,
-        sourceType: pet.sourceType ?? 'ONG',
-        sourceName: pet.sourceName ?? 'Origem não informada',
+        sourceType: pet.sourceType,
+        sourceName: pet.sourceName,
       };
     }
 
@@ -224,8 +224,8 @@ export class AdoptionRequestsService {
       city: 'Cidade não informada',
       state: 'UF',
       responsibleUserId,
-      sourceType: 'ONG',
-      sourceName: 'Origem não informada',
+      sourceType: null,
+      sourceName: null,
     };
   }
 
