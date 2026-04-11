@@ -299,6 +299,7 @@ export class PetsService {
           sourceType: pet.sourceType ?? null,
           sourceName: pet.sourceName ?? null,
           status: 'AVAILABLE',
+          deleted: false,
         },
       });
     }
@@ -343,6 +344,7 @@ export class PetsService {
         sourceType: null,
         sourceName: null,
         status: 'AVAILABLE',
+        deleted: false,
       },
     });
 
@@ -355,8 +357,10 @@ export class PetsService {
   async findAll(responsibleUserId?: string) {
     await this.ensureMockPetsSeededIfEnabled();
 
+    const where = responsibleUserId ? { responsibleUserId, deleted: false } : { deleted: false };
+
     const pets = await this.prisma.pet.findMany({
-      where: responsibleUserId ? { responsibleUserId } : undefined,
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -373,7 +377,7 @@ export class PetsService {
       where: { id },
     });
 
-    if (!pet) {
+    if (!pet || pet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
@@ -398,10 +402,11 @@ export class PetsService {
         sourceType: true,
         sourceName: true,
         status: true,
+        deleted: true,
       },
     });
 
-    if (!pet || !pet.responsibleUserId) {
+    if (!pet || pet.deleted || !pet.responsibleUserId) {
       return null;
     }
 
@@ -424,10 +429,11 @@ export class PetsService {
       select: {
         id: true,
         responsibleUserId: true,
+        deleted: true,
       },
     });
 
-    if (!existingPet) {
+    if (!existingPet || existingPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
@@ -452,10 +458,10 @@ export class PetsService {
   async update(id: string, updatePetDto: UpdatePetDto) {
     const currentPet = await this.prisma.pet.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, deleted: true },
     });
 
-    if (!currentPet) {
+    if (!currentPet || currentPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
@@ -509,6 +515,30 @@ export class PetsService {
     return {
       message: 'Pet updated successfully',
       data: this.toRecord(updatedPet),
+    };
+  }
+
+  async remove(id: string) {
+    const currentPet = await this.prisma.pet.findUnique({
+      where: { id },
+      select: { id: true, deleted: true },
+    });
+
+    if (!currentPet || currentPet.deleted) {
+      throw new NotFoundException(`Pet with id "${id}" not found`);
+    }
+
+    const deletedPet = await this.prisma.pet.update({
+      where: { id },
+      data: {
+        deleted: true,
+        status: 'UNAVAILABLE',
+      },
+    });
+
+    return {
+      message: 'Pet deleted successfully',
+      data: this.toRecord(deletedPet),
     };
   }
 }

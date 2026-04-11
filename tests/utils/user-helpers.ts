@@ -10,6 +10,19 @@ export type UsuarioE2E = {
   cpf: string;
 };
 
+export type UsuarioCriadoE2E = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "PESSOA_FISICA" | "ONG";
+  birthDate: string | null;
+  cpf: string | null;
+  organizationName: string | null;
+  cnpj: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 /**
  * Gera dados únicos de usuário para testes E2E
  */
@@ -31,7 +44,7 @@ export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
 export async function criarUsuarioViaApi(
   request: APIRequestContext,
   usuario: UsuarioE2E,
-): Promise<void> {
+): Promise<UsuarioCriadoE2E> {
   const resposta = await request.post(`${API_BASE_URL}/users`, {
     data: {
       fullName: usuario.fullName,
@@ -43,6 +56,8 @@ export async function criarUsuarioViaApi(
   });
 
   expect(resposta.ok()).toBeTruthy();
+  const payload = (await resposta.json()) as { data: UsuarioCriadoE2E };
+  return payload.data;
 }
 
 /**

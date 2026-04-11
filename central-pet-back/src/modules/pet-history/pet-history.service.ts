@@ -25,10 +25,10 @@ export class PetHistoryService {
   async create(createPetHistoryDto: CreatePetHistoryDto, performedByUserId?: string) {
     const pet = await this.prisma.pet.findUnique({
       where: { id: createPetHistoryDto.petId },
-      select: { id: true },
+      select: { id: true, deleted: true },
     });
 
-    if (!pet) {
+    if (!pet || pet.deleted) {
       throw new NotFoundException(`Pet with id "${createPetHistoryDto.petId}" not found`);
     }
 
@@ -98,10 +98,10 @@ export class PetHistoryService {
   async findByPetId(petId: string) {
     const pet = await this.prisma.pet.findUnique({
       where: { id: petId },
-      select: { id: true },
+      select: { id: true, deleted: true },
     });
 
-    if (!pet) {
+    if (!pet || pet.deleted) {
       throw new NotFoundException(`Pet with id "${petId}" not found`);
     }
 

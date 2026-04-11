@@ -35,6 +35,7 @@ type PrismaPetRecord = {
   sourceType: 'ONG' | 'PESSOA_FISICA' | null;
   sourceName: string | null;
   status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
+  deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -123,15 +124,19 @@ describe('PetsService', () => {
             return created;
           },
         ),
-        findMany: jest.fn((args?: { where?: { responsibleUserId?: string } }) => {
-          if (!args?.where?.responsibleUserId) {
-            return [...records];
-          }
+        findMany: jest.fn(
+          (args?: { where?: { responsibleUserId?: string; deleted?: boolean } }) => {
+            return records.filter((record) => {
+              const matchesResponsible = args?.where?.responsibleUserId
+                ? record.responsibleUserId === args.where.responsibleUserId
+                : true;
+              const matchesDeleted =
+                args?.where?.deleted !== undefined ? record.deleted === args.where.deleted : true;
 
-          return records.filter(
-            (record) => record.responsibleUserId === args.where?.responsibleUserId,
-          );
-        }),
+              return matchesResponsible && matchesDeleted;
+            });
+          },
+        ),
         findUnique: jest.fn((args: { where: { id: string }; select?: Record<string, boolean> }) => {
           const found = records.find((record) => record.id === args.where.id) ?? null;
 
@@ -292,6 +297,7 @@ describe('PetsService', () => {
       sourceType: null,
       sourceName: null,
       status: 'AVAILABLE',
+      deleted: false,
       createdAt: new Date('2026-04-10T00:00:00.000Z'),
       updatedAt: new Date('2026-04-10T00:00:00.000Z'),
     });
@@ -309,5 +315,17 @@ describe('PetsService', () => {
     expect(result.previousResponsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
     expect(result.pet.responsibleUserId).toBe(mockUserIds.ANA_SOUZA);
     expect(result.pet.adoptionStatus).toBe('ADOPTED');
+  });
+
+  it('deve realizar soft delete e ocultar pet das consultas', async () => {
+    const created = await service.create(await validateCreateDto(makeCreateDto()));
+
+    const deleted = await service.remove(created.data.id);
+    const listed = await service.findAll();
+
+    expect(deleted.message).toBe('Pet deleted successfully');
+    expect(deleted.data.adoptionStatus).toBe('UNAVAILABLE');
+    await expect(service.findOne(created.data.id)).rejects.toThrow(NotFoundException);
+    expect(listed.data.find((pet) => pet.id === created.data.id)).toBeUndefined();
   });
 });
