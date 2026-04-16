@@ -25,6 +25,9 @@ export interface PetRegisterFormData {
   physicalLimitation: boolean;
   visualLimitation: boolean;
   hearingLimitation: boolean;
+  responsibleUserId: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
 }
 
 export const petRegisterFormSchema = z.object({
@@ -49,6 +52,8 @@ export const petRegisterFormSchema = z.object({
   physicalLimitation: z.boolean(),
   visualLimitation: z.boolean(),
   hearingLimitation: z.boolean(),
+  sourceType: z.enum(['ONG', 'PESSOA_FISICA'], { error: 'Selecione o tipo de origem.' }),
+  sourceName: z.string().trim().min(1, 'Informe o nome da origem (ONG, abrigo ou pessoa física).'),
 });
 
 export const normalizePetRegisterFormData = (
@@ -63,6 +68,7 @@ export const normalizePetRegisterFormData = (
 export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetRegisterFormData> =>
   typeof data === 'object' && data !== null && !Array.isArray(data);
 
+// TODO: Remover os dados iniciais e deixar o formulário vazio, forçando o usuário a preencher tudo (exceto as informações iniciais como localização e contato, que podem ser pré-preenchidas com base no perfil do usuário ou na localização atual).
 export const initialPetRegisterFormData: PetRegisterFormData = {
   profilePhoto: dogImage,
   galleryPhotos: [],
@@ -85,6 +91,9 @@ export const initialPetRegisterFormData: PetRegisterFormData = {
   physicalLimitation: false,
   visualLimitation: false,
   hearingLimitation: false,
+  responsibleUserId: '',
+  sourceType: 'ONG',
+  sourceName: 'Abrigo Reencontro',
 };
 
 export const petSpeciesOptions = [

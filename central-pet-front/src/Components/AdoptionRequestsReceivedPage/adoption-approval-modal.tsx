@@ -1,0 +1,81 @@
+type ApprovalModalData = {
+  requestId: string;
+  petName: string;
+};
+
+type AdoptionApprovalModalProps = {
+  modalData: ApprovalModalData | null;
+  approvalNote: string;
+  isSubmitting: boolean;
+  onApprovalNoteChange: (value: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+
+export function AdoptionApprovalModal({
+  modalData,
+  approvalNote,
+  isSubmitting,
+  onApprovalNoteChange,
+  onCancel,
+  onConfirm,
+}: AdoptionApprovalModalProps) {
+  if (!modalData) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div
+        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="approval-modal-title"
+      >
+        <h2 id="approval-modal-title" className="text-xl font-bold text-slate-900">
+          Aprovar adoção
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Confirme que o pet{' '}
+          <span className="font-semibold text-slate-900">{modalData.petName}</span> foi adotado.
+        </p>
+
+        <div className="mt-5">
+          <label htmlFor="approval-note" className="block">
+            <span className="mb-2 flex items-center justify-between text-sm font-medium text-slate-700">
+              <span>Observações da aprovação (opcional)</span>
+              <span className="text-xs text-slate-500">{approvalNote.length}/500</span>
+            </span>
+            <textarea
+              id="approval-note"
+              value={approvalNote}
+              onChange={(event) => onApprovalNoteChange(event.target.value)}
+              placeholder="Ex: Adoção concluída após visita e assinatura do termo..."
+              maxLength={500}
+              className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              rows={4}
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={onConfirm}
+            className="flex-1 inline-flex items-center justify-center rounded-full bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? 'Aprovando...' : 'Confirmar aprovação'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

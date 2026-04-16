@@ -1,12 +1,23 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '@/prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
+import { PetHistoryModule } from '../pet-history/pet-history.module';
+import { PetsModule } from '../pets/pets.module';
+import { MockAuthModule } from '../mock-auth';
 import { AdoptionRequestsController } from './adoption-requests.controller';
 import { AdoptionRequestsService } from './adoption-requests.service';
+import { ApproveAdoptionUseCase, ShareContactUseCase, RejectAdoptionUseCase } from './use-cases';
+import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [AuthModule, PetsModule, PetHistoryModule, MockAuthModule],
   controllers: [AdoptionRequestsController],
-  providers: [AdoptionRequestsService],
-  exports: [AdoptionRequestsService],
+  providers: [
+    AdoptionRequestsService,
+    ManageAdoptionRequestsService,
+    ApproveAdoptionUseCase,
+    ShareContactUseCase,
+    RejectAdoptionUseCase,
+    AdoptionRequestSimulationService,
+  ],
 })
 export class AdoptionRequestsModule {}

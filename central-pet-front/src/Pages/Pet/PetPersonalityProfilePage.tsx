@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { api } from '@/lib/api';
 import PetProfileFactGrid, {
   type PetProfileFact,
 } from '@/Components/PetProfile/PetProfileFactGrid';
@@ -8,9 +9,11 @@ import PetProfileHero from '@/Components/PetProfile/PetProfileHero';
 import PetProfileOverview from '@/Components/PetProfile/PetProfileOverview';
 import PetProfilePersonalityList from '@/Components/PetProfile/PetProfilePersonalityList';
 import PetProfileSection from '@/Components/PetProfile/PetProfileSection';
+import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
+import type { PetApiResponse } from '@/Models/pet';
 import { petPersonalityOptions } from '@/storage/pets';
 import { initialPetRegisterFormData, type PetRegisterFormData } from '@/storage/pets';
-import { getPetById, getPetProfileById } from '@/storage/pets';
+import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
 
 const PetPersonalityProfilePage = () => {
@@ -18,6 +21,10 @@ const PetPersonalityProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
+  const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
+  const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   // Limpar a mensagem após 3 segundos
   useEffect(() => {
@@ -30,50 +37,49 @@ const PetPersonalityProfilePage = () => {
       return () => clearTimeout(timer);
     }
   }, [displayMessage, location.pathname, navigate]);
-  const numericPetId = Number(petId);
-
-  const profileState: {
-    formData: PetRegisterFormData;
-    selectedPersonalities: string[];
-  } = (() => {
-    if (!Number.isFinite(numericPetId)) {
-      return {
-        formData: initialPetRegisterFormData,
-        selectedPersonalities: [],
-      };
+  useEffect(() => {
+    if (!petId) {
+      setIsLoading(false);
+      setIsNotFound(true);
+      return;
     }
 
-    const savedProfile = getPetProfileById(numericPetId);
+    let isMounted = true;
+    const loadPet = async () => {
+      setIsLoading(true);
+      setIsNotFound(false);
 
-    if (savedProfile) {
-      return {
-        formData: savedProfile.formData,
-        selectedPersonalities: savedProfile.selectedPersonalities,
-      };
-    }
+      try {
+        const backendId = resolveBackendId(petId);
+        const response = await api.get<{ data: PetApiResponse }>(`/pets/${String(backendId)}`);
 
-    const petSummary = getPetById(numericPetId);
+        if (!isMounted) {
+          return;
+        }
 
-    if (!petSummary) {
-      return {
-        formData: initialPetRegisterFormData,
-        selectedPersonalities: [],
-      };
-    }
+        setFormData(mapPetApiResponseToRegisterFormData(response.data.data));
+        setSelectedPersonalities(response.data.data.selectedPersonalities ?? []);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
 
-    return {
-      formData: {
-        ...initialPetRegisterFormData,
-        name: petSummary.name,
-        species: petSummary.species,
-        profilePhoto: petSummary.photo,
-      },
-      selectedPersonalities: [],
+        setIsNotFound(true);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     };
-  })();
 
-  const { formData, selectedPersonalities } = profileState;
-  const editPath = Number.isFinite(numericPetId) ? routes.pets.edit.build(numericPetId) : undefined;
+    void loadPet();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [petId]);
+
+  const editPath = petId ? routes.pets.edit.build(petId) : undefined;
 
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
@@ -102,6 +108,18 @@ const PetPersonalityProfilePage = () => {
 
   return (
     <section className="mx-auto w-full max-w-[1320px] px-1 pb-16 pt-4">
+      {isLoading ? (
+        <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          Carregando perfil do pet...
+        </div>
+      ) : null}
+      {isNotFound && !isLoading ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+          <p className="text-sm font-medium text-red-700">
+            Pet não encontrado. Verifique se o ID está correto ou tente novamente mais tarde.
+          </p>
+        </div>
+      ) : null}
       {displayMessage && (
         <div
           className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4"
@@ -112,37 +130,39 @@ const PetPersonalityProfilePage = () => {
           <p className="text-sm font-medium text-emerald-700">{displayMessage}</p>
         </div>
       )}
-      <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-        <PetProfileHero formData={formData} />
+      {!isNotFound ? (
+        <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <PetProfileHero formData={formData} />
 
-        <div className="p-5 lg:p-6">
-          <div className="space-y-4">
-            <PetProfileOverview formData={formData} />
-            <PetProfileGallery
-              editPath={editPath}
-              name={formData.name}
-              photos={formData.galleryPhotos}
-            />
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <PetProfileSection title="Saude">
-              <PetProfileFactGrid items={healthItems} />
-            </PetProfileSection>
-
-            <PetProfileSection title="Comportamento">
-              <PetProfilePersonalityList options={activeOptions} />
-            </PetProfileSection>
-
-            <PetProfileSection title="Localizacao">
-              <PetProfileFactGrid
-                columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
-                items={locationItems}
+          <div className="p-5 lg:p-6">
+            <div className="space-y-4">
+              <PetProfileOverview formData={formData} />
+              <PetProfileGallery
+                editPath={editPath}
+                name={formData.name}
+                photos={formData.galleryPhotos}
               />
-            </PetProfileSection>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <PetProfileSection title="Saude">
+                <PetProfileFactGrid items={healthItems} />
+              </PetProfileSection>
+
+              <PetProfileSection title="Comportamento">
+                <PetProfilePersonalityList options={activeOptions} />
+              </PetProfileSection>
+
+              <PetProfileSection title="Localizacao">
+                <PetProfileFactGrid
+                  columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
+                  items={locationItems}
+                />
+              </PetProfileSection>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 };

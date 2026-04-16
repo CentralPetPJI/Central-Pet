@@ -414,3 +414,4 @@ yarn.lock
 .github
 .idea
 test-results
+.opencode

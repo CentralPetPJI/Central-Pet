@@ -1,4 +1,3 @@
-import defaultPetsData from './default-pets';
 import type { Pet } from '@/Models/pet';
 import {
   initialPetRegisterFormData,
@@ -64,7 +63,7 @@ export const getStoredPets = (): Pet[] => {
   const rawPets = window.localStorage.getItem(petsStorageKey);
 
   if (!rawPets) {
-    return defaultPetsData;
+    return [];
   }
 
   try {
@@ -72,14 +71,20 @@ export const getStoredPets = (): Pet[] => {
 
     if (!Array.isArray(parsedPets)) {
       window.localStorage.removeItem(petsStorageKey);
-      return defaultPetsData;
+      return [];
     }
 
     const validPets = parsedPets.filter(isPetLike);
-    return validPets.length > 0 ? validPets : defaultPetsData;
+
+    // Persist only valid pets to keep storage clean
+    if (validPets.length < parsedPets.length) {
+      window.localStorage.setItem(petsStorageKey, JSON.stringify(validPets));
+    }
+
+    return validPets;
   } catch {
     window.localStorage.removeItem(petsStorageKey);
-    return defaultPetsData;
+    return [];
   }
 };
 
@@ -108,7 +113,9 @@ export const buildPetFromRegisterForm = (
         ? personalityLabels.join(', ')
         : 'Perfil comportamental nao informado',
     notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
-    responsibleUserId,
+    responsibleUserId: responsibleUserId ?? formData.responsibleUserId,
+    sourceType: formData.sourceType,
+    sourceName: formData.sourceName,
   };
 };
 
@@ -170,6 +177,9 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
     sex: normalizedSex,
     size: normalizedSize,
     profilePhoto: pet.photo,
+    responsibleUserId: pet.responsibleUserId,
+    sourceType: pet.sourceType,
+    sourceName: pet.sourceName,
   };
 };
 

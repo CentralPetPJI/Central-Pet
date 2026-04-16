@@ -1,21 +1,25 @@
 import React from 'react';
+import { useMemo } from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import SidePanel from '@/Components/SidePanel';
 import { MockUserChoiceGate } from '@/Components/Auth/MockUserChoiceGate';
-import { getStoredPets } from '@/storage/pets';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes } from '@/routes';
 import { shouldDisplayMockChoiceGates } from '@/lib/dev-mode.ts';
+import { usePets } from '@/lib/pets';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const petsData = getStoredPets();
-
-  const speciesCounts = petsData.reduce<Record<string, number>>((counts, pet) => {
-    counts[pet.species] = (counts[pet.species] ?? 0) + 1;
-    return counts;
-  }, {});
+  const { pets } = usePets();
+  const speciesCounts = useMemo(
+    () =>
+      pets.reduce<Record<string, number>>((counts, pet) => {
+        counts[pet.species] = (counts[pet.species] ?? 0) + 1;
+        return counts;
+      }, {}),
+    [pets],
+  );
 
   const routedContent = useRoutes([
     routes.home,

@@ -6,5 +6,6 @@ declare namespace NodeJS {
     DATABASE_URL?: string;
     THROTTLE_TTL?: string;
     THROTTLE_LIMIT?: string;
+    ENABLE_MOCK_PETS?: string;
   }
 }

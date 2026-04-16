@@ -36,6 +36,8 @@ describe('Carousel', () => {
       </MemoryRouter>,
     );
 
+    expect(screen.getAllByText('Bolt')).toHaveLength(1);
+
     fireEvent.click(screen.getAllByText('Bolt')[0]);
 
     expect(screen.getByRole('heading', { level: 2, name: 'Bolt' })).toBeInTheDocument();

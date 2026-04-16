@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { AdoptionRequestsController } from './adoption-requests.controller';
 import { AdoptionRequestsService } from './adoption-requests.service';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
 
 describe('AdoptionRequestsController', () => {
   let controller: AdoptionRequestsController;
@@ -27,7 +28,10 @@ describe('AdoptionRequestsController', () => {
           useValue: adoptionRequestsServiceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(SessionGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     controller = module.get<AdoptionRequestsController>(AdoptionRequestsController);
   });

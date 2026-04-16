@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PetHistoryService } from './pet-history.service';
 
-type PetFindUnique = (args: unknown) => Promise<{ id: string } | null>;
+type PetFindUnique = (args: unknown) => Promise<{ id: string; deleted?: boolean } | null>;
 type UserFindUnique = (args: unknown) => Promise<{ id: string } | null>;
 type PetHistoryCreate = (args: unknown) => Promise<unknown>;
 type PetHistoryFindMany = (args: unknown) => Promise<unknown[]>;
@@ -48,6 +48,21 @@ describe('PetHistoryService', () => {
 
   it('should throw when pet does not exist on create', async () => {
     petFindUniqueMock.mockResolvedValue(null);
+
+    await expect(
+      service.create({
+        petId: '11111111-1111-1111-1111-111111111111',
+        eventType: 'CREATED',
+        description: 'Pet created',
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw when pet is soft deleted on create', async () => {
+    petFindUniqueMock.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+      deleted: true,
+    });
 
     await expect(
       service.create({

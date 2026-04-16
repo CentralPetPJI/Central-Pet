@@ -3,40 +3,59 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Param,
+  Patch,
   Post,
   Query,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import { ParseUUIDPipe } from '@nestjs/common';
-import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
+import { CurrentUser } from '@/decorators/current-user.decorator';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
+import type { MockUser } from '@/mocks';
+import type { PublicUser } from '@/modules/users/users.service';
 import { AdoptionRequestsService } from './adoption-requests.service';
+import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
+import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
+import type { AdoptionRequestActionResult } from './models';
+
+export type { AdoptionRequestActionResult };
 
 @Controller('adoption-requests')
 export class AdoptionRequestsController {
   constructor(private readonly adoptionRequestsService: AdoptionRequestsService) {}
 
-  @Post()
-  create(@Body() createAdoptionRequestDto: CreateAdoptionRequestDto) {
-    return this.adoptionRequestsService.create(createAdoptionRequestDto);
-  }
-
   @Get()
-  findReceived(@Query('type') type?: 'received' | 'sent', @Headers('x-user-id') userId?: string) {
-    if (!userId) {
-      throw new UnauthorizedException('User ID is required');
+  @UseGuards(SessionGuard)
+  async findAll(
+    @Query('type') type: 'received' | 'sent' = 'received',
+    @Query('responsibleUserId') responsibleUserId: string | undefined,
+    @Query('adopterId') adopterId: string | undefined,
+    @CurrentUser() user: MockUser | PublicUser,
+  ) {
+    if (type === 'sent') {
+      return this.adoptionRequestsService.findSent(adopterId ?? user.id);
     }
 
-    if (type && type !== 'received') {
-      throw new BadRequestException('Only "received" type is currently supported');
-    }
-
-    return this.adoptionRequestsService.findReceived(userId);
+    // default to received
+    return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.adoptionRequestsService.findOne(id);
+  @Patch(':id')
+  @UseGuards(SessionGuard)
+  async manage(
+    @Param('id') id: string,
+    @Body() dto: ManageAdoptionRequestDto,
+    @CurrentUser() user: MockUser | PublicUser,
+  ) {
+    return this.adoptionRequestsService.manageReceived(id, user.id, dto);
+  }
+
+  @Post('simulate')
+  @UseGuards(SessionGuard)
+  async simulate(
+    @Body() dto: SimulateAdoptionRequestDto,
+    @CurrentUser() user: MockUser | PublicUser,
+  ) {
+    return this.adoptionRequestsService.simulateReceived(user.id, dto);
   }
 }

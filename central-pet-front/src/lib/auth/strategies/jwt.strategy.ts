@@ -50,12 +50,10 @@ export class JwtAuthStrategy implements AuthStrategy {
    */
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      console.log("getting user")
       const response = await api.get<GetUserResponse>('/auth/me');
       return response.data.data.user;
     } catch (_error) {
       // Se não estiver autenticado ou sessão expirou, retorna null
-      console.error("error getting user", _error)
       return null;
     }
   }
@@ -65,6 +63,8 @@ export class JwtAuthStrategy implements AuthStrategy {
    * O backend retorna um cookie httpOnly com o sessionId.
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
+    await api.post('/auth/mode', { mode: 'jwt' });
+
     const response = await api.post<LoginResponse>('/auth/login', {
       email: credentials.email,
       password: credentials.password,

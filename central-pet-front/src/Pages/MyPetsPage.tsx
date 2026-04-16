@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
-import { getPublicIdFromBackend, getPetProfileById, getStoredPets } from '@/storage/pets';
+import { getPublicIdFromBackend } from '@/storage/pets';
 import { routes } from '@/routes';
 import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
 import type { PetApiResponse, PetListItem } from '@/Models/pet';
@@ -77,34 +77,7 @@ export default function MyPetsPage() {
         if (!isMounted) {
           return;
         }
-
-        // Alternativa: usar localStorage quando o backend não estiver disponível
-        try {
-          const localPets = getStoredPets().filter(
-            (pet) => pet.responsibleUserId === currentUser.id,
-          );
-
-          // Converter Pet[] do localStorage para MyPetItem[] esperado
-          const formattedPets: PetListItem[] = localPets.map((pet) => {
-            // Busca o perfil completo para pegar dados adicionais
-            const profile = getPetProfileById(pet.id);
-
-            return {
-              id: String(pet.id),
-              name: pet.name,
-              species: pet.species,
-              breed: profile?.formData.breed,
-              city: profile?.formData.city,
-              state: profile?.formData.state,
-              adoptionStatus: 'AVAILABLE', // Default para pets locais
-            };
-          });
-
-          setPets(formattedPets);
-          setErrorMessage(null); // Limpa mensagem de erro se localStorage funcionar
-        } catch {
-          setErrorMessage('Nao foi possivel carregar os pets cadastrados.');
-        }
+        setErrorMessage('Nao foi possivel carregar os pets cadastrados.');
       } finally {
         if (isMounted) {
           setIsLoading(false);

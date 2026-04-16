@@ -1,3 +1,5 @@
+import type { AdoptionRequestStatus } from './adoption-request-status';
+
 export interface Pet {
   id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
   name: string;
@@ -6,9 +8,9 @@ export interface Pet {
   behavioralCharacteristics: string;
   notes: string;
   photo: string;
-  responsibleUserId?: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  responsibleUserId: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
 }
 
 export interface Photo {
@@ -32,7 +34,7 @@ export interface PetApiResponse {
   tutor: string;
   shelter: string;
   city: string;
-  state?: string;
+  state: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -44,8 +46,8 @@ export interface PetApiResponse {
   selectedPersonalities: string[];
   responsibleUserId: string;
   adoptionStatus?: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,12 +62,10 @@ export interface PetListItem {
   adoptionStatus: string;
 }
 
-export type AdoptionRequestStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
-
 export interface ReceivedAdoptionRequest {
   id: string;
   pet: {
-    id: number;
+    id: number | string;
     name: string;
     species: string;
     city: string;
@@ -81,6 +81,9 @@ export interface ReceivedAdoptionRequest {
     state: string;
   };
   message: string;
+  adopterContactShareConsent: boolean;
   status: AdoptionRequestStatus;
+  note?: string;
   requestedAt: string;
+  updatedAt: string;
 }

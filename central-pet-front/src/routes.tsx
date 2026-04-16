@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
 import MyPetsPage from '@/Pages/MyPetsPage';
-import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceivedPage';
+import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceived/AdoptionRequestsReceivedPage';
 import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
 import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
 import Login from '@/Pages/Login/Login';

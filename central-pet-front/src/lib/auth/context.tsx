@@ -41,11 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshCurrentUser = useCallback(async () => {
     try {
-      console.log("refreshing user")
       const user = await strategy.getCurrentUser();
       setCurrentUser(user);
     } catch {
-      console.log("error refreshing user")
       setCurrentUser(null);
     }
   }, [strategy]);

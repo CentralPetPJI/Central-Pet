@@ -1,59 +1,116 @@
-import type { MockAdoptionRequest } from '@/mocks';
-import type { MockPet } from '@/mocks';
+import type { AdoptionRequestRecord } from './adoption-request-record';
+import type { AdoptionRequestStatus } from './adoption-request-status';
+import type { PetForAdoptionRequest } from '../../pets/pets.service';
 import type { MockUser } from '@/mocks';
+
+export type ReceivedAdoptionRequestPet = {
+  id: string;
+  name: string;
+  species: string;
+  city: string;
+  state: string;
+  responsibleUserId: string | undefined;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string | null | undefined;
+};
+
+export type ReceivedAdoptionRequestAdopter = {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+};
 
 export type ReceivedAdoptionRequest = {
   id: string;
-  pet: {
-    id: number;
-    name: string;
-    species: string;
-    city: string;
-    state: string;
-    responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
-    sourceName: string;
-  };
-  adopter: {
-    id: string;
-    name: string;
-    city: string;
-    state: string;
-  };
+  pet: ReceivedAdoptionRequestPet;
+  adopter: ReceivedAdoptionRequestAdopter;
   message: string;
-  status: MockAdoptionRequest['status'];
+  adopterContactShareConsent: boolean;
+  status: AdoptionRequestStatus;
+  note?: string;
   requestedAt: string;
+  updatedAt: string;
 };
 
 type ReceivedAdoptionRequestSource = {
-  request: MockAdoptionRequest;
-  pet: MockPet;
-  adopter: MockUser;
+  request: AdoptionRequestRecord;
+  pet: ReceivedAdoptionRequestPet;
+  adopter: ReceivedAdoptionRequestAdopter;
 };
 
-export const mapToReceivedAdoptionRequest = ({
-  request,
-  pet,
-  adopter,
-}: ReceivedAdoptionRequestSource): ReceivedAdoptionRequest => ({
-  id: request.id,
-  pet: {
+export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionRequestPet {
+  return {
     id: pet.id,
     name: pet.name,
     species: pet.species,
-    city: pet.city ?? 'UNKNOWN_CITY',
-    state: pet.state ?? 'UNKNOWN_STATE',
+    city: pet.city,
+    state: pet.state,
     responsibleUserId: pet.responsibleUserId,
-    sourceType: pet.sourceType ?? 'ONG',
-    sourceName: pet.sourceName ?? 'UNKNOWN_SOURCE',
-  },
-  adopter: {
-    id: adopter.id,
-    name: adopter.fullName,
-    city: adopter.city ?? 'UNKNOWN_CITY',
-    state: adopter.state ?? 'UNKNOWN_STATE',
-  },
-  message: request.message,
-  status: request.status,
-  requestedAt: request.requestedAt,
-});
+    sourceType: pet.sourceType,
+    sourceName: pet.sourceName,
+  };
+}
+
+export function mapAdopterForResponse(
+  adopterId: string,
+  mockUsersById: Map<string, MockUser>,
+  persistedUsersById: Map<string, { id: string; fullName: string }>,
+): ReceivedAdoptionRequestAdopter {
+  // Treat persisted users and mock users as the same kind of entity.
+  // Prefer persisted user when available, otherwise fall back to mock seed data.
+  const persistedUser = persistedUsersById.get(adopterId);
+  if (persistedUser) {
+    return {
+      id: persistedUser.id,
+      name: persistedUser.fullName,
+      city: '',
+      state: '',
+    };
+  }
+
+  const mockUser = mockUsersById.get(adopterId);
+  if (mockUser) {
+    return {
+      id: mockUser.id,
+      name: mockUser.fullName,
+      city: mockUser.city ?? '',
+      state: mockUser.state ?? '',
+    };
+  }
+
+  return {
+    id: adopterId,
+    name: 'Usuário não encontrado',
+    city: '',
+    state: '',
+  };
+}
+
+export function toRecord(request: {
+  id: string;
+  petId: string;
+  responsibleUserId: string;
+  adopterId: string;
+  adopterContactShareConsent: boolean;
+  message: string;
+  status: any;
+  note: string | null;
+  requestedAt: Date;
+  updatedAt: Date;
+  version?: number | null;
+}): AdoptionRequestRecord {
+  return {
+    id: request.id,
+    petId: request.petId,
+    responsibleUserId: request.responsibleUserId,
+    adopterId: request.adopterId,
+    adopterContactShareConsent: request.adopterContactShareConsent,
+    message: request.message,
+    status: request.status as AdoptionRequestStatus,
+    note: request.note,
+    requestedAt: request.requestedAt,
+    updatedAt: request.updatedAt,
+    version: request.version ?? 0,
+  };
+}

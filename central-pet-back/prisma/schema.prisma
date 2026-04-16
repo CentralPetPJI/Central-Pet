@@ -43,6 +43,7 @@ enum PetStatus {
 
 enum AdoptionRequestStatus {
   PENDING
+  CONTACT_SHARED
   APPROVED
   REJECTED
   CANCELLED
@@ -70,7 +71,9 @@ model User {
   updatedAt            DateTime           @updatedAt
 
   sessions             Session[]
-  adoptionRequests     AdoptionRequest[]
+  responsiblePets      Pet[]               @relation("ResponsibleUserPets")
+  responsibleAdoptionRequests AdoptionRequest[] @relation("ResponsibleUserAdoptionRequests")
+  adopterAdoptionRequests     AdoptionRequest[] @relation("AdopterAdoptionRequests")
   performedPetHistory  PetHistory[]       @relation("PerformedPetHistory")
 }
 
@@ -79,7 +82,7 @@ model Session {
   userId    String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
 }
@@ -105,34 +108,50 @@ model Pet {
   tutor              String
   shelter            String
   city               String
+  state              String
   contact            String
+  selectedPersonalitiesJson String         @default("[]")
+  responsibleUserId  String
+  sourceType         UserRole
+  sourceName         String
   status             PetStatus          @default(AVAILABLE)
+  deleted            Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
+  responsibleUser    User?              @relation("ResponsibleUserPets", fields: [responsibleUserId], references: [id], onDelete: Restrict)
   adoptionRequests   AdoptionRequest[]
   history            PetHistory[]
 
   @@index([status])
   @@index([species])
   @@index([city])
+  @@index([responsibleUserId])
+  @@index([deleted])
 }
 
 model AdoptionRequest {
-  id          String                @id @default(uuid())
-  petId       String
-  requesterId String
-  message     String?
-  status      AdoptionRequestStatus @default(PENDING)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  id                         String                @id @default(uuid())
+  petId                      String
+  responsibleUserId          String
+  adopterId                  String
+  adopterContactShareConsent Boolean               @default(false)
+  message                    String
+  status                     AdoptionRequestStatus @default(PENDING)
+  note                       String?
+  requestedAt                DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+  version                    Int                   @default(0)
 
-  pet         Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
-  requester   User                  @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  pet                        Pet                   @relation(fields: [petId], references: [id], onDelete: Restrict)
+  responsibleUser            User                  @relation("ResponsibleUserAdoptionRequests", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  adopter                    User                  @relation("AdopterAdoptionRequests", fields: [adopterId], references: [id], onDelete: Restrict)
 
+  @@index([responsibleUserId, requestedAt])
+  @@index([adopterId])
   @@index([petId])
-  @@index([requesterId])
-  @@index([status])
+
+  @@unique([id, version])
 }
 
 model PetHistory {
