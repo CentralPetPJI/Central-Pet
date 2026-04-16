@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import PetProfileFactGrid, {
   type PetProfileFact,
 } from '@/Components/PetProfile/PetProfileFactGrid';
@@ -20,6 +21,7 @@ const PetPersonalityProfilePage = () => {
   const { petId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
   const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
@@ -79,7 +81,8 @@ const PetPersonalityProfilePage = () => {
     };
   }, [petId]);
 
-  const editPath = petId ? routes.pets.edit.build(petId) : undefined;
+  const isOwner = currentUser?.id === formData.responsibleUserId;
+  const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
 
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
