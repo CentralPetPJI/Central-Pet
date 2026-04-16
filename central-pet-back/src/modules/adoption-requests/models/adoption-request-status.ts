@@ -1,24 +1,27 @@
-export const adoptionRequestStatuses = [
-  'pending',
-  'contact_shared',
-  'approved',
-  'rejected',
+export enum AdoptionRequestStatus {
+  PENDING = 'PENDING',
+  CONTACT_SHARED = 'CONTACT_SHARED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export const simulateAdoptionRequestInitialStatuses = [
+  AdoptionRequestStatus.PENDING,
+  AdoptionRequestStatus.CONTACT_SHARED,
 ] as const;
 
-export const simulateAdoptionRequestInitialStatuses = ['pending', 'contact_shared'] as const;
-
-export type AdoptionRequestStatus = (typeof adoptionRequestStatuses)[number];
 export type SimulateAdoptionRequestInitialStatus =
   (typeof simulateAdoptionRequestInitialStatuses)[number];
 
 export function canShareContactForStatus(status: AdoptionRequestStatus): boolean {
-  return status === 'pending';
+  return status === AdoptionRequestStatus.PENDING;
 }
 
 export function canApproveForStatus(status: AdoptionRequestStatus): boolean {
-  return status === 'contact_shared';
+  return status === AdoptionRequestStatus.CONTACT_SHARED;
 }
 
 export function canRejectForStatus(status: AdoptionRequestStatus): boolean {
-  return status === 'contact_shared';
+  return status === AdoptionRequestStatus.CONTACT_SHARED;
 }

@@ -1,11 +1,9 @@
-export const adoptionRequestStatuses = [
-  'pending',
-  'contact_shared',
-  'approved',
-  'rejected',
-] as const;
-
-export type AdoptionRequestStatus = (typeof adoptionRequestStatuses)[number];
+export enum AdoptionRequestStatus {
+  PENDING = 'PENDING',
+  CONTACT_SHARED = 'CONTACT_SHARED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
 
 type AdoptionRequestStatusPresentation = {
   label: string;
@@ -13,19 +11,19 @@ type AdoptionRequestStatusPresentation = {
 };
 
 const statusPresentationMap: Record<AdoptionRequestStatus, AdoptionRequestStatusPresentation> = {
-  pending: {
+  [AdoptionRequestStatus.PENDING]: {
     label: 'Pendente',
     className: 'bg-amber-100 text-amber-800',
   },
-  contact_shared: {
+  [AdoptionRequestStatus.CONTACT_SHARED]: {
     label: 'Contato compartilhado',
     className: 'bg-emerald-100 text-emerald-800',
   },
-  approved: {
+  [AdoptionRequestStatus.APPROVED]: {
     label: 'Aprovada',
     className: 'bg-emerald-100 text-emerald-800',
   },
-  rejected: {
+  [AdoptionRequestStatus.REJECTED]: {
     label: 'Recusada',
     className: 'bg-rose-100 text-rose-800',
   },
@@ -38,9 +36,9 @@ export function getAdoptionRequestStatusPresentation(
 }
 
 export function canShareContact(status: AdoptionRequestStatus): boolean {
-  return status === 'pending';
+  return status === AdoptionRequestStatus.PENDING;
 }
 
 export function canManageDecision(status: AdoptionRequestStatus): boolean {
-  return status === 'contact_shared';
+  return status === AdoptionRequestStatus.CONTACT_SHARED;
 }

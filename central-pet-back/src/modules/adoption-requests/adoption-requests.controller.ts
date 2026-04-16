@@ -16,6 +16,9 @@ import type { PublicUser } from '@/modules/users/users.service';
 import { AdoptionRequestsService } from './adoption-requests.service';
 import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
 import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
+import type { AdoptionRequestActionResult } from './models';
+
+export type { AdoptionRequestActionResult };
 
 @Controller('adoption-requests')
 export class AdoptionRequestsController {
@@ -24,14 +27,17 @@ export class AdoptionRequestsController {
   @Get()
   @UseGuards(SessionGuard)
   async findAll(
+    @Query('type') type: 'received' | 'sent' = 'received',
+    @Query('responsibleUserId') responsibleUserId: string | undefined,
+    @Query('adopterId') adopterId: string | undefined,
     @CurrentUser() user: MockUser | PublicUser,
-    @Query('type') type?: 'received' | 'sent',
   ) {
-    if (type && type !== 'received') {
-      throw new BadRequestException('Only "received" type is currently supported');
+    if (type === 'sent') {
+      return this.adoptionRequestsService.findSent(adopterId ?? user.id);
     }
 
-    return this.adoptionRequestsService.findReceived(user.id);
+    // default to received
+    return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
   }
 
   @Patch(':id')

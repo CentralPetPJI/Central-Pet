@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { mockUserIds } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PetHistoryService } from '../pet-history/pet-history.service';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { AdoptionRequestsService } from './adoption-requests.service';
-import type { AdoptionRequestStatus } from './models/adoption-request-status';
+import { ApproveAdoptionUseCase, ShareContactUseCase, RejectAdoptionUseCase } from './use-cases';
+
+import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
+import { MockUserPersistenceService } from '../mock-auth';
+import { AdoptionRequestStatus } from './models/adoption-request-status';
 
 type DbAdoptionRequest = {
   id: string;
@@ -24,7 +28,6 @@ describe('Servico de solicitacoes de adocao', () => {
   let service: AdoptionRequestsService;
   let records: DbAdoptionRequest[];
   let petsById: Map<string, PetForAdoptionRequest>;
-  let petHistoryCreateMock: jest.Mock;
   let prismaMock: {
     adoptionRequest: {
       findMany: jest.Mock;
@@ -48,6 +51,7 @@ describe('Servico de solicitacoes de adocao', () => {
     petHistory: {
       create: jest.Mock;
     };
+    $transaction: jest.Mock;
   };
 
   beforeEach(() => {
@@ -251,7 +255,48 @@ describe('Servico de solicitacoes de adocao', () => {
             };
           },
         ),
-        updateMany: jest.fn(() => ({ count: 1 })),
+        updateMany: jest.fn(
+          (args: {
+            where: {
+              id: string;
+              status?: { in?: string[] } | string;
+              responsibleUserId?: string;
+            };
+            data: { responsibleUserId?: string; status?: string };
+          }) => {
+            const pet = petsById.get(args.where.id);
+            if (!pet) {
+              return { count: 0 };
+            }
+
+            const statusMatches =
+              !args.where.status ||
+              (typeof args.where.status === 'object' &&
+                'in' in args.where.status &&
+                (args.where.status.in as string[]).includes(pet.adoptionStatus)) ||
+              (typeof args.where.status === 'string' && args.where.status === pet.adoptionStatus);
+
+            const responsibleUserMatches =
+              !args.where.responsibleUserId ||
+              args.where.responsibleUserId === pet.responsibleUserId;
+
+            if (!statusMatches || !responsibleUserMatches) {
+              return { count: 0 };
+            }
+
+            if (args.data.responsibleUserId) {
+              pet.responsibleUserId = args.data.responsibleUserId;
+            }
+            if (args.data.status) {
+              pet.adoptionStatus =
+                args.data.status === 'ADOPTED'
+                  ? 'ADOPTED'
+                  : (args.data.status as typeof pet.adoptionStatus);
+            }
+
+            return { count: 1 };
+          },
+        ),
       },
       petHistory: {
         create: jest.fn(() => ({
@@ -264,8 +309,6 @@ describe('Servico de solicitacoes de adocao', () => {
       $transaction: jest.fn(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (callback: (tx: any) => Promise<any>) => {
-          // Execute the callback with the same prisma mock as the transaction client
-
           return callback(prismaMock);
         },
       ),
@@ -299,9 +342,38 @@ describe('Servico de solicitacoes de adocao', () => {
       }),
     } as unknown as PetsService;
 
-    service = new AdoptionRequestsService(prismaMock as unknown as PrismaService, petsServiceMock, {
-      create: petHistoryCreateMock,
-    } as unknown as PetHistoryService);
+    const approveAdoptionUseCaseMock = new ApproveAdoptionUseCase(
+      prismaMock as unknown as PrismaService,
+      petsServiceMock,
+    );
+
+    const shareContactUseCaseMock = new ShareContactUseCase(prismaMock as unknown as PrismaService);
+
+    const rejectAdoptionUseCaseMock = new RejectAdoptionUseCase(
+      prismaMock as unknown as PrismaService,
+    );
+
+    const userPersistence = new MockUserPersistenceService(prismaMock as unknown as PrismaService);
+    const simulationService = new AdoptionRequestSimulationService(
+      prismaMock as unknown as PrismaService,
+      userPersistence,
+      petsServiceMock,
+    );
+
+    const manageService = new ManageAdoptionRequestsService(
+      prismaMock as unknown as PrismaService,
+      approveAdoptionUseCaseMock,
+      shareContactUseCaseMock,
+      rejectAdoptionUseCaseMock,
+    );
+
+    service = new AdoptionRequestsService(
+      prismaMock as unknown as PrismaService,
+      simulationService,
+      manageService,
+      petsServiceMock,
+      userPersistence,
+    );
   });
 
   it('deve simular solicitacao usando um usuario mock existente como adotante', async () => {
@@ -327,7 +399,7 @@ describe('Servico de solicitacoes de adocao', () => {
       service.manageReceived(simulated.data.id, mockUserIds.ONG_PATAS_DO_CENTRO, {
         action: 'approve',
       }),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(ConflictException);
   });
 
   it('deve bloquear compartilhamento sem autorizacao do adotante', async () => {
@@ -349,7 +421,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterContactShareConsent: true,
-      initialStatus: 'contact_shared',
+      initialStatus: AdoptionRequestStatus.CONTACT_SHARED,
     });
 
     const approved = await service.manageReceived(
@@ -361,12 +433,11 @@ describe('Servico de solicitacoes de adocao', () => {
       },
     );
 
-    expect(simulated.data.status).toBe('contact_shared');
-    expect(approved.data.status).toBe('approved');
+    expect(simulated.data.status).toBe('CONTACT_SHARED');
+    expect(approved.data.status).toBe('APPROVED');
     expect(approved.data.note).toBe('Adocao concluida apos visita presencial.');
     expect(petsById.get('pet-001')?.adoptionStatus).toBe('ADOPTED');
     expect(petsById.get('pet-001')?.responsibleUserId).toBe(approved.data.adopter.id);
-    // Verify petHistory was created via the transaction mock
     expect(prismaMock.petHistory.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -405,7 +476,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.RAFAEL_LIMA,
       adopterContactShareConsent: true,
-      initialStatus: 'contact_shared',
+      initialStatus: AdoptionRequestStatus.CONTACT_SHARED,
     });
 
     const pendingRequest = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
@@ -413,7 +484,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.ANA_SOUZA,
       adopterContactShareConsent: true,
-      initialStatus: 'pending',
+      initialStatus: AdoptionRequestStatus.PENDING,
     });
 
     const approved = await service.manageReceived(
@@ -428,15 +499,14 @@ describe('Servico de solicitacoes de adocao', () => {
     const allRequests = await service.findReceived(mockUserIds.ONG_PATAS_DO_CENTRO);
     const autoRejected = allRequests.data.find((request) => request.id === pendingRequest.data.id);
 
-    expect(approved.message).toContain('foram recusadas automaticamente');
-    expect(autoRejected?.status).toBe('rejected');
+    expect(approved.message).toContain('recusadas automaticamente');
+    expect(autoRejected?.status).toBe('REJECTED');
     expect(autoRejected?.note).toBe(
       'Solicitação encerrada automaticamente porque este pet já foi adotado.',
     );
   });
 
   it('deve impedir que o mesmo adotante abra mais de uma solicitacao para o mesmo doador', async () => {
-    // Primeira solicitação: Rafael para pet-001 do ONG_PATAS_DO_CENTRO
     await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
@@ -444,8 +514,6 @@ describe('Servico de solicitacoes de adocao', () => {
       adopterContactShareConsent: true,
     });
 
-    // Segunda solicitação: Rafael para pet-002 do MESMO doador (ONG_PATAS_DO_CENTRO)
-    // Isso deve falhar porque Rafael já tem uma solicitação pendente para ONG_PATAS_DO_CENTRO
     await expect(
       service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
         petId: 'pet-002',

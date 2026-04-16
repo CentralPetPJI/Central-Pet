@@ -1,14 +1,4 @@
 import type { AdoptionRequestStatus } from './adoption-request-status';
+import { AdoptionRequest } from '@/../generated/prisma/client';
 
-export type AdoptionRequestRecord = {
-  id: string;
-  petId: string;
-  responsibleUserId: string;
-  adopterId: string;
-  adopterContactShareConsent: boolean;
-  message: string;
-  status: AdoptionRequestStatus;
-  note: string | null;
-  requestedAt: Date;
-  updatedAt: Date;
-};
+export type AdoptionRequestRecord = AdoptionRequest;
