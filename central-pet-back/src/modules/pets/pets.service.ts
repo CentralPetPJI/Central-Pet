@@ -220,6 +220,7 @@ export class PetsService {
     }
   }
 
+  // TODO: Remover logica de user daqui, foi criado MockUserPersistenceService para isso
   private async upsertMockUser(mockUser: MockUser) {
     await this.prisma.user.upsert({
       where: { id: mockUser.id },
