@@ -13,6 +13,9 @@ const petsStub: Pet[] = [
     behavioralCharacteristics: 'Brincalhao',
     notes: 'Tutor: Ana',
     photo: 'https://example.com/bolt.png',
+    responsibleUserId: 'user-1',
+    sourceType: 'PESSOA_FISICA',
+    sourceName: 'Ana',
   },
 ];
 

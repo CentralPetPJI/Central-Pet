@@ -17,6 +17,7 @@ describe('mapPetApiResponseToPetListItem', () => {
       tutor: 'ONG Patas do Centro',
       shelter: 'Abrigo Central',
       city: 'São Paulo',
+      state: 'SP',
       contact: '(11) 99999-0000',
       vaccinated: true,
       neutered: true,
@@ -27,6 +28,8 @@ describe('mapPetApiResponseToPetListItem', () => {
       hearingLimitation: false,
       selectedPersonalities: [],
       responsibleUserId: 'user-1',
+      sourceType: 'ONG',
+      sourceName: 'ONG Patas do Centro',
       createdAt: '2026-04-04T00:00:00.000Z',
       updatedAt: '2026-04-04T00:00:00.000Z',
     });

@@ -231,7 +231,15 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
       const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
 
-      setFormData(validationResult.data);
+      setFormData({
+        ...validationResult.data,
+        responsibleUserId: currentUser.id,
+        sourceType: currentUser.role === 'ONG' ? 'ONG' : 'PESSOA_FISICA',
+        sourceName:
+          currentUser.role === 'ONG'
+            ? currentUser.organizationName || currentUser.fullName
+            : currentUser.fullName,
+      });
       window.localStorage.removeItem(petRegisterStorageKey);
       window.localStorage.removeItem(petPersonalityStorageKey);
 

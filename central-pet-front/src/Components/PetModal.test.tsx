@@ -12,6 +12,9 @@ const petStub: Pet = {
   behavioralCharacteristics: 'Calma, sociavel',
   notes: 'Contato: 11999999999',
   photo: 'https://example.com/luna.png',
+  responsibleUserId: 'user-2',
+  sourceType: 'PESSOA_FISICA',
+  sourceName: 'Luna',
 };
 
 describe('PetModal', () => {
