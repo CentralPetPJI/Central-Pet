@@ -14,7 +14,7 @@ export class PetResponseDto {
   tutor!: string;
   shelter!: string;
   city!: string;
-  state?: string;
+  state!: string;
   contact!: string;
   vaccinated!: boolean;
   neutered!: boolean;
@@ -26,8 +26,8 @@ export class PetResponseDto {
   selectedPersonalities!: string[];
   responsibleUserId!: string;
   adoptionStatus!: string;
-  sourceType?: string;
-  sourceName?: string;
+  sourceType!: string;
+  sourceName!: string;
   createdAt!: string;
   updatedAt!: string;
 

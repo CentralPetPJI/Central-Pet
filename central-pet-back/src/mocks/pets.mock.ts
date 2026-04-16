@@ -21,10 +21,10 @@ export type MockPet = {
   dewormed: boolean;
   adoptionStatus: string;
   city?: string;
-  state?: string;
+  state: string;
   responsibleUserId: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
   createdAt: string;
   updatedAt: string;
 };

@@ -83,6 +83,8 @@ describe('PetsService', () => {
     hearingLimitation: false,
     responsibleUserId: mockUserIds.RAFAEL_LIMA,
     selectedPersonalities: ['playful', 'friendly'],
+    sourceType: 'PESSOA_FISICA',
+    sourceName: 'Rafael Lima',
   });
 
   const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {

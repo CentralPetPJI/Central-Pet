@@ -112,6 +112,8 @@ describe('pet storage helpers', () => {
       behavioralCharacteristics: 'Curioso',
       notes: 'Tutor: ONG Patas do Centro.',
       responsibleUserId: 'user-3',
+      sourceType: 'ONG',
+      sourceName: 'ONG Patas do Centro',
     });
 
     expect(formData).toMatchObject({
@@ -127,6 +129,27 @@ describe('pet storage helpers', () => {
     const normalized = normalizePetRegisterFormData({
       name: 'Mia',
       galleryPhotos: ['https://example.com/mia-1.png'],
+      responsibleUserId: 'user-1',
+      sourceType: 'ONG',
+      sourceName: 'ONG Mia',
+      age: '2 anos',
+      species: 'dog',
+      breed: 'SRD',
+      sex: 'Femea',
+      size: 'Medio',
+      microchipped: true,
+      tutor: 'ONG Mia',
+      shelter: 'Abrigo Mia',
+      city: 'São Paulo',
+      state: 'SP',
+      contact: '(11) 99999-0000',
+      vaccinated: true,
+      neutered: true,
+      dewormed: true,
+      needsHealthCare: false,
+      physicalLimitation: false,
+      visualLimitation: false,
+      hearingLimitation: false,
     });
 
     expect(normalized.profilePhoto).toBe(initialPetRegisterFormData.profilePhoto);

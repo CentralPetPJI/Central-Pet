@@ -24,7 +24,7 @@ type PetRecord = {
   tutor: string;
   shelter: string;
   city: string;
-  state?: string;
+  state: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -34,9 +34,9 @@ type PetRecord = {
   visualLimitation: boolean;
   hearingLimitation: boolean;
   selectedPersonalities: string[];
-  responsibleUserId?: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  responsibleUserId: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
   adoptionStatus: 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
   createdAt: string;
   updatedAt: string;
@@ -156,7 +156,7 @@ export class PetsService {
     tutor: string;
     shelter: string;
     city: string;
-    state: string | null;
+    state: string;
     contact: string;
     vaccinated: boolean;
     neutered: boolean;
@@ -166,9 +166,9 @@ export class PetsService {
     visualLimitation: boolean;
     hearingLimitation: boolean;
     selectedPersonalitiesJson: string;
-    responsibleUserId: string | null;
-    sourceType: 'ONG' | 'PESSOA_FISICA' | null;
-    sourceName: string | null;
+    responsibleUserId: string;
+    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceName: string;
     status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
     createdAt: Date;
     updatedAt: Date;
@@ -187,7 +187,7 @@ export class PetsService {
       tutor: pet.tutor,
       shelter: pet.shelter,
       city: pet.city,
-      state: pet.state ?? undefined,
+      state: pet.state,
       contact: pet.contact,
       vaccinated: pet.vaccinated,
       neutered: pet.neutered,
@@ -197,9 +197,9 @@ export class PetsService {
       visualLimitation: pet.visualLimitation,
       hearingLimitation: pet.hearingLimitation,
       selectedPersonalities: this.parseJsonArray(pet.selectedPersonalitiesJson),
-      responsibleUserId: pet.responsibleUserId ?? undefined,
-      sourceType: pet.sourceType ?? undefined,
-      sourceName: pet.sourceName ?? undefined,
+      responsibleUserId: pet.responsibleUserId,
+      sourceType: pet.sourceType,
+      sourceName: pet.sourceName,
       adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
       createdAt: pet.createdAt.toISOString(),
       updatedAt: pet.updatedAt.toISOString(),
@@ -214,7 +214,9 @@ export class PetsService {
     );
 
     if (invalidTraits.length > 0) {
-      throw new BadRequestException(`Invalid personality traits: ${invalidTraits.join(', ')}`);
+      throw new BadRequestException(
+        `Traits de personalidade inválidos: ${invalidTraits.join(', ')}`,
+      );
     }
   }
 
@@ -297,12 +299,12 @@ export class PetsService {
           tutor: pet.sourceName ?? 'Tutor não informado',
           shelter: pet.sourceName ?? 'Origem não informada',
           city: pet.city ?? 'Cidade não informada',
-          state: pet.state ?? null,
+          state: pet.state,
           contact: 'Contato não informado',
           selectedPersonalitiesJson: '[]',
           responsibleUserId: pet.responsibleUserId,
-          sourceType: pet.sourceType ?? null,
-          sourceName: pet.sourceName ?? null,
+          sourceType: pet.sourceType,
+          sourceName: pet.sourceName,
           status: 'AVAILABLE',
           deleted: false,
         },
@@ -314,7 +316,7 @@ export class PetsService {
 
   async create(createPetDto: CreatePetDto) {
     if (!createPetDto.responsibleUserId) {
-      throw new BadRequestException('responsibleUserId is required');
+      throw new BadRequestException('O campo responsibleUserId é obrigatório');
     }
 
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
@@ -335,7 +337,7 @@ export class PetsService {
         tutor: createPetDto.tutor,
         shelter: createPetDto.shelter,
         city: createPetDto.city,
-        state: createPetDto.state ?? null,
+        state: createPetDto.state,
         contact: createPetDto.contact,
         vaccinated: createPetDto.vaccinated,
         neutered: createPetDto.neutered,
@@ -346,8 +348,8 @@ export class PetsService {
         hearingLimitation: createPetDto.hearingLimitation,
         selectedPersonalitiesJson: JSON.stringify(selectedPersonalities),
         responsibleUserId: createPetDto.responsibleUserId,
-        sourceType: null,
-        sourceName: null,
+        sourceType: createPetDto.sourceType,
+        sourceName: createPetDto.sourceName,
         status: 'AVAILABLE',
         deleted: false,
       },
@@ -383,7 +385,7 @@ export class PetsService {
     });
 
     if (!pet || pet.deleted) {
-      throw new NotFoundException(`Pet with id "${id}" not found`);
+      throw new NotFoundException(`Pet com id "${id}" não encontrado`);
     }
 
     return {
@@ -420,10 +422,10 @@ export class PetsService {
       name: pet.name,
       species: this.normalizeSpeciesForResponse(pet.species),
       city: pet.city,
-      state: pet.state ?? undefined,
+      state: pet.state,
       responsibleUserId: pet.responsibleUserId,
-      sourceType: pet.sourceType ?? undefined,
-      sourceName: pet.sourceName ?? undefined,
+      sourceType: pet.sourceType,
+      sourceName: pet.sourceName,
       adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
     };
   }

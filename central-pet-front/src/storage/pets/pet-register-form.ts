@@ -25,6 +25,9 @@ export interface PetRegisterFormData {
   physicalLimitation: boolean;
   visualLimitation: boolean;
   hearingLimitation: boolean;
+  responsibleUserId: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
 }
 
 export const petRegisterFormSchema = z.object({
@@ -49,6 +52,9 @@ export const petRegisterFormSchema = z.object({
   physicalLimitation: z.boolean(),
   visualLimitation: z.boolean(),
   hearingLimitation: z.boolean(),
+  responsibleUserId: z.string().trim().min(1, 'Informe o usuário responsável pelo pet.'),
+  sourceType: z.enum(['ONG', 'PESSOA_FISICA'], { error: 'Selecione o tipo de origem.' }),
+  sourceName: z.string().trim().min(1, 'Informe o nome da origem (ONG, abrigo ou pessoa física).'),
 });
 
 export const normalizePetRegisterFormData = (
@@ -85,6 +91,9 @@ export const initialPetRegisterFormData: PetRegisterFormData = {
   physicalLimitation: false,
   visualLimitation: false,
   hearingLimitation: false,
+  responsibleUserId: '',
+  sourceType: 'ONG',
+  sourceName: 'Abrigo Reencontro',
 };
 
 export const petSpeciesOptions = [
