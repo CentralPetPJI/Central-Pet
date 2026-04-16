@@ -8,13 +8,13 @@ import {
 /**
  * Testes E2E para verificar persistência de sessão após refresh
  *
- * Estes testes usam JWT (autenticação real) e verificam que:
+ * Estes testes usam autenticação por sessão (cookie httpOnly) e verificam que:
  * - Sessão persiste após refresh
  * - Cookies são mantidos pelo navegador
  * - Backend reconhece a sessão após reload
  */
 
-test.describe("Persistência de sessão (JWT)", () => {
+test.describe("Persistência de sessão", () => {
   test("deve manter sessão do usuário após refresh da página", async ({
     page,
     request,

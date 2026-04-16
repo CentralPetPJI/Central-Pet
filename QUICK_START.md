@@ -131,10 +131,10 @@ pnpm test:all
 - Múltiplos usuários disponíveis para simular diferentes cenários
 - Configurado em `VITE_AUTH_STRATEGY=mock`
 
-**Trocar para JWT (futuro):**
+**Trocar para sessão:**
 
 - Edite `central-pet-front/.env.development`
-- Mude para `VITE_AUTH_STRATEGY=jwt`
+- Mude para `VITE_AUTH_STRATEGY=session`
 
 ---
 

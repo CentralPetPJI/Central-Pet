@@ -18,5 +18,5 @@ export { useAuth } from './use-auth';
 
 // Strategies
 export { MockAuthStrategy } from './strategies/mock.strategy';
-export { JwtAuthStrategy } from './strategies/jwt.strategy';
+export { SessionAuthStrategy } from './strategies/session.strategy';
 export { createAuthStrategy, type AuthStrategyType } from './strategies/factory';

@@ -1,6 +1,6 @@
 export const SESSION_COOKIE_NAME = 'central_pet_session';
 
-export type SessionCookieMode = 'jwt' | 'mock';
+export type SessionCookieMode = 'session' | 'mock';
 
 export type ParsedSessionCookie = {
   mode: SessionCookieMode;
@@ -24,7 +24,7 @@ export function parseSessionCookieValue(raw?: string | null): ParsedSessionCooki
 
   if (separatorIndex < 0) {
     return {
-      mode: 'jwt',
+      mode: 'session',
       value: raw,
     };
   }
@@ -32,7 +32,7 @@ export function parseSessionCookieValue(raw?: string | null): ParsedSessionCooki
   const mode = raw.slice(0, separatorIndex);
   const value = raw.slice(separatorIndex + 1);
 
-  if ((mode !== 'jwt' && mode !== 'mock') || !value) {
+  if ((mode !== 'session' && mode !== 'mock') || !value) {
     return null;
   }
 

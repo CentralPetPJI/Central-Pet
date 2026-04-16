@@ -1,5 +1,5 @@
 /**
- * Estratégia de autenticação JWT
+ * Estratégia de autenticação por sessão
  *
  * Implementa autenticação usando sessões com cookies httpOnly.
  * O backend gerencia as sessões e retorna cookies seguros.
@@ -28,16 +28,16 @@ type CreateUserResponse = {
 };
 
 /**
- * Estratégia de autenticação JWT com cookies httpOnly.
+ * Estratégia de autenticação por sessão com cookies httpOnly.
  *
  * Utiliza cookies httpOnly gerenciados pelo backend para segurança contra XSS.
- * O token nunca fica exposto no JavaScript do cliente.
+ * O sessionId nunca fica exposto no JavaScript do cliente.
  */
-export class JwtAuthStrategy implements AuthStrategy {
-  readonly type = 'jwt' as const;
+export class SessionAuthStrategy implements AuthStrategy {
+  readonly type = 'session' as const;
 
   /**
-   * Inicializa a autenticação JWT.
+   * Inicializa a autenticação por sessão.
    * Não precisa fazer nada pois o cookie é gerenciado automaticamente.
    */
   async initialize(): Promise<void> {
@@ -63,7 +63,7 @@ export class JwtAuthStrategy implements AuthStrategy {
    * O backend retorna um cookie httpOnly com o sessionId.
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    await api.post('/auth/mode', { mode: 'jwt' });
+    await api.post('/auth/mode', { mode: 'session' });
 
     const response = await api.post<LoginResponse>('/auth/login', {
       email: credentials.email,

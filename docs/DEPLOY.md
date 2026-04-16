@@ -161,7 +161,7 @@ NODE_ENV=production
 
 # === Frontend ===
 VITE_API_BASE_URL="https://centraupet.com.br/api"
-VITE_AUTH_STRATEGY=production  # Não usar mock em produção!
+VITE_AUTH_STRATEGY=session  # Não usar mock em produção!
 VITE_DISPLAY_MOCK_CHOICE_GATE=false
 ```
 

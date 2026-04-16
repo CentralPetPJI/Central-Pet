@@ -1,11 +1,5 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PetHistoryService } from '../../pet-history/pet-history.service';
 import { PetsService } from '../../pets/pets.service';
 import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dto';
 import type { AdoptionRequestRecord } from '@/modules/adoption-requests/models';

@@ -38,11 +38,11 @@ pnpm dev
 
 Use o que preferir! Ambos funcionam.
 
-### Como mudo entre mock auth e JWT?
+### Como mudo entre mock auth e sessão?
 
 Edite `central-pet-front/.env.development`:
 `VITE_AUTH_STRATEGY=mock` (padrão, mais fácil)
-`VITE_AUTH_STRATEGY=jwt`
+`VITE_AUTH_STRATEGY=session`
 
 ---
 
@@ -139,7 +139,7 @@ pnpm install
 ### Como faço login em desenvolvimento?
 
 - **Mock (`VITE_AUTH_STRATEGY=mock`)**: não exige credenciais reais. Use o seletor de usuário mock na interface.
-- **JWT (`VITE_AUTH_STRATEGY=jwt`)**: use login/cadastro normal (email e senha), com sessão por cookie.
+- **Sessão (`VITE_AUTH_STRATEGY=session`)**: use login/cadastro normal (email e senha), com sessão por cookie.
 
 ### Quais são os usuários disponíveis?
 

@@ -31,7 +31,7 @@ export class AuthController {
       message: result.message,
       data: {
         user: result.data.user,
-        sessionId: buildSessionCookieValue('jwt', result.data.sessionId),
+        sessionId: buildSessionCookieValue('session', result.data.sessionId),
       },
     };
   }
@@ -40,11 +40,11 @@ export class AuthController {
   @UseInterceptors(CookieInterceptor)
   setMode(@Body() dto: SetAuthModeDto) {
     // Two-step authentication flow:
-    // 1. setMode sets the auth mode (mock or jwt) with 'pending' state via session cookie
+    // 1. setMode sets the auth mode (mock or session) with 'pending' state via session cookie
     //    - For 'mock' mode: next step is POST /api/mock-auth/select-user with userId
-    //    - For 'jwt' mode: next step is POST /api/auth/login with email/password
+    //    - For 'session' mode: next step is POST /api/auth/login with email/password
     // 2. The second-step endpoint (select-user or login) will update the session cookie
-    //    with the authenticated state (mode:userId or mode:token)
+    //    with the authenticated state (mode:userId or mode:sessionId)
     // Using 'pending' state prevents premature authentication while mode is being selected.
     if (dto.mode === 'mock' && !isMockAuthEnabled()) {
       throw new UnauthorizedException('Mock auth is not available');
@@ -62,7 +62,7 @@ export class AuthController {
   me(@Cookies(SESSION_COOKIE_NAME) sessionCookie?: string) {
     const parsedSession = parseSessionCookieValue(sessionCookie);
 
-    if (!parsedSession || parsedSession.mode !== 'jwt') {
+    if (!parsedSession || parsedSession.mode !== 'session') {
       throw new UnauthorizedException('Authentication required');
     }
 
@@ -73,8 +73,8 @@ export class AuthController {
   @UseInterceptors(CookieInterceptor)
   async logout(@Cookies(SESSION_COOKIE_NAME) sessionCookie?: string) {
     const parsedSession = parseSessionCookieValue(sessionCookie);
-    const jwtSessionId = parsedSession?.mode === 'jwt' ? parsedSession.value : undefined;
-    const result = await this.authService.logout(jwtSessionId);
+    const sessionId = parsedSession?.mode === 'session' ? parsedSession.value : undefined;
+    const result = await this.authService.logout(sessionId);
 
     return {
       ...result,

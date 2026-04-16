@@ -1,15 +1,12 @@
 /**
- * Camada de abstração de autenticação - Definições de tipos
+ * Interface para estratégias de autenticação.
  *
- * Este módulo define os contratos para o padrão de estratégia de autenticação.
- * A implementação atual usa autenticação mock para desenvolvimento e testes E2E.
- * A autenticação JWT será implementada na v1.1.
+ * Atualmente suporta dois tipos:
+ * - MockAuthStrategy: autenticação mock para desenvolvimento e testes.
+ * - SessionAuthStrategy: autenticação por sessão com cookies httpOnly.
  */
 
-/**
- * Estrutura de dados do usuário autenticado.
- * Corresponde exatamente ao tipo AuthUser atual de auth-context.tsx.
- */
+// Tipos bases são definidos no topo do arquivo para evitar dependência circular
 export type AuthUser = {
   id: string;
   fullName: string;
@@ -23,53 +20,28 @@ export type AuthUser = {
   updatedAt: string;
 };
 
-// ============================================================================
-// Tipos de credenciais
-// ============================================================================
-
-/**
- * Credenciais para operação de login.
- * Usadas pela estratégia JWT; a estratégia mock usa selectUser.
- */
 export type LoginCredentials = {
   email: string;
   password: string;
 };
 
-/**
- * Dados para cadastro de usuário.
- * Campos específicos por perfil são exigidos condicionalmente com base no valor de role.
- */
 export type RegisterData = {
+  fullName: string;
   email: string;
   password: string;
-  fullName: string;
   role: 'PESSOA_FISICA' | 'ONG';
-  // Campos opcionais específicos por perfil
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
 };
 
-// ============================================================================
-// Interface da estratégia
-// ============================================================================
-
-/**
- * Interface de estratégia de autenticação
- *
- * Define o contrato para todas as estratégias de autenticação.
- * Cada estratégia implementa a mesma interface, mas com comportamentos diferentes:
- * - MockAuthStrategy: usa usuários mock do backend e salva seleção no localStorage
- * - JwtAuthStrategy: autenticação real com tokens JWT (v1.1)
- */
 export interface AuthStrategy {
   /**
    * Identificador da estratégia.
    * Usado para habilitar condicionalmente interfaces específicas (ex.: seletor de usuário mock).
    */
-  readonly type: 'mock' | 'jwt';
+  readonly type: 'mock' | 'session';
 
   // -------------------------------------------------------------------------
   // Ciclo de vida
@@ -79,7 +51,7 @@ export interface AuthStrategy {
    * Inicializa a estratégia.
    * É chamado uma vez quando o AuthProvider é montado.
    * Mock: carrega usuários mock do backend.
-   * JWT: verifica sessão/token existente.
+   * Session: verifica sessão existente.
    */
   initialize(): Promise<void>;
 
@@ -96,21 +68,21 @@ export interface AuthStrategy {
   /**
    * Autentica com credenciais.
    * Mock: lança erro (use selectUser).
-   * JWT: POST /auth/login com credenciais.
+   * Session: POST /auth/login com credenciais.
    */
   login(credentials: LoginCredentials): Promise<AuthUser>;
 
   /**
    * Encerra a sessão atual.
    * Mock: remove o ID de usuário mock salvo.
-   * JWT: POST /auth/logout para limpar o cookie.
+   * Session: POST /auth/logout para limpar o cookie.
    */
   logout(): Promise<void>;
 
   /**
    * Cadastra uma nova conta de usuário.
    * Mock: lança erro (usuários mock vêm do backend).
-   * JWT: POST /auth/register com os dados do usuário.
+   * Session: POST /users com os dados do usuário.
    */
   register(data: RegisterData): Promise<AuthUser>;
 
