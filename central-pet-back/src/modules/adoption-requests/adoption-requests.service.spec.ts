@@ -314,11 +314,6 @@ describe('Servico de solicitacoes de adocao', () => {
       ),
     };
 
-    petHistoryCreateMock = jest.fn(() => ({
-      message: 'Pet history created successfully',
-      data: {},
-    }));
-
     const petsServiceMock = {
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
       finalizeAdoption: jest.fn((id: string, newResponsibleUserId: string) => {
