@@ -68,6 +68,7 @@ export const normalizePetRegisterFormData = (
 export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetRegisterFormData> =>
   typeof data === 'object' && data !== null && !Array.isArray(data);
 
+// TODO: Remover os dados iniciais e deixar o formulário vazio, forçando o usuário a preencher tudo (exceto as informações iniciais como localização e contato, que podem ser pré-preenchidas com base no perfil do usuário ou na localização atual).
 export const initialPetRegisterFormData: PetRegisterFormData = {
   profilePhoto: dogImage,
   galleryPhotos: [],
