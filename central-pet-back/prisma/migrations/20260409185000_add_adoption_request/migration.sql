@@ -27,7 +27,6 @@ ALTER TABLE "AdoptionRequest"
 UPDATE "AdoptionRequest" ar
 SET
   "adopterId" = ar."requesterId",
-  "responsibleUserId" = p."responsibleUserId",
   "message" = COALESCE(ar."message", 'Interesse em adocao'),
   "requestedAt" = COALESCE(ar."createdAt", CURRENT_TIMESTAMP)
 FROM "Pet" p
