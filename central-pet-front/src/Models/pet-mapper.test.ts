@@ -40,7 +40,7 @@ describe('mapPetApiResponseToPetListItem', () => {
       species: 'CAT',
       breed: 'SRD',
       city: 'São Paulo',
-      state: undefined,
+      state: 'SP',
       adoptionStatus: 'AVAILABLE',
     });
   });

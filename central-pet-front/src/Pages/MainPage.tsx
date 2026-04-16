@@ -15,9 +15,9 @@ const MainPage: React.FC = () => {
 
       <div className="mb-8 grid gap-4 rounded-3xl bg-linear-to-r from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 2xl:grid-cols-[minmax(0,1fr)_auto_auto] 2xl:items-center">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Fluxo de doacao e adocao</h2>
+          <h2 className="text-xl font-bold text-slate-900">Encontre ou cadastre um companheiro</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Cadastre um pet para adoção ou encontre o companheiro ideal para levar para casa.
+            Cadastre seu pet para adoção ou adote um novo amigo para levar para casa.
           </p>
         </div>
         <Link

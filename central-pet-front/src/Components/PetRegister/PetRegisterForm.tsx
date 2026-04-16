@@ -40,7 +40,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const [saveMessage, setSaveMessage] = useState('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const isEditMode = Boolean(petId);
-  const latestPetPath = isEditMode && petId ? routes.pets.detail.build(petId) : '';
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
@@ -259,7 +258,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
         <PetRegisterHeader isEditMode={isEditMode} />
         <PetRegisterActions
           isEditMode={isEditMode}
-          latestPetPath={latestPetPath}
+          petId={petId}
           onSave={handleSavePet}
           saveMessage={saveMessage}
           selectedPersonalitiesCount={selectedPersonalities.length}

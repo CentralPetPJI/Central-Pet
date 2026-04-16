@@ -18,11 +18,12 @@ COPY central-pet-back ./central-pet-back
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
 
-RUN pnpm --filter central-pet-back exec prisma generate \
-    && pnpm --filter central-pet-back build \
+RUN pnpm --filter central-pet-back build \
     && pnpm --config.inject-workspace-packages=true --filter central-pet-back deploy --prod --ignore-scripts /prod/central-pet-back \
     && cp -r central-pet-back/dist /prod/central-pet-back/dist \
-    && cp -r central-pet-back/generated /prod/central-pet-back/generated
+    && cp -r central-pet-back/generated /prod/central-pet-back/generated \
+    && cd /prod/central-pet-back \
+    && pnpm exec prisma generate
 
 FROM node:24.12.0-alpine AS runner
 
@@ -37,4 +38,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["node", "dist/src/main.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
