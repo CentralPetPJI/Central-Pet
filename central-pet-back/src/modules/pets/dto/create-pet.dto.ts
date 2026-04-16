@@ -65,10 +65,9 @@ export class CreatePetDto {
   @IsNotEmpty()
   city: string;
 
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  state?: string;
+  state: string;
 
   @IsString()
   @IsNotEmpty()
@@ -95,10 +94,9 @@ export class CreatePetDto {
   @IsBoolean()
   hearingLimitation: boolean;
 
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  responsibleUserId?: string;
+  responsibleUserId: string;
 
   @IsOptional()
   @IsArray()
@@ -106,4 +104,12 @@ export class CreatePetDto {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   selectedPersonalities?: string[];
+
+  @IsString()
+  @IsIn(['ONG', 'PESSOA_FISICA'])
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+
+  @IsString()
+  @IsNotEmpty()
+  sourceName: string;
 }
