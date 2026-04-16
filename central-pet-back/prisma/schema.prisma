@@ -42,10 +42,11 @@ enum PetStatus {
 }
 
 enum AdoptionRequestStatus {
-  pending
-  contact_shared
-  approved
-  rejected
+  PENDING
+  CONTACT_SHARED
+  APPROVED
+  REJECTED
+  CANCELLED
 }
 
 enum PetHistoryEventType {
@@ -107,12 +108,12 @@ model Pet {
   tutor              String
   shelter            String
   city               String
-  state              String?
+  state              String
   contact            String
   selectedPersonalitiesJson String         @default("[]")
-  responsibleUserId  String?
-  sourceType         UserRole?
-  sourceName         String?
+  responsibleUserId  String
+  sourceType         UserRole
+  sourceName         String
   status             PetStatus          @default(AVAILABLE)
   deleted            Boolean            @default(false)
   createdAt          DateTime           @default(now())
@@ -136,10 +137,11 @@ model AdoptionRequest {
   adopterId                  String
   adopterContactShareConsent Boolean               @default(false)
   message                    String
-  status                     AdoptionRequestStatus @default(pending)
+  status                     AdoptionRequestStatus @default(PENDING)
   note                       String?
   requestedAt                DateTime              @default(now())
   updatedAt                  DateTime              @updatedAt
+  version                    Int                   @default(0)
 
   pet                        Pet                   @relation(fields: [petId], references: [id], onDelete: Restrict)
   responsibleUser            User                  @relation("ResponsibleUserAdoptionRequests", fields: [responsibleUserId], references: [id], onDelete: Restrict)
@@ -148,6 +150,8 @@ model AdoptionRequest {
   @@index([responsibleUserId, requestedAt])
   @@index([adopterId])
   @@index([petId])
+
+  @@unique([id, version])
 }
 
 model PetHistory {
