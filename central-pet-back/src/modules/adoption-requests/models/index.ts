@@ -12,7 +12,6 @@ export {
 export {
   mapPetForResponse,
   mapAdopterForResponse,
-  toRecord,
   type ReceivedAdoptionRequest,
   type ReceivedAdoptionRequestAdopter,
   type ReceivedAdoptionRequestPet,

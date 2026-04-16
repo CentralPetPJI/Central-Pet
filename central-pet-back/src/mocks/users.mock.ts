@@ -14,8 +14,8 @@ export type MockUser = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export const mockUserIds = {
@@ -34,8 +34,8 @@ export const mockUsers: MockUser[] = [
     role: 'ONG',
     organizationName: 'ONG Patas do Centro',
     cnpj: '12.345.678/0001-90',
-    createdAt: '2026-03-01T10:00:00.000Z',
-    updatedAt: '2026-03-01T10:00:00.000Z',
+    createdAt: new Date('2026-03-01T10:00:00.000Z'),
+    updatedAt: new Date('2026-03-01T10:00:00.000Z'),
   },
   {
     id: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
@@ -44,8 +44,8 @@ export const mockUsers: MockUser[] = [
     role: 'ONG',
     organizationName: 'Lar Temporario Quatro Patas',
     cnpj: '98.765.432/0001-10',
-    createdAt: '2026-03-02T14:00:00.000Z',
-    updatedAt: '2026-03-02T14:00:00.000Z',
+    createdAt: new Date('2026-03-02T14:00:00.000Z'),
+    updatedAt: new Date('2026-03-02T14:00:00.000Z'),
   },
   {
     id: mockUserIds.JULIANA_MARTINS,
@@ -54,8 +54,8 @@ export const mockUsers: MockUser[] = [
     role: 'PESSOA_FISICA',
     birthDate: '1988-11-03',
     cpf: '456.789.123-00',
-    createdAt: '2026-03-04T08:15:00.000Z',
-    updatedAt: '2026-03-04T08:15:00.000Z',
+    createdAt: new Date('2026-03-04T08:15:00.000Z'),
+    updatedAt: new Date('2026-03-04T08:15:00.000Z'),
   },
   {
     id: mockUserIds.RAFAEL_LIMA,
@@ -66,8 +66,8 @@ export const mockUsers: MockUser[] = [
     state: 'SP',
     birthDate: '1994-06-15',
     cpf: '123.456.789-00',
-    createdAt: '2026-03-05T09:30:00.000Z',
-    updatedAt: '2026-03-05T09:30:00.000Z',
+    createdAt: new Date('2026-03-05T09:30:00.000Z'),
+    updatedAt: new Date('2026-03-05T09:30:00.000Z'),
   },
   {
     id: mockUserIds.ANA_SOUZA,
@@ -78,8 +78,8 @@ export const mockUsers: MockUser[] = [
     state: 'SP',
     birthDate: '1990-01-20',
     cpf: '987.654.321-00',
-    createdAt: '2026-03-06T16:20:00.000Z',
-    updatedAt: '2026-03-06T16:20:00.000Z',
+    createdAt: new Date('2026-03-06T16:20:00.000Z'),
+    updatedAt: new Date('2026-03-06T16:20:00.000Z'),
   },
 ];
 

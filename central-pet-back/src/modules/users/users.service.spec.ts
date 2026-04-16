@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { makePrismaMock } from '@/utils/prisma-mock';
 
 describe('UsersService', () => {
   type CreateUserInput = {
@@ -17,34 +18,38 @@ describe('UsersService', () => {
   };
 
   let service: UsersService;
-  let prismaMock: {
-    user: {
-      findFirst: jest.Mock;
-      findUnique: jest.Mock;
-      create: jest.Mock;
-    };
-  };
+  let prismaMock = makePrismaMock();
 
   beforeEach(() => {
-    prismaMock = {
-      user: {
-        findFirst: jest.fn().mockResolvedValue(null),
-        findUnique: jest.fn().mockResolvedValue(null),
-        create: jest.fn().mockImplementation(({ data }: { data: CreateUserInput }) => ({
-          id: 'user-1',
-          fullName: data.fullName,
-          email: data.email,
-          role: data.role,
-          birthDate: data.birthDate ?? null,
-          cpf: data.cpf ?? null,
-          organizationName: data.organizationName ?? null,
-          cnpj: data.cnpj ?? null,
-          passwordHash: data.passwordHash,
-          createdAt: new Date('2026-01-01T00:00:00.000Z'),
-          updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-        })),
-      },
-    };
+    prismaMock = makePrismaMock();
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockImplementation(
+      (args: {
+        data: {
+          fullName: string;
+          email: string;
+          role: string;
+          birthDate?: string;
+          cpf?: string;
+          organizationName?: string;
+          cnpj?: string;
+          passwordHash: string;
+        };
+      }) => ({
+        id: 'user-1',
+        fullName: args.data.fullName,
+        email: args.data.email,
+        role: args.data.role as 'PESSOA_FISICA' | 'ONG',
+        birthDate: args.data.birthDate ?? null,
+        cpf: args.data.cpf ?? null,
+        organizationName: args.data.organizationName ?? null,
+        cnpj: args.data.cnpj ?? null,
+        passwordHash: args.data.passwordHash,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      }),
+    );
 
     service = new UsersService(prismaMock as unknown as PrismaService);
   });
@@ -68,7 +73,11 @@ describe('UsersService', () => {
   });
 
   it('deve rejeitar e-mails duplicados', async () => {
-    prismaMock.user.findFirst.mockResolvedValueOnce({ id: 'existing' });
+    prismaMock.user.findFirst.mockResolvedValueOnce({
+      id: 'existing',
+      email: 'existing@example.com',
+      role: 'PESSOA_FISICA' as const,
+    } as never);
 
     await expect(service.create(makeAdopterDto())).rejects.toThrow(ConflictException);
   });

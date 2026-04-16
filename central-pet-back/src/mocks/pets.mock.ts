@@ -25,8 +25,8 @@ export type MockPet = {
   responsibleUserId: string;
   sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 /**
@@ -55,8 +55,8 @@ export const mockPets: MockPet[] = [
     responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
     sourceType: 'ONG',
     sourceName: 'ONG Patas do Centro',
-    createdAt: '2026-03-10T10:00:00.000Z',
-    updatedAt: '2026-03-10T10:00:00.000Z',
+    createdAt: new Date('2026-03-10T10:00:00.000Z'),
+    updatedAt: new Date('2026-03-10T10:00:00.000Z'),
   },
   {
     id: 2,
@@ -77,8 +77,8 @@ export const mockPets: MockPet[] = [
     responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
     sourceType: 'ONG',
     sourceName: 'ONG Patas do Centro',
-    createdAt: '2026-03-11T14:00:00.000Z',
-    updatedAt: '2026-03-11T14:00:00.000Z',
+    createdAt: new Date('2026-03-11T14:00:00.000Z'),
+    updatedAt: new Date('2026-03-11T14:00:00.000Z'),
   },
   {
     id: 3,
@@ -99,8 +99,8 @@ export const mockPets: MockPet[] = [
     responsibleUserId: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
     sourceType: 'ONG',
     sourceName: 'Lar Temporario Quatro Patas',
-    createdAt: '2026-03-12T09:00:00.000Z',
-    updatedAt: '2026-03-12T09:00:00.000Z',
+    createdAt: new Date('2026-03-12T09:00:00.000Z'),
+    updatedAt: new Date('2026-03-12T09:00:00.000Z'),
   },
   {
     id: 4,
@@ -121,8 +121,8 @@ export const mockPets: MockPet[] = [
     responsibleUserId: mockUserIds.JULIANA_MARTINS,
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Juliana Martins',
-    createdAt: '2026-03-13T16:00:00.000Z',
-    updatedAt: '2026-03-13T16:00:00.000Z',
+    createdAt: new Date('2026-03-13T16:00:00.000Z'),
+    updatedAt: new Date('2026-03-13T16:00:00.000Z'),
   },
   {
     id: 5,
@@ -143,7 +143,7 @@ export const mockPets: MockPet[] = [
     responsibleUserId: mockUserIds.JULIANA_MARTINS,
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Juliana Martins',
-    createdAt: '2026-03-14T11:00:00.000Z',
-    updatedAt: '2026-03-14T11:00:00.000Z',
+    createdAt: new Date('2026-03-14T11:00:00.000Z'),
+    updatedAt: new Date('2026-03-14T11:00:00.000Z'),
   },
 ];
