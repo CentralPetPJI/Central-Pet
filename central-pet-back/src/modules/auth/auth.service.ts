@@ -71,6 +71,7 @@ export class AuthService {
 
   async logout(sessionId?: string | null) {
     if (sessionId) {
+      // TODO: acho que é soft delete, pra manter histórico de sessões e permitir auditoria, etc. Mas por ora tá ok deletar mesmo.
       await this.prisma.session.deleteMany({
         where: { id: sessionId },
       });

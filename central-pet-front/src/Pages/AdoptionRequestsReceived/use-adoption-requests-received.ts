@@ -228,7 +228,7 @@ export function useAdoptionRequestsReceived({
         {
           petId: pet.id,
           petResponsibleUserId: pet.responsibleUserId,
-          initialStatus: simulateWithSharedContact ? 'contact_shared' : 'pending',
+          initialStatus: simulateWithSharedContact ? 'CONTACT_SHARED' : 'PENDING',
           adopterContactShareConsent: simulateContactShareConsent,
         },
       );

@@ -113,7 +113,9 @@ export const buildPetFromRegisterForm = (
         ? personalityLabels.join(', ')
         : 'Perfil comportamental nao informado',
     notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
-    responsibleUserId,
+    responsibleUserId: responsibleUserId ?? formData.responsibleUserId,
+    sourceType: formData.sourceType,
+    sourceName: formData.sourceName,
   };
 };
 
@@ -175,6 +177,9 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
     sex: normalizedSex,
     size: normalizedSize,
     profilePhoto: pet.photo,
+    responsibleUserId: pet.responsibleUserId,
+    sourceType: pet.sourceType,
+    sourceName: pet.sourceName,
   };
 };
 

@@ -197,53 +197,34 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       shelter: formData.shelter.trim(),
       city: formData.city.trim(),
       contact: formData.contact.trim(),
+      sourceType: currentUser.role,
+      sourceName: currentUser.organizationName || currentUser.fullName,
+      state: formData.state.trim() || 'SP',
     };
     const validationResult = petRegisterFormSchema.safeParse(normalizedFormData);
 
     if (!validationResult.success) {
       setFormErrors(mapIssuesToErrors(validationResult.error.issues));
-      setSaveMessage('');
+      setSaveMessage(
+        'Ocorreu um erro de validacao. Verifique os campos destacados e tente novamente.',
+      );
       return;
     }
 
     setFormErrors({});
 
     try {
-      const backendPayload = {
-        profilePhoto: validationResult.data.profilePhoto,
-        galleryPhotos: validationResult.data.galleryPhotos ?? [],
-        name: validationResult.data.name,
-        age: validationResult.data.age,
-        species: validationResult.data.species, // 'dog' | 'cat'
-        breed: validationResult.data.breed,
-        sex: validationResult.data.sex, // 'Macho' | 'Femea'
-        size: validationResult.data.size, // 'Pequeno' | 'Medio' | 'Grande'
-        microchipped: validationResult.data.microchipped,
-        tutor: validationResult.data.tutor,
-        shelter: validationResult.data.shelter,
-        city: validationResult.data.city,
-        contact: validationResult.data.contact,
-        vaccinated: validationResult.data.vaccinated,
-        neutered: validationResult.data.neutered,
-        dewormed: validationResult.data.dewormed,
-        needsHealthCare: validationResult.data.needsHealthCare,
-        physicalLimitation: validationResult.data.physicalLimitation,
-        visualLimitation: validationResult.data.visualLimitation,
-        hearingLimitation: validationResult.data.hearingLimitation,
-        selectedPersonalities: selectedPersonalities,
-      };
-
       let response: { data: { message: string; data: PetApiResponse } };
 
       if (isEditMode && petId) {
         const backendId = resolveBackendId(petId);
         response = await api.patch<{ message: string; data: PetApiResponse }>(
           `/pets/${String(backendId)}`,
-          backendPayload,
+          normalizedFormData,
         );
       } else {
         response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
-          ...backendPayload,
+          ...normalizedFormData,
           responsibleUserId: currentUser.id,
         });
       }

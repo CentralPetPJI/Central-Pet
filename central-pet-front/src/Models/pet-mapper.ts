@@ -40,4 +40,7 @@ export const mapPetApiResponseToRegisterFormData = (pet: PetApiResponse): PetReg
   physicalLimitation: pet.physicalLimitation,
   visualLimitation: pet.visualLimitation,
   hearingLimitation: pet.hearingLimitation,
+  responsibleUserId: pet.responsibleUserId ?? '',
+  sourceType: pet.sourceType ?? 'ONG',
+  sourceName: pet.sourceName ?? '',
 });

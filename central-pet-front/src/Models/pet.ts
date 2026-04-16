@@ -8,9 +8,9 @@ export interface Pet {
   behavioralCharacteristics: string;
   notes: string;
   photo: string;
-  responsibleUserId?: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  responsibleUserId: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
 }
 
 export interface Photo {
@@ -34,7 +34,7 @@ export interface PetApiResponse {
   tutor: string;
   shelter: string;
   city: string;
-  state?: string;
+  state: string;
   contact: string;
   vaccinated: boolean;
   neutered: boolean;
@@ -46,8 +46,8 @@ export interface PetApiResponse {
   selectedPersonalities: string[];
   responsibleUserId: string;
   adoptionStatus?: string;
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
-  sourceName?: string;
+  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceName: string;
   createdAt: string;
   updatedAt: string;
 }
