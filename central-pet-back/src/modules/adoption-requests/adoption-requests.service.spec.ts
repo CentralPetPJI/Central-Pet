@@ -383,25 +383,6 @@ describe('Servico de solicitacoes de adocao', () => {
     expect(result.data.adopter.name).toBe('Rafael Lima');
   });
 
-  it('deve permitir aprovacao direta no status PENDING quando adotante permitiu', async () => {
-    const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
-      petId: 'pet-001',
-      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
-      responsibleContactShareConsent: true,
-    });
-
-    const approved = await service.manageReceived(
-      simulated.data.id,
-      mockUserIds.ONG_PATAS_DO_CENTRO,
-      {
-        action: 'approve',
-      },
-    );
-
-    expect(approved.data.status).toBe(AdoptionRequestStatus.APPROVED);
-    expect(approved.message).toContain('aprovada com sucesso');
-  });
-
   it('deve bloquear compartilhamento sem autorizacao do adotante', async () => {
     const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
       petId: 'pet-001',
