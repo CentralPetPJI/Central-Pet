@@ -49,7 +49,9 @@ test.describe("profile-workflow", () => {
 
     // Validação do pet
     await page.goto("/");
-    await expect(page.getByRole("img", { name: "Pet Segredo" })).toHaveCount(1);
+    const elements = page.getByRole("img", { name: "Pet Segredo" });
+    // OBS: Pode duplicar por conta do carousel ser um loop infinito, mas o importante é garantir que ele aparece
+    expect(await elements.count()).toBeGreaterThan(1);
 
     // 2. Desativar conta
     await page.goto("/profile");
