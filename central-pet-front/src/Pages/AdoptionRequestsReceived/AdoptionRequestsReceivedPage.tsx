@@ -23,15 +23,15 @@ export default function AdoptionRequestsReceivedPage() {
     isSimulationPanelOpen,
     selectedPetId,
     isSimulating,
-    simulateWithSharedContact,
-    simulateContactShareConsent,
+    simulateResponsibleContactShareConsent,
+    simulateAdopterContactShareConsent,
     rejectionModalData,
     rejectionReason,
     approvalModalData,
     approvalNote,
     setSelectedPetId,
-    setSimulateWithSharedContact,
-    setSimulateContactShareConsent,
+    setSimulateResponsibleContactShareConsent,
+    setSimulateAdopterContactShareConsent,
     setRejectionReason,
     setApprovalNote,
     loadOwnPets,
@@ -73,11 +73,11 @@ export default function AdoptionRequestsReceivedPage() {
           selectedPetId={selectedPetId}
           isLoadingOwnPets={isLoadingOwnPets}
           isSimulating={isSimulating}
-          simulateWithSharedContact={simulateWithSharedContact}
-          simulateContactShareConsent={simulateContactShareConsent}
+          simulateResponsibleContactShareConsent={simulateResponsibleContactShareConsent}
+          simulateAdopterContactShareConsent={simulateAdopterContactShareConsent}
           onSelectedPetIdChange={setSelectedPetId}
-          onSimulateWithSharedContactChange={setSimulateWithSharedContact}
-          onSimulateContactShareConsentChange={setSimulateContactShareConsent}
+          onSimulateResponsibleContactShareConsentChange={setSimulateResponsibleContactShareConsent}
+          onSimulateAdopterContactShareConsentChange={setSimulateAdopterContactShareConsent}
           onSimulate={() => void simulateRequest()}
         />
       ) : null}
@@ -99,7 +99,7 @@ export default function AdoptionRequestsReceivedPage() {
         </div>
       ) : null}
 
-      {!isLoading && !errorMessage && requests.length > 0 ? (
+      {!isLoading && requests.length > 0 ? (
         <div className="grid gap-4">
           {requests.map((request) => (
             <AdoptionRequestCard

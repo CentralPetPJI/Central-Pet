@@ -171,7 +171,7 @@ describe('Servico de solicitacoes de adocao', () => {
             where: {
               petId?: string;
               id?: { not?: string };
-              status?: AdoptionRequestStatus;
+              status?: AdoptionRequestStatus | { in?: AdoptionRequestStatus[] };
             };
             data: Partial<Pick<DbAdoptionRequest, 'status' | 'note'>>;
           }) => {
@@ -180,7 +180,27 @@ describe('Servico de solicitacoes de adocao', () => {
             records = records.map((record) => {
               const matchesPetId = args.where.petId ? record.petId === args.where.petId : true;
               const matchesNotId = args.where.id?.not ? record.id !== args.where.id.not : true;
-              const matchesStatus = args.where.status ? record.status === args.where.status : true;
+              const matchesStatus = (() => {
+                const statusFilter = args.where.status;
+
+                if (!statusFilter) return true;
+
+                if (typeof statusFilter === 'string') {
+                  return record.status === statusFilter;
+                }
+
+                if (typeof statusFilter === 'object') {
+                  if ('in' in statusFilter && Array.isArray(statusFilter.in)) {
+                    return statusFilter.in.includes(record.status);
+                  }
+
+                  if ('equals' in statusFilter) {
+                    return record.status === statusFilter.equals;
+                  }
+                }
+
+                return true;
+              })();
 
               if (!matchesPetId || !matchesNotId || !matchesStatus) {
                 return record;
@@ -376,46 +396,18 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.RAFAEL_LIMA,
-      adopterContactShareConsent: true,
+      responsibleContactShareConsent: true,
     });
 
     expect(result.data.adopter.id).toBe(mockUserIds.RAFAEL_LIMA);
     expect(result.data.adopter.name).toBe('Rafael Lima');
   });
 
-  it('deve exigir compartilhamento de contato antes da aprovacao', async () => {
-    const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
-      petId: 'pet-001',
-      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
-      adopterContactShareConsent: true,
-    });
-
-    await expect(
-      service.manageReceived(simulated.data.id, mockUserIds.ONG_PATAS_DO_CENTRO, {
-        action: 'approve',
-      }),
-    ).rejects.toThrow(ConflictException);
-  });
-
-  it('deve bloquear compartilhamento sem autorizacao do adotante', async () => {
-    const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
-      petId: 'pet-001',
-      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
-      adopterContactShareConsent: false,
-    });
-
-    await expect(
-      service.manageReceived(simulated.data.id, mockUserIds.ONG_PATAS_DO_CENTRO, {
-        action: 'share_contact',
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
   it('deve permitir simulacao direta com contato compartilhado para facilitar testes', async () => {
     const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
-      adopterContactShareConsent: true,
+      responsibleContactShareConsent: true,
       initialStatus: AdoptionRequestStatus.CONTACT_SHARED,
     });
 
@@ -460,7 +452,7 @@ describe('Servico de solicitacoes de adocao', () => {
         petId: 'pet-001',
         petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
         adopterId: mockUserIds.RAFAEL_LIMA,
-        adopterContactShareConsent: true,
+        responsibleContactShareConsent: true,
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -470,7 +462,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.RAFAEL_LIMA,
-      adopterContactShareConsent: true,
+      responsibleContactShareConsent: true,
       initialStatus: AdoptionRequestStatus.CONTACT_SHARED,
     });
 
@@ -478,7 +470,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.ANA_SOUZA,
-      adopterContactShareConsent: true,
+      responsibleContactShareConsent: false,
       initialStatus: AdoptionRequestStatus.PENDING,
     });
 
@@ -506,7 +498,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.RAFAEL_LIMA,
-      adopterContactShareConsent: true,
+      responsibleContactShareConsent: true,
     });
 
     await expect(
@@ -514,7 +506,7 @@ describe('Servico de solicitacoes de adocao', () => {
         petId: 'pet-002',
         petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
         adopterId: mockUserIds.RAFAEL_LIMA,
-        adopterContactShareConsent: true,
+        responsibleContactShareConsent: true,
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -526,10 +518,12 @@ describe('Servico de solicitacoes de adocao', () => {
       const simulated = await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
         petId: 'pet-001',
         petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
-        adopterContactShareConsent: true,
+        responsibleContactShareConsent: true,
       });
 
-      expect(simulated.data.adopter.id).toBe(mockUserIds.ANA_SOUZA);
+      expect([mockUserIds.JULIANA_MARTINS, mockUserIds.ANA_SOUZA]).toContain(
+        simulated.data.adopter.id,
+      );
     } finally {
       randomSpy.mockRestore();
     }

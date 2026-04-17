@@ -81,6 +81,7 @@ export interface ReceivedAdoptionRequest {
     state: string;
   };
   message: string;
+  responsibleContactShareConsent: boolean;
   adopterContactShareConsent: boolean;
   status: AdoptionRequestStatus;
   note?: string;

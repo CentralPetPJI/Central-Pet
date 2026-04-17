@@ -2,20 +2,14 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { hashPassword } from './password.util';
+import { makePrismaMock } from '@/utils/prisma-mock';
 
 describe('AuthService', () => {
   let usersService: jest.Mocked<UsersService>;
   let authService: AuthService;
-  let prismaMock: {
-    session: {
-      create: jest.Mock;
-      findUnique: jest.Mock;
-      delete: jest.Mock;
-      deleteMany: jest.Mock;
-    };
-  };
+  let prismaMock = makePrismaMock();
 
   beforeEach(() => {
     usersService = {
@@ -24,14 +18,10 @@ describe('AuthService', () => {
       toPublicUser: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
 
-    prismaMock = {
-      session: {
-        create: jest.fn().mockResolvedValue({ id: 'session-1' }),
-        findUnique: jest.fn(),
-        delete: jest.fn().mockResolvedValue(undefined),
-        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-    };
+    prismaMock = makePrismaMock();
+    prismaMock.session.create.mockResolvedValue({ id: 'session-1' });
+    prismaMock.session.delete.mockResolvedValue(undefined);
+    prismaMock.session.deleteMany.mockResolvedValue({ count: 1 });
 
     authService = new AuthService(usersService, prismaMock as unknown as PrismaService);
   });
@@ -61,8 +51,8 @@ describe('AuthService', () => {
       birthDate: '1995-05-10',
       organizationName: null,
       cnpj: null,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
 
     const result = await authService.login({
@@ -99,8 +89,8 @@ describe('AuthService', () => {
       birthDate: '1995-05-10',
       organizationName: null,
       cnpj: null,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
 
     const loginResult = await authService.login({

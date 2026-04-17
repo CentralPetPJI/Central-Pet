@@ -27,6 +27,7 @@ export type ReceivedAdoptionRequest = {
   adopter: ReceivedAdoptionRequestAdopter;
   message: string;
   adopterContactShareConsent: boolean;
+  responsibleContactShareConsent: boolean;
   status: AdoptionRequestStatus;
   note?: string;
   requestedAt: string;
@@ -84,33 +85,5 @@ export function mapAdopterForResponse(
     name: 'Usuário não encontrado',
     city: '',
     state: '',
-  };
-}
-
-export function toRecord(request: {
-  id: string;
-  petId: string;
-  responsibleUserId: string;
-  adopterId: string;
-  adopterContactShareConsent: boolean;
-  message: string;
-  status: any;
-  note: string | null;
-  requestedAt: Date;
-  updatedAt: Date;
-  version?: number | null;
-}): AdoptionRequestRecord {
-  return {
-    id: request.id,
-    petId: request.petId,
-    responsibleUserId: request.responsibleUserId,
-    adopterId: request.adopterId,
-    adopterContactShareConsent: request.adopterContactShareConsent,
-    message: request.message,
-    status: request.status as AdoptionRequestStatus,
-    note: request.note,
-    requestedAt: request.requestedAt,
-    updatedAt: request.updatedAt,
-    version: request.version ?? 0,
   };
 }

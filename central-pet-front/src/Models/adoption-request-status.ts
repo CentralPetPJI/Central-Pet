@@ -40,5 +40,7 @@ export function canShareContact(status: AdoptionRequestStatus): boolean {
 }
 
 export function canManageDecision(status: AdoptionRequestStatus): boolean {
-  return status === AdoptionRequestStatus.CONTACT_SHARED;
+  return (
+    status === AdoptionRequestStatus.PENDING || status === AdoptionRequestStatus.CONTACT_SHARED
+  );
 }

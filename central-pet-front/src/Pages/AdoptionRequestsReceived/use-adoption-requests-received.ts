@@ -12,6 +12,7 @@ type UseAdoptionRequestsReceivedParams = {
   isAuthLoading: boolean;
 };
 
+// TODO: refatorar esse hook, talvez usar zustand para organizar melhor os estados e funcoes relacionados as solicitacoes recebidas, e separar a logica de simulacao em um hook a parte
 export function useAdoptionRequestsReceived({
   currentUserId,
   isAuthLoading,
@@ -26,8 +27,10 @@ export function useAdoptionRequestsReceived({
   const [isSimulationPanelOpen, setIsSimulationPanelOpen] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState('');
   const [isSimulating, setIsSimulating] = useState(false);
-  const [simulateWithSharedContact, setSimulateWithSharedContact] = useState(true);
-  const [simulateContactShareConsent, setSimulateContactShareConsent] = useState(true);
+  const [simulateResponsibleContactShareConsent, setSimulateResponsibleContactShareConsent] =
+    useState(true);
+  const [simulateAdopterContactShareConsent, setSimulateAdopterContactShareConsent] =
+    useState(true);
   const [rejectionModalData, setRejectionModalData] = useState<AdoptionRequestModalData | null>(
     null,
   );
@@ -35,7 +38,6 @@ export function useAdoptionRequestsReceived({
   const [approvalModalData, setApprovalModalData] = useState<AdoptionRequestModalData | null>(null);
   const [approvalNote, setApprovalNote] = useState('');
 
-  // Request token to ignore stale responses from async loadRequests calls
   const requestIdRef = useRef<number>(0);
 
   const closeRejectionModal = useCallback(() => {
@@ -163,7 +165,7 @@ export function useAdoptionRequestsReceived({
         );
         setActionMessage(response.data.message);
 
-        if (action === 'approve' && currentUserId) {
+        if (currentUserId) {
           await loadRequests(currentUserId);
         }
 
@@ -228,15 +230,19 @@ export function useAdoptionRequestsReceived({
         {
           petId: pet.id,
           petResponsibleUserId: pet.responsibleUserId,
-          initialStatus: simulateWithSharedContact ? 'CONTACT_SHARED' : 'PENDING',
-          adopterContactShareConsent: simulateContactShareConsent,
+          initialStatus: simulateResponsibleContactShareConsent ? 'CONTACT_SHARED' : 'PENDING',
+          adopterContactShareConsent: simulateAdopterContactShareConsent,
+          responsibleContactShareConsent: simulateResponsibleContactShareConsent,
         },
       );
 
       setActionMessage(response.data.message);
       await loadRequests(currentUserId);
-    } catch {
-      setErrorMessage('Nao foi possivel simular a solicitacao no momento.');
+    } catch (error) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Nao foi possivel simular a solicitacao no momento.';
+      setErrorMessage(errorMessage);
     } finally {
       setIsSimulating(false);
     }
@@ -245,8 +251,8 @@ export function useAdoptionRequestsReceived({
     loadRequests,
     ownPets,
     selectedPetId,
-    simulateContactShareConsent,
-    simulateWithSharedContact,
+    simulateAdopterContactShareConsent,
+    simulateResponsibleContactShareConsent,
   ]);
 
   const openApprovalModal = useCallback((request: ReceivedAdoptionRequest) => {
@@ -276,15 +282,15 @@ export function useAdoptionRequestsReceived({
     isSimulationPanelOpen,
     selectedPetId,
     isSimulating,
-    simulateWithSharedContact,
-    simulateContactShareConsent,
+    simulateResponsibleContactShareConsent,
+    simulateAdopterContactShareConsent,
     rejectionModalData,
     rejectionReason,
     approvalModalData,
     approvalNote,
     setSelectedPetId,
-    setSimulateWithSharedContact,
-    setSimulateContactShareConsent,
+    setSimulateResponsibleContactShareConsent: setSimulateResponsibleContactShareConsent,
+    setSimulateAdopterContactShareConsent,
     setRejectionReason,
     setApprovalNote,
     loadOwnPets,

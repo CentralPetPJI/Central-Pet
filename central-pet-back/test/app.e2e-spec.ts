@@ -7,6 +7,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { HealthController } from '@/modules/health/health.controller';
 import { UsersController } from '@/modules/users/users.controller';
 import { TestDatabaseHelper } from './helpers/test-database.helper';
+import { login } from './helpers/e2e.helper';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
@@ -66,13 +67,10 @@ describe('App (e2e)', () => {
     });
 
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
-    const response = await request(httpServer)
-      .post('/api/auth/login')
-      .send({
-        email: 'maria@example.com',
-        password: 'Senha123!',
-      })
-      .expect(201);
+    const response = await login(httpServer, {
+      email: 'maria@example.com',
+      password: 'Senha123!',
+    });
 
     const body = response.body as {
       message: string;
@@ -85,9 +83,7 @@ describe('App (e2e)', () => {
 
     expect(body.message).toBe('Login successful');
     expect(body.data.user.email).toBe('maria@example.com');
-    // Verify sessionId is NOT exposed in response body (sanitized by interceptor)
     expect(body.data.sessionId).toBeUndefined();
-    // Verify cookie is set via Set-Cookie header
     expect(setCookie).toBeDefined();
     expect(setCookie?.[0]).toContain('central_pet_session=');
   });

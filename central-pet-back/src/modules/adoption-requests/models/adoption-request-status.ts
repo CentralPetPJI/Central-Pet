@@ -23,5 +23,7 @@ export function canApproveForStatus(status: AdoptionRequestStatus): boolean {
 }
 
 export function canRejectForStatus(status: AdoptionRequestStatus): boolean {
-  return status === AdoptionRequestStatus.CONTACT_SHARED;
+  return (
+    status === AdoptionRequestStatus.PENDING || status === AdoptionRequestStatus.CONTACT_SHARED
+  );
 }

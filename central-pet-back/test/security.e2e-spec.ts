@@ -6,6 +6,7 @@ import { AppModule } from '@/app.module';
 import { setupApp } from '@/bootstrap/setup-app';
 import { PrismaService } from '@/prisma/prisma.service';
 import { TestDatabaseHelper } from './helpers/test-database.helper';
+import { createUser, login, getSessionCookie } from './helpers/e2e.helper';
 
 describe('Security (e2e)', () => {
   let app: INestApplication;
@@ -93,35 +94,22 @@ describe('Security (e2e)', () => {
   });
 
   it('sets secure session cookie attributes and hides sessionId on login', async () => {
-    // Criar usuário para o teste
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
 
-    await request(httpServer)
-      .post('/api/users')
-      .send({
-        fullName: 'Maria Silva',
-        email: 'maria@example.com',
-        password: 'Senha123!',
-        role: 'PESSOA_FISICA',
-        cpf: '12345678901',
-      })
-      .expect(201);
+    await createUser(httpServer, {
+      fullName: 'Maria Silva',
+      email: 'maria@example.com',
+      password: 'Senha123!',
+      role: 'PESSOA_FISICA',
+      cpf: '12345678901',
+    });
 
-    const response = await request(httpServer)
-      .post('/api/auth/login')
-      .send({
-        email: 'maria@example.com',
-        password: 'Senha123!',
-      })
-      .expect(201);
+    const response = await login(httpServer, {
+      email: 'maria@example.com',
+      password: 'Senha123!',
+    });
 
-    const rawSetCookie = response.headers['set-cookie'];
-    const setCookie =
-      rawSetCookie === undefined
-        ? undefined
-        : Array.isArray(rawSetCookie)
-          ? rawSetCookie
-          : [rawSetCookie];
+    const setCookie = response.headers['set-cookie'] as unknown as string[] | undefined;
 
     const body = response.body as {
       message?: string;
@@ -138,43 +126,29 @@ describe('Security (e2e)', () => {
   });
 
   it('clears session cookie and keeps internal control fields private on logout', async () => {
-    // Criar usuário e fazer login primeiro
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];
 
-    await request(httpServer)
-      .post('/api/users')
-      .send({
-        fullName: 'Joao Santos',
-        email: 'joao@example.com',
-        password: 'Senha123!',
-        role: 'PESSOA_FISICA',
-        cpf: '98765432100',
-      })
-      .expect(201);
+    await createUser(httpServer, {
+      fullName: 'Joao Santos',
+      email: 'joao@example.com',
+      password: 'Senha123!',
+      role: 'PESSOA_FISICA',
+      cpf: '98765432100',
+    });
 
-    const loginResponse = await request(httpServer)
-      .post('/api/auth/login')
-      .send({
-        email: 'joao@example.com',
-        password: 'Senha123!',
-      })
-      .expect(201);
+    const loginResponse = await login(httpServer, {
+      email: 'joao@example.com',
+      password: 'Senha123!',
+    });
 
-    const loginCookies = loginResponse.headers['set-cookie'] as unknown as string[];
-    const sessionCookie = loginCookies.find((c: string) => c.startsWith('central_pet_session='));
+    const sessionCookie = getSessionCookie(loginResponse);
 
     const response = await request(httpServer)
       .post('/api/auth/logout')
       .set('Cookie', [sessionCookie!])
       .expect(201);
 
-    const rawSetCookie = response.headers['set-cookie'];
-    const setCookie =
-      rawSetCookie === undefined
-        ? undefined
-        : Array.isArray(rawSetCookie)
-          ? rawSetCookie
-          : [rawSetCookie];
+    const setCookie = response.headers['set-cookie'] as unknown as string[] | undefined;
 
     const body = response.body as {
       message?: string;

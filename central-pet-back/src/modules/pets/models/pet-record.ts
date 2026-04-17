@@ -1,4 +1,5 @@
 import type { MockPet } from '@/mocks';
+import { toISO } from '@/utils/date.util';
 
 export type PetAdoptionStatus = 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
 export type PetSourceType = 'ONG' | 'PESSOA_FISICA';
@@ -114,8 +115,8 @@ export const mapMockPetToPetRecord = (pet: MockPet): PetRecord => ({
   adoptionStatus: (pet.adoptionStatus as PetAdoptionStatus) ?? 'AVAILABLE',
   sourceType: pet.sourceType,
   sourceName: pet.sourceName,
-  createdAt: pet.createdAt ?? new Date().toISOString(),
-  updatedAt: pet.updatedAt ?? new Date().toISOString(),
+  createdAt: toISO(pet.createdAt),
+  updatedAt: toISO(pet.updatedAt),
 });
 
 export const mapPetRecordToPersistence = (pet: PetRecord): PetRecord => ({
