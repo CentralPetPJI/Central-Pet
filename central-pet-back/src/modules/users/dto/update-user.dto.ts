@@ -1,4 +1,5 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsDate } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -7,8 +8,9 @@ export class UpdateUserDto {
   fullName?: string;
 
   @IsOptional()
-  @IsString()
-  birthDate?: string;
+  @IsDate()
+  @Type(() => Date)
+  birthDate?: Date;
 
   @IsOptional()
   @IsString()
@@ -49,6 +51,7 @@ export class UpdateUserDto {
   website?: string;
 
   @IsOptional()
-  @IsString()
-  foundedAt?: string;
+  @IsDate()
+  @Type(() => Date)
+  foundedAt?: Date;
 }

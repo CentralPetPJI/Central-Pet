@@ -6,6 +6,8 @@ import {
 } from "../utils/user-helpers";
 
 test.describe("profile-workflow", () => {
+  const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
+
   test("desativar conta deve tornar usuário, pets e solicitações inacessíveis", async ({
     page,
     request,
@@ -14,7 +16,7 @@ test.describe("profile-workflow", () => {
     const usuario = gerarUsuarioUnico("profileWorkflow");
     const user = await criarUsuarioViaApi(request, usuario);
 
-    const petResposta = await request.post("http://localhost:3001/api/pets", {
+    const petResposta = await request.post(`${BASE_API}/api/pets`, {
       data: {
         name: "Pet Segredo",
         age: "2 anos",
@@ -68,9 +70,9 @@ test.describe("profile-workflow", () => {
     await expect(page.getByText("Esta conta foi desativada")).toBeVisible();
 
     // B) Pet não deve aparecer na listagem pública (API e UI)
-    const listaPets = await request.get("http://localhost:3001/api/pets");
+    const listaPets = await request.get(`${BASE_API}/api/pets`);
     const petsData = (await listaPets.json()).data;
-    const petEncontrado = petsData.find((p: any) => p.id === pet.id);
+    const petEncontrado = petsData.find((p: { id: string }) => p.id === pet.id);
     expect(petEncontrado).toBeUndefined();
 
     await page.goto("/");
@@ -79,9 +81,7 @@ test.describe("profile-workflow", () => {
     ).toHaveCount(0);
 
     // C) Usuário não deve ser encontrado na API
-    const respostaPerfil = await request.get(
-      `http://localhost:3001/api/users/me`,
-    );
+    const respostaPerfil = await request.get(`${BASE_API}/api/users/me`);
     expect(respostaPerfil.status()).toBe(401);
 
     // D) Pet não deve ser encontrado na pagina inicial

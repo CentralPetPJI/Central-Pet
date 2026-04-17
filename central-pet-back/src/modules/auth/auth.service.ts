@@ -69,7 +69,7 @@ export class AuthService {
     }
 
     return {
-      message: 'Usuárioo autenticado',
+      message: 'Usuário autenticado',
       data: {
         user: user,
       },
@@ -85,7 +85,7 @@ export class AuthService {
     }
 
     return {
-      message: 'logout bem-sucedido',
+      message: 'Logout bem-sucedido',
     };
   }
 }

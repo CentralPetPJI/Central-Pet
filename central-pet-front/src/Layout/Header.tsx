@@ -7,7 +7,7 @@ import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import {shouldDisplayMockUsers} from '@/lib/dev-mode';
+import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
 
 const roleLabelMap = {
@@ -227,6 +227,7 @@ const Header = () => {
                     <span>Solicitações</span>
                   </span>
                 </NavLink>
+                <NavLink to={routes.profile.path}>Perfil</NavLink>
                 <button
                   className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
                   onClick={() => {

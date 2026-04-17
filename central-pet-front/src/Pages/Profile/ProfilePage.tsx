@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const logoutTimerRef = useRef<number | null>(null);
 
   const editableKeys: (keyof UserProfile)[] = [
     'fullName',
@@ -41,21 +42,23 @@ export default function ProfilePage() {
     )
   );
 
+  const profileToEditForm = (p: UserProfile) => ({
+    fullName: p.fullName,
+    birthDate: p.birthDate ?? '',
+    city: p.city ?? '',
+    state: p.state ?? '',
+    organizationName: p.organizationName ?? '',
+    phone: p.phone ?? '',
+    mobile: p.mobile ?? '',
+    instagram: p.instagram ?? '',
+    facebook: p.facebook ?? '',
+    website: p.website ?? '',
+    foundedAt: p.foundedAt ?? '',
+  });
+
   const resetEditForm = () => {
     if (!profile) return;
-    setEditForm({
-      fullName: profile.fullName,
-      birthDate: profile.birthDate ?? '',
-      city: profile.city ?? '',
-      state: profile.state ?? '',
-      organizationName: profile.organizationName ?? '',
-      phone: profile.phone ?? '',
-      mobile: profile.mobile ?? '',
-      instagram: profile.instagram ?? '',
-      facebook: profile.facebook ?? '',
-      website: profile.website ?? '',
-      foundedAt: profile.foundedAt ?? '',
-    });
+    setEditForm(profileToEditForm(profile));
     setValidationErrors({});
   };
 
@@ -83,19 +86,7 @@ export default function ProfilePage() {
         }
 
         setProfile(response.data.data);
-        setEditForm({
-          fullName: response.data.data.fullName,
-          birthDate: response.data.data.birthDate ?? '',
-          city: response.data.data.city ?? '',
-          state: response.data.data.state ?? '',
-          organizationName: response.data.data.organizationName ?? '',
-          phone: response.data.data.phone ?? '',
-          mobile: response.data.data.mobile ?? '',
-          instagram: response.data.data.instagram ?? '',
-          facebook: response.data.data.facebook ?? '',
-          website: response.data.data.website ?? '',
-          foundedAt: response.data.data.foundedAt ?? '',
-        });
+        setEditForm(profileToEditForm(response.data.data));
       } catch (_error) {
         if (!isMounted) {
           return;
@@ -183,10 +174,9 @@ export default function ProfilePage() {
         'Sua conta foi desativada. Seus dados serão mantidos por 90 dias para fins de auditoria; após esse período serão removidos permanentemente.',
       );
 
-      // Perform logout through auth context
-      setTimeout(async () => {
-        await logout();
-        window.location.href = '/login';
+      // Perform logout through auth context (delayed so user can read the success message)
+      logoutTimerRef.current = window.setTimeout(() => {
+        void logout(routes.login.path);
       }, 2000);
     } catch (_error) {
       setErrorMessage('Não foi possível desativar a conta. Tente novamente mais tarde.');
@@ -361,9 +351,14 @@ export default function ProfilePage() {
             <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
               {/* Editable Fields */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Nome completo</label>
+                <label htmlFor="fullName" className="text-sm font-bold text-slate-800 ml-1">
+                  Nome completo
+                </label>
                 <input
+                  id="fullName"
                   type="text"
+                  aria-invalid={!!validationErrors.fullName}
+                  aria-describedby={validationErrors.fullName ? 'fullName-error' : undefined}
                   value={editForm.fullName ?? ''}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
                   className={`w-full rounded-2xl border ${
@@ -381,9 +376,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Data de nascimento</label>
+                <label htmlFor="birthDate" className="text-sm font-bold text-slate-800 ml-1">
+                  Data de nascimento
+                </label>
                 <input
+                  id="birthDate"
                   type="date"
+                  aria-invalid={!!validationErrors.birthDate}
+                  aria-describedby={validationErrors.birthDate ? 'birthDate-error' : undefined}
                   max={new Date().toISOString().split('T')[0]}
                   value={editForm.birthDate ?? ''}
                   onChange={(e) => handleInputChange('birthDate', e.target.value)}
@@ -401,9 +401,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Cidade</label>
+                <label htmlFor="city" className="text-sm font-bold text-slate-800 ml-1">
+                  Cidade
+                </label>
                 <input
+                  id="city"
                   type="text"
+                  aria-invalid={!!validationErrors.city}
+                  aria-describedby={validationErrors.city ? 'city-error' : undefined}
                   value={editForm.city ?? ''}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   className={`w-full rounded-2xl border ${
@@ -421,8 +426,13 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Estado</label>
+                <label htmlFor="state" className="text-sm font-bold text-slate-800 ml-1">
+                  Estado
+                </label>
                 <FormSelect
+                  id="state"
+                  aria-invalid={!!validationErrors.state}
+                  aria-describedby={validationErrors.state ? 'state-error' : undefined}
                   value={editForm.state || ''}
                   onChange={(e) => handleInputChange('state', e.target.value)}
                   className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
@@ -442,11 +452,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">
+                <label htmlFor="phone" className="text-sm font-bold text-slate-800 ml-1">
                   Telefone Fixo (opcional)
                 </label>
                 <input
+                  id="phone"
                   type="text"
+                  aria-invalid={!!validationErrors.phone}
+                  aria-describedby={validationErrors.phone ? 'phone-error' : undefined}
                   value={editForm.phone ?? ''}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
@@ -455,11 +468,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">
+                <label htmlFor="mobile" className="text-sm font-bold text-slate-800 ml-1">
                   Celular / WhatsApp (opcional)
                 </label>
                 <input
+                  id="mobile"
                   type="text"
+                  aria-invalid={!!validationErrors.mobile}
+                  aria-describedby={validationErrors.mobile ? 'mobile-error' : undefined}
                   value={editForm.mobile ?? ''}
                   onChange={(e) => handleInputChange('mobile', e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
@@ -468,11 +484,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">
+                <label htmlFor="instagram" className="text-sm font-bold text-slate-800 ml-1">
                   Instagram (opcional)
                 </label>
                 <input
+                  id="instagram"
                   type="text"
+                  aria-invalid={!!validationErrors.instagram}
+                  aria-describedby={validationErrors.instagram ? 'instagram-error' : undefined}
                   value={editForm.instagram ?? ''}
                   onChange={(e) => handleInputChange('instagram', e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
@@ -481,9 +500,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Facebook (opcional)</label>
+                <label htmlFor="facebook" className="text-sm font-bold text-slate-800 ml-1">
+                  Facebook (opcional)
+                </label>
                 <input
+                  id="facebook"
                   type="text"
+                  aria-invalid={!!validationErrors.facebook}
+                  aria-describedby={validationErrors.facebook ? 'facebook-error' : undefined}
                   value={editForm.facebook ?? ''}
                   onChange={(e) => handleInputChange('facebook', e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
@@ -492,9 +516,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-800 ml-1">Website (opcional)</label>
+                <label htmlFor="website" className="text-sm font-bold text-slate-800 ml-1">
+                  Website (opcional)
+                </label>
                 <input
+                  id="website"
                   type="text"
+                  aria-invalid={!!validationErrors.website}
+                  aria-describedby={validationErrors.website ? 'website-error' : undefined}
                   value={editForm.website ?? ''}
                   onChange={(e) => handleInputChange('website', e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
@@ -505,11 +534,14 @@ export default function ProfilePage() {
               {profile.role === 'ONG' && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-800 ml-1">
+                    <label htmlFor="foundedAt" className="text-sm font-bold text-slate-800 ml-1">
                       Data de Fundação
                     </label>
                     <input
+                      id="foundedAt"
                       type="date"
+                      aria-invalid={!!validationErrors.foundedAt}
+                      aria-describedby={validationErrors.foundedAt ? 'foundedAt-error' : undefined}
                       max={new Date().toISOString().split('T')[0]}
                       value={editForm.foundedAt ?? ''}
                       onChange={(e) => handleInputChange('foundedAt', e.target.value)}
@@ -517,11 +549,19 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-800 ml-1">
+                    <label
+                      htmlFor="organizationName"
+                      className="text-sm font-bold text-slate-800 ml-1"
+                    >
                       Nome da Organização
                     </label>
                     <input
+                      id="organizationName"
                       type="text"
+                      aria-invalid={!!validationErrors.organizationName}
+                      aria-describedby={
+                        validationErrors.organizationName ? 'organizationName-error' : undefined
+                      }
                       value={editForm.organizationName ?? ''}
                       onChange={(e) => handleInputChange('organizationName', e.target.value)}
                       className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"

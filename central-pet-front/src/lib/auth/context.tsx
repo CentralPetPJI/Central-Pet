@@ -63,11 +63,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [strategy],
   );
 
-  const logout = useCallback(async () => {
-    await strategy.logout();
-    navigate('/');
-    setCurrentUser(null);
-  }, [strategy, navigate]);
+  const logout = useCallback(
+    async (redirectTo?: string) => {
+      try {
+        await strategy.logout();
+      } finally {
+        setCurrentUser(null);
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/');
+        }
+      }
+    },
+    [strategy, navigate],
+  );
 
   const register = useCallback(
     async (data: RegisterData) => {

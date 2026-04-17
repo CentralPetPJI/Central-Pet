@@ -55,7 +55,9 @@ export function formatCnpj(cnpj: string | undefined): string {
  */
 export function formatDocument(document: string | undefined, role: string): string {
   if (!document) return '';
-  return role === 'PESSOA_FISICA' ? formatCpf(document) : formatCnpj(document);
+  if (role === 'PESSOA_FISICA') return formatCpf(document);
+  if (role === 'ONG') return formatCnpj(document);
+  return document ?? '';
 }
 
 /**
