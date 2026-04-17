@@ -152,18 +152,34 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    /*
+      Soft-deactivate user data:
+      - Mark all pets as deleted + UNAVAILABLE
+      - Cancel adoption requests involving the user
+      - Remove sessions
+      - Anonymize the user's email to avoid conflicts
+
+      NOTE: We keep the user row to avoid breaking relations (schema uses Restrict on some FKs).
+    */
     await this.prisma.$transaction([
-      this.prisma.pet.deleteMany({ where: { responsibleUserId: id } }),
-      this.prisma.adoptionRequest.deleteMany({
+      this.prisma.pet.updateMany({
+        where: { responsibleUserId: id },
+        data: { deleted: true, status: 'UNAVAILABLE' },
+      }),
+      this.prisma.adoptionRequest.updateMany({
         where: {
           OR: [{ responsibleUserId: id }, { adopterId: id }],
         },
+        data: { status: 'CANCELLED' },
       }),
       this.prisma.session.deleteMany({ where: { userId: id } }),
-      this.prisma.user.delete({ where: { id } }),
+      this.prisma.user.update({
+        where: { id },
+        data: { email: `deactivated+${id}@example.invalid` },
+      }),
     ]);
 
-    return { message: 'User and all related data deleted successfully' };
+    return { message: 'User deactivated successfully' };
   }
 
   toPublicUser(user: PersistedUser): PublicUser {
