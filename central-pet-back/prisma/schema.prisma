@@ -68,7 +68,14 @@ model User {
   cnpj                 String?            @unique
   city                 String?
   state                String?
+  phone                String?
+  mobile               String?
+  instagram            String?
+  facebook             String?
+  website              String?
+  foundedAt            String?
   passwordHash         String
+  deleted              Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 

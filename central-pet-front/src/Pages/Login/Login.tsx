@@ -26,6 +26,10 @@ function getErrorMessage(error: unknown): string {
 
     // Mensagens específicas por status HTTP
     if (status === 401) {
+      const apiMessage = data?.message;
+      if (typeof apiMessage === 'string' && apiMessage.includes('desativada')) {
+        return apiMessage;
+      }
       return 'E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.';
     }
 

@@ -87,6 +87,12 @@ export class UsersService {
         cnpj: true,
         city: true,
         state: true,
+        phone: true,
+        mobile: true,
+        instagram: true,
+        facebook: true,
+        website: true,
+        foundedAt: true,
         createdAt: true,
         _count: {
           select: {
@@ -113,6 +119,12 @@ export class UsersService {
         cnpj: user.cnpj,
         city: user.city,
         state: user.state,
+        phone: user.phone,
+        mobile: user.mobile,
+        instagram: user.instagram,
+        facebook: user.facebook,
+        website: user.website,
+        foundedAt: user.foundedAt,
         createdAt: user.createdAt.toISOString(),
         petsCount: user._count.responsiblePets,
       },
@@ -136,6 +148,20 @@ export class UsersService {
         ...(updateUserDto.organizationName && {
           organizationName: updateUserDto.organizationName.trim(),
         }),
+        ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
+        ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),
+        ...(updateUserDto.instagram !== undefined && {
+          instagram: updateUserDto.instagram ?? null,
+        }),
+        ...(updateUserDto.facebook !== undefined && {
+          facebook: updateUserDto.facebook ?? null,
+        }),
+        ...(updateUserDto.website !== undefined && {
+          website: updateUserDto.website ?? null,
+        }),
+        ...(updateUserDto.foundedAt !== undefined && {
+          foundedAt: updateUserDto.foundedAt ?? null,
+        }),
       },
     });
 
@@ -145,7 +171,7 @@ export class UsersService {
     };
   }
 
-  async delete(id: string) {
+  async deactivate(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -175,7 +201,9 @@ export class UsersService {
       this.prisma.session.deleteMany({ where: { userId: id } }),
       this.prisma.user.update({
         where: { id },
-        data: { email: `deactivated+${id}@example.invalid` },
+        data: {
+          deleted: true,
+        },
       }),
     ]);
 

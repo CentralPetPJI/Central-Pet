@@ -15,13 +15,19 @@ export class AuthService {
     const user = await this.usersService.findByEmail(loginDto.email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Email ou senha inválidos');
+    }
+
+    if (user.deleted) {
+      throw new UnauthorizedException(
+        'Esta conta foi desativada. Entre em contato com o suporte para mais informações.',
+      );
     }
 
     const isPasswordValid = await verifyPassword(loginDto.password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Email ou senha inválidos');
     }
 
     const session = await this.prisma.session.create({
@@ -31,7 +37,7 @@ export class AuthService {
     });
 
     return {
-      message: 'Login successful',
+      message: 'Login bem-sucedido',
       data: {
         sessionId: session.id,
         user: user,
@@ -41,7 +47,7 @@ export class AuthService {
 
   async getAuthenticatedUser(sessionId?: string | null) {
     if (!sessionId) {
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException('Autenticação requerida');
     }
 
     const session = await this.prisma.session.findUnique({
@@ -49,20 +55,21 @@ export class AuthService {
     });
 
     if (!session) {
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException('Autenticação requerida');
     }
 
+    // TODO: Se é so para validar autenticacao, talvez seja melhor so retornar o necessario e nao o user inteiro, pra evitar expor dados desnecessarios. Mas por ora tá ok retornar o user inteiro mesmo.
     const user = await this.usersService.findById(session.userId);
 
     if (!user) {
       await this.prisma.session.delete({
         where: { id: sessionId },
       });
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException('Autenticação requerida');
     }
 
     return {
-      message: 'Authenticated user retrieved successfully',
+      message: 'Usuárioo autenticado',
       data: {
         user: user,
       },
@@ -78,7 +85,7 @@ export class AuthService {
     }
 
     return {
-      message: 'Logout successful',
+      message: 'logout bem-sucedido',
     };
   }
 }

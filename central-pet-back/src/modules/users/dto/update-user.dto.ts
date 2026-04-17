@@ -22,4 +22,33 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(100)
   organizationName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  mobile?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  instagram?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  facebook?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  website?: string;
+
+  @IsOptional()
+  @IsString()
+  foundedAt?: string;
 }

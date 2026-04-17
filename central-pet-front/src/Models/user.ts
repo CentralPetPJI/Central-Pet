@@ -9,6 +9,12 @@ export type UserProfile = {
   cnpj?: string;
   city?: string;
   state?: string;
+  phone?: string;
+  mobile?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
+  foundedAt?: string;
   createdAt: string;
   petsCount: number;
 };
@@ -19,4 +25,10 @@ export type UpdateProfileData = {
   city?: string;
   state?: string;
   organizationName?: string;
+  phone?: string;
+  mobile?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
+  foundedAt?: string;
 };

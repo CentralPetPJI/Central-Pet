@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { RouteObject } from 'react-router-dom';
+import { useRoutes, type RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
 import MyPetsPage from '@/Pages/MyPetsPage';
 import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceived/AdoptionRequestsReceivedPage';
@@ -61,3 +61,26 @@ export const routes = {
     } satisfies DynamicAppRoute,
   },
 } as const;
+
+/**
+ * Extrai todas as rotas com propriedade `path` de um objeto de rotas aninhado.
+ * @param obj Objeto de rotas
+ * @returns Lista de rotas para o React Router
+ */
+export function extractRoutes(obj: Record<string, unknown>): RouteObject[] {
+  const result: RouteObject[] = [];
+  Object.values(obj).forEach((value) => {
+    if (typeof value === 'object' && value !== null) {
+      if ('path' in value) {
+        result.push(value as RouteObject);
+      }
+      // Busca recursiva para rotas aninhadas
+      result.push(...extractRoutes(value as Record<string, unknown>));
+    }
+  });
+  return result;
+}
+
+export const useAppRoutes = () => {
+  return useRoutes(extractRoutes(routes));
+};

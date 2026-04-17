@@ -44,12 +44,21 @@ export class UsersController {
     return this.usersService.update(user.id, updateUserDto);
   }
 
+  @Post('me/deactivate')
+  @UseGuards(SessionGuard)
+  deactivateProfile(@CurrentUser() user: PublicUser | MockUser) {
+    if (!user) {
+      throw new UnauthorizedException('Usuário não autenticado');
+    }
+    return this.usersService.deactivate(user.id);
+  }
+
   @Delete('me')
   @UseGuards(SessionGuard)
   deleteProfile(@CurrentUser() user: PublicUser | MockUser) {
     if (!user) {
       throw new UnauthorizedException('Usuário não autenticado');
     }
-    return this.usersService.delete(user.id);
+    return this.usersService.deactivate(user.id);
   }
 }

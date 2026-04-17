@@ -1,11 +1,11 @@
 import React from 'react';
 import { useMemo } from 'react';
-import { useLocation, useRoutes } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import SidePanel from '@/Components/SidePanel';
 import { MockUserChoiceGate } from '@/Components/Auth/MockUserChoiceGate';
 import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
-import { routes } from '@/routes';
+import { routes, useAppRoutes } from '@/routes';
 import { shouldDisplayMockChoiceGates } from '@/lib/dev-mode.ts';
 import { usePets } from '@/lib/pets';
 
@@ -21,17 +21,7 @@ const App: React.FC = () => {
     [pets],
   );
 
-  const routedContent = useRoutes([
-    routes.home,
-    routes.login,
-    routes.register,
-    routes.profile,
-    routes.pets.new,
-    routes.pets.mine,
-    routes.pets.edit,
-    routes.pets.detail,
-    routes.adoptionRequests.received,
-  ]);
+  const routedContent = useAppRoutes();
   const showSidePanel = location.pathname === routes.home.path;
 
   return (
