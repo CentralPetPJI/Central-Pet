@@ -66,6 +66,8 @@ model User {
   cpf                  String?            @unique
   organizationName     String?
   cnpj                 String?            @unique
+  city                 String?
+  state                String?
   passwordHash         String
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt

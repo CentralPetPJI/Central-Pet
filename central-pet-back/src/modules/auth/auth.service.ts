@@ -34,7 +34,7 @@ export class AuthService {
       message: 'Login successful',
       data: {
         sessionId: session.id,
-        user: this.usersService.toPublicUser(user),
+        user: user,
       },
     };
   }
@@ -64,7 +64,7 @@ export class AuthService {
     return {
       message: 'Authenticated user retrieved successfully',
       data: {
-        user: this.usersService.toPublicUser(user),
+        user: user,
       },
     };
   }

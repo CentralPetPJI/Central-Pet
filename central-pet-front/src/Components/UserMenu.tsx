@@ -57,9 +57,9 @@ export function UserMenu() {
     {
       label: 'Perfil',
       // TODO: Criar rota de perfil
-      disabled: true,
-      tooltip: 'Em breve',
-      icon: <UserRound className="h-4 w-4 text-slate-500" />,
+      disabled: false,
+      path: routes.profile.path,
+      icon: <UserRound className="h-4 w-4 text-cyan-700" />,
     },
     {
       divider: true,

@@ -36,6 +36,8 @@ describe('AuthService', () => {
     birthDate: '1995-05-10',
     organizationName: null,
     cnpj: null,
+    city: null,
+    state: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   });
@@ -51,6 +53,8 @@ describe('AuthService', () => {
       birthDate: '1995-05-10',
       organizationName: null,
       cnpj: null,
+      city: null,
+      state: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
@@ -89,6 +93,8 @@ describe('AuthService', () => {
       birthDate: '1995-05-10',
       organizationName: null,
       cnpj: null,
+      city: null,
+      state: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
