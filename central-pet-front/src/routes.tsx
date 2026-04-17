@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { RouteObject } from 'react-router-dom';
+import { useRoutes, type RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
 import MyPetsPage from '@/Pages/MyPetsPage';
 import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceived/AdoptionRequestsReceivedPage';
@@ -74,3 +74,35 @@ export const routes = {
     } satisfies DynamicAppRoute,
   },
 } as const;
+
+/**
+ * Extrai todas as rotas com propriedade `path` de um objeto de rotas aninhado.
+ * Usa cache para evitar recomputações e evita recursão desnecessária quando um valor já é uma rota.
+ * @param obj Objeto de rotas
+ * @returns Lista de rotas para o React Router
+ */
+const extractRoutesCache = new WeakMap<Record<string, unknown>, RouteObject[]>();
+
+export function extractRoutes(obj: Record<string, unknown>): RouteObject[] {
+  if (extractRoutesCache.has(obj)) return extractRoutesCache.get(obj)!;
+
+  const result: RouteObject[] = [];
+  Object.values(obj).forEach((value) => {
+    if (typeof value === 'object' && value !== null) {
+      if ('path' in value) {
+        // Quando o objeto já representa uma rota, adiciona e não continua descendendo nele
+        result.push(value as RouteObject);
+        return;
+      }
+      // Busca recursiva para rotas aninhadas
+      result.push(...extractRoutes(value as Record<string, unknown>));
+    }
+  });
+
+  extractRoutesCache.set(obj, result);
+  return result;
+}
+
+export const useAppRoutes = () => {
+  return useRoutes(extractRoutes(routes));
+};

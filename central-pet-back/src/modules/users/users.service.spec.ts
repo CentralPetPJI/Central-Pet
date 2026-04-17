@@ -10,7 +10,7 @@ describe('UsersService', () => {
     fullName: string;
     email: string;
     role: 'PESSOA_FISICA' | 'ONG';
-    birthDate?: string | null;
+    birthDate?: Date | null;
     cpf?: string | null;
     organizationName?: string | null;
     cnpj?: string | null;
@@ -30,7 +30,7 @@ describe('UsersService', () => {
           fullName: string;
           email: string;
           role: string;
-          birthDate?: string;
+          birthDate?: Date;
           cpf?: string;
           organizationName?: string;
           cnpj?: string;

@@ -87,6 +87,12 @@ export class UsersService {
         cnpj: true,
         city: true,
         state: true,
+        phone: true,
+        mobile: true,
+        instagram: true,
+        facebook: true,
+        website: true,
+        foundedAt: true,
         createdAt: true,
         _count: {
           select: {
@@ -113,6 +119,12 @@ export class UsersService {
         cnpj: user.cnpj,
         city: user.city,
         state: user.state,
+        phone: user.phone,
+        mobile: user.mobile,
+        instagram: user.instagram,
+        facebook: user.facebook,
+        website: user.website,
+        foundedAt: user.foundedAt,
         createdAt: user.createdAt.toISOString(),
         petsCount: user._count.responsiblePets,
       },
@@ -129,12 +141,32 @@ export class UsersService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
-        ...(updateUserDto.fullName && { fullName: updateUserDto.fullName.trim() }),
-        ...(updateUserDto.birthDate && { birthDate: updateUserDto.birthDate }),
+        ...(updateUserDto.fullName !== undefined && {
+          fullName:
+            typeof updateUserDto.fullName === 'string'
+              ? updateUserDto.fullName.trim()
+              : (updateUserDto.fullName ?? null),
+        }),
+        ...(updateUserDto.birthDate !== undefined && {
+          birthDate: updateUserDto.birthDate ?? null,
+        }),
         ...(updateUserDto.city !== undefined && { city: updateUserDto.city ?? null }),
         ...(updateUserDto.state !== undefined && { state: updateUserDto.state ?? null }),
-        ...(updateUserDto.organizationName && {
-          organizationName: updateUserDto.organizationName.trim(),
+        ...(updateUserDto.organizationName !== undefined && {
+          organizationName:
+            typeof updateUserDto.organizationName === 'string'
+              ? updateUserDto.organizationName.trim()
+              : (updateUserDto.organizationName ?? null),
+        }),
+        ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
+        ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),
+        ...(updateUserDto.instagram !== undefined && {
+          instagram: updateUserDto.instagram ?? null,
+        }),
+        ...(updateUserDto.facebook !== undefined && { facebook: updateUserDto.facebook ?? null }),
+        ...(updateUserDto.website !== undefined && { website: updateUserDto.website ?? null }),
+        ...(updateUserDto.foundedAt !== undefined && {
+          foundedAt: updateUserDto.foundedAt ?? null,
         }),
       },
     });
@@ -145,7 +177,7 @@ export class UsersService {
     };
   }
 
-  async delete(id: string) {
+  async deactivate(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -157,9 +189,8 @@ export class UsersService {
       - Mark all pets as deleted + UNAVAILABLE
       - Cancel adoption requests involving the user
       - Remove sessions
-      - Anonymize the user's email to avoid conflicts
 
-      NOTE: We keep the user row to avoid breaking relations (schema uses Restrict on some FKs).
+      NOTE: We intentionally keep the user's email unchanged to allow the login flow to display a "conta desativada" message. Only the `deleted` flag is set on the user row to avoid breaking relations (schema uses Restrict on some FKs).
     */
     await this.prisma.$transaction([
       this.prisma.pet.updateMany({
@@ -175,7 +206,9 @@ export class UsersService {
       this.prisma.session.deleteMany({ where: { userId: id } }),
       this.prisma.user.update({
         where: { id },
-        data: { email: `deactivated+${id}@example.invalid` },
+        data: {
+          deleted: true,
+        },
       }),
     ]);
 

@@ -1,5 +1,5 @@
 import {
-  IsDateString,
+  IsDate,
   IsEmail,
   IsIn,
   IsNotEmpty,
@@ -9,6 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString()
@@ -30,8 +31,9 @@ export class CreateUserDto {
   role: 'PESSOA_FISICA' | 'ONG';
 
   @IsOptional()
-  @IsDateString()
-  birthDate?: string;
+  @IsDate()
+  @Type(() => Date)
+  birthDate?: Date;
 
   @IsOptional()
   @IsString()

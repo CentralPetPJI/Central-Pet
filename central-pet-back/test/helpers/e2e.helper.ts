@@ -8,7 +8,7 @@ export interface UserData {
   password: string;
   role: string;
   cpf?: string;
-  birthDate?: string;
+  birthDate?: Date;
 }
 
 export interface Credentials {

@@ -1,6 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { useAuth } from './use-auth';
 
@@ -64,7 +65,11 @@ vi.mock('./strategies/factory', () => ({
 }));
 
 function Wrapper({ children }: { children: ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <MemoryRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </MemoryRouter>
+  );
 }
 
 describe('AuthProvider', () => {
