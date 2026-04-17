@@ -312,7 +312,7 @@ export default function ProfilePage() {
             <h2 className="text-xl font-black text-slate-900">Desativar conta</h2>
             <p className="mt-3 text-slate-600 leading-relaxed">
               Ao desativar sua conta, seus dados e pets serão desativados e mantidos por{' '}
-              <span className="font-bold text-slate-900">90 dias</span>
+              <span className="font-bold text-slate-900">90 dias </span>
               para fins de auditoria. Após esse período, serão removidos permanentemente.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
