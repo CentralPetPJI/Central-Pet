@@ -143,6 +143,7 @@ export class AdoptionRequestSimulationService {
       adopter: adopterForResponse,
       message: request.message,
       adopterContactShareConsent: request.adopterContactShareConsent,
+      responsibleContactShareConsent: request.responsibleContactShareConsent,
       status: request.status,
       note: request.note ?? undefined,
       requestedAt: request.requestedAt.toISOString(),

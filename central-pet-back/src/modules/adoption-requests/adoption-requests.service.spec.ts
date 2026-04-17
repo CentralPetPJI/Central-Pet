@@ -171,7 +171,7 @@ describe('Servico de solicitacoes de adocao', () => {
             where: {
               petId?: string;
               id?: { not?: string };
-              status?: AdoptionRequestStatus;
+              status?: AdoptionRequestStatus | { in?: AdoptionRequestStatus[] };
             };
             data: Partial<Pick<DbAdoptionRequest, 'status' | 'note'>>;
           }) => {
@@ -180,7 +180,27 @@ describe('Servico de solicitacoes de adocao', () => {
             records = records.map((record) => {
               const matchesPetId = args.where.petId ? record.petId === args.where.petId : true;
               const matchesNotId = args.where.id?.not ? record.id !== args.where.id.not : true;
-              const matchesStatus = args.where.status ? record.status === args.where.status : true;
+              const matchesStatus = (() => {
+                const statusFilter = args.where.status;
+
+                if (!statusFilter) return true;
+
+                if (typeof statusFilter === 'string') {
+                  return record.status === statusFilter;
+                }
+
+                if (typeof statusFilter === 'object') {
+                  if ('in' in statusFilter && Array.isArray(statusFilter.in)) {
+                    return statusFilter.in.includes(record.status);
+                  }
+
+                  if ('equals' in statusFilter) {
+                    return record.status === statusFilter.equals;
+                  }
+                }
+
+                return true;
+              })();
 
               if (!matchesPetId || !matchesNotId || !matchesStatus) {
                 return record;
@@ -464,7 +484,7 @@ describe('Servico de solicitacoes de adocao', () => {
       petId: 'pet-001',
       petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
       adopterId: mockUserIds.ANA_SOUZA,
-      responsibleContactShareConsent: true,
+      responsibleContactShareConsent: false,
       initialStatus: AdoptionRequestStatus.PENDING,
     });
 

@@ -73,6 +73,15 @@ export class ManageAdoptionRequestsService {
           'Para compartilhar o contato, o status anterior deve ser "Pendente".',
         );
       }
+      /* TODO: Verificar se o usuario adotante ja compartilhou o contato
+if (!currentRequest.adopterContactShareConsent) {
+        throw new BadRequestException(
+          'O tutor deve autorizar o compartilhamento de contato antes desta etapa ser concluída',
+        );
+      }*/
+      if (!currentRequest.responsibleContactShareConsent) {
+        throw new BadRequestException('O contato já foi compartilhado para este pedido.');
+      }
       return this.shareContactUseCase.execute(requestId, userId, dto);
     }
 

@@ -120,7 +120,9 @@ export function AdoptionRequestCard({
             <div className="grid gap-2">
               <button
                 type="button"
-                disabled={managedRequestId === request.id || !request.adopterContactShareConsent}
+                disabled={
+                  managedRequestId === request.id || !request.responsibleContactShareConsent
+                }
                 onClick={() => onOpenApproval(request)}
                 className="inline-flex items-center justify-center rounded-full bg-cyan-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >

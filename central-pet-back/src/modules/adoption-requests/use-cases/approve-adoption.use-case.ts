@@ -61,7 +61,7 @@ export class ApproveAdoptionUseCase {
         where: {
           petId: updatedReq.petId,
           id: { not: updatedReq.id },
-          status: { in: [AdoptionRequestStatus.REJECTED, AdoptionRequestStatus.CONTACT_SHARED] },
+          status: { in: [AdoptionRequestStatus.PENDING, AdoptionRequestStatus.CONTACT_SHARED] },
         },
         data: {
           status: AdoptionRequestStatus.REJECTED,

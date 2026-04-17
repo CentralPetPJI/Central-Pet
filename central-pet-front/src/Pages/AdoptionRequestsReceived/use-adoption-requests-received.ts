@@ -229,7 +229,7 @@ export function useAdoptionRequestsReceived({
           petId: pet.id,
           petResponsibleUserId: pet.responsibleUserId,
           initialStatus: simulateWithSharedContact ? 'CONTACT_SHARED' : 'PENDING',
-          adopterContactShareConsent: simulateContactShareConsent,
+          responsibleContactShareConsent: simulateContactShareConsent,
         },
       );
 
