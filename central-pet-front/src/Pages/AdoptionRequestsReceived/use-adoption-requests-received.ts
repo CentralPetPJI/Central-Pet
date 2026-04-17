@@ -27,7 +27,10 @@ export function useAdoptionRequestsReceived({
   const [selectedPetId, setSelectedPetId] = useState('');
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulateWithSharedContact, setSimulateWithSharedContact] = useState(true);
-  const [simulateContactShareConsent, setSimulateContactShareConsent] = useState(true);
+  const [simulateAdopterContactShareConsent, setSimulateAdopterContactShareConsent] =
+    useState(true);
+  const [simulateResponsibleContactShareConsent, setSimulateResponsibleContactShareConsent] =
+    useState(false);
   const [rejectionModalData, setRejectionModalData] = useState<AdoptionRequestModalData | null>(
     null,
   );
@@ -35,7 +38,6 @@ export function useAdoptionRequestsReceived({
   const [approvalModalData, setApprovalModalData] = useState<AdoptionRequestModalData | null>(null);
   const [approvalNote, setApprovalNote] = useState('');
 
-  // Request token to ignore stale responses from async loadRequests calls
   const requestIdRef = useRef<number>(0);
 
   const closeRejectionModal = useCallback(() => {
@@ -163,7 +165,7 @@ export function useAdoptionRequestsReceived({
         );
         setActionMessage(response.data.message);
 
-        if (action === 'approve' && currentUserId) {
+        if (currentUserId) {
           await loadRequests(currentUserId);
         }
 
@@ -229,14 +231,18 @@ export function useAdoptionRequestsReceived({
           petId: pet.id,
           petResponsibleUserId: pet.responsibleUserId,
           initialStatus: simulateWithSharedContact ? 'CONTACT_SHARED' : 'PENDING',
-          responsibleContactShareConsent: simulateContactShareConsent,
+          adopterContactShareConsent: simulateAdopterContactShareConsent,
+          responsibleContactShareConsent: simulateResponsibleContactShareConsent,
         },
       );
 
       setActionMessage(response.data.message);
       await loadRequests(currentUserId);
-    } catch {
-      setErrorMessage('Nao foi possivel simular a solicitacao no momento.');
+    } catch (error) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Nao foi possivel simular a solicitacao no momento.';
+      setErrorMessage(errorMessage);
     } finally {
       setIsSimulating(false);
     }
@@ -245,7 +251,8 @@ export function useAdoptionRequestsReceived({
     loadRequests,
     ownPets,
     selectedPetId,
-    simulateContactShareConsent,
+    simulateAdopterContactShareConsent,
+    simulateResponsibleContactShareConsent,
     simulateWithSharedContact,
   ]);
 
@@ -277,14 +284,16 @@ export function useAdoptionRequestsReceived({
     selectedPetId,
     isSimulating,
     simulateWithSharedContact,
-    simulateContactShareConsent,
+    simulateAdopterContactShareConsent,
+    simulateResponsibleContactShareConsent,
     rejectionModalData,
     rejectionReason,
     approvalModalData,
     approvalNote,
     setSelectedPetId,
     setSimulateWithSharedContact,
-    setSimulateContactShareConsent,
+    setSimulateAdopterContactShareConsent,
+    setSimulateResponsibleContactShareConsent,
     setRejectionReason,
     setApprovalNote,
     loadOwnPets,

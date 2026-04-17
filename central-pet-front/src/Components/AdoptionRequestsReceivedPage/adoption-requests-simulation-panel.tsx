@@ -7,10 +7,12 @@ type AdoptionRequestsSimulationPanelProps = {
   isLoadingOwnPets: boolean;
   isSimulating: boolean;
   simulateWithSharedContact: boolean;
-  simulateContactShareConsent: boolean;
+  simulateAdopterContactShareConsent: boolean;
+  simulateResponsibleContactShareConsent: boolean;
   onSelectedPetIdChange: (value: string) => void;
   onSimulateWithSharedContactChange: (value: boolean) => void;
-  onSimulateContactShareConsentChange: (value: boolean) => void;
+  onSimulateAdopterContactShareConsentChange: (value: boolean) => void;
+  onSimulateResponsibleContactShareConsentChange: (value: boolean) => void;
   onSimulate: () => void;
 };
 
@@ -20,10 +22,12 @@ export function AdoptionRequestsSimulationPanel({
   isLoadingOwnPets,
   isSimulating,
   simulateWithSharedContact,
-  simulateContactShareConsent,
+  simulateAdopterContactShareConsent,
+  simulateResponsibleContactShareConsent,
   onSelectedPetIdChange,
   onSimulateWithSharedContactChange,
-  onSimulateContactShareConsentChange,
+  onSimulateAdopterContactShareConsentChange,
+  onSimulateResponsibleContactShareConsentChange,
   onSimulate,
 }: AdoptionRequestsSimulationPanelProps) {
   return (
@@ -84,11 +88,23 @@ export function AdoptionRequestsSimulationPanel({
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={simulateContactShareConsent}
-            onChange={(event) => onSimulateContactShareConsentChange(event.target.checked)}
+            checked={simulateAdopterContactShareConsent}
+            onChange={(event) => onSimulateAdopterContactShareConsentChange(event.target.checked)}
             className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
           />
           Adotante autoriza compartilhamento de contato
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={simulateResponsibleContactShareConsent}
+            onChange={(event) =>
+              onSimulateResponsibleContactShareConsentChange(event.target.checked)
+            }
+            className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+          />
+          Responsável autoriza compartilhamento de contato
         </label>
       </div>
     </div>

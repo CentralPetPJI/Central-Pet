@@ -26,6 +26,39 @@ export class AdoptionRequestSimulationService {
     }
   }
 
+  async findAvailableMockAdopter(ownerUserId: string, adopterId?: string): Promise<MockUser> {
+    if (adopterId) {
+      return this.getSimulationAdopter(ownerUserId, adopterId);
+    }
+
+    const eligibleAdopters = mockUsers.filter(
+      (user) => user.role === 'PESSOA_FISICA' && user.id !== ownerUserId,
+    );
+
+    if (eligibleAdopters.length === 0) {
+      throw new NotFoundException('No eligible mock adopter was found');
+    }
+
+    for (const mockUser of eligibleAdopters) {
+      const existingRequest = await this.prisma.adoptionRequest.findFirst({
+        where: {
+          adopterId: mockUser.id,
+          responsibleUserId: ownerUserId,
+          status: { in: [AdoptionRequestStatus.PENDING, AdoptionRequestStatus.CONTACT_SHARED] },
+        },
+        select: { id: true },
+      });
+
+      if (!existingRequest) {
+        return mockUser;
+      }
+    }
+
+    throw new BadRequestException(
+      'Todos os mock adopters já possuem solicitação para este doador. Aguarde o andamento das solicitações atuais.',
+    );
+  }
+
   getSimulationAdopter(ownerUserId: string, adopterId?: string): MockUser {
     if (adopterId) {
       const mockUser = this.mockUsersById.get(adopterId);
@@ -103,7 +136,10 @@ export class AdoptionRequestSimulationService {
   async simulateReceived(userId: string, dto: SimulateAdoptionRequestDto) {
     this.validateSimulationPermission(userId, dto.petResponsibleUserId);
 
-    const mockAdopter = this.getSimulationAdopter(dto.petResponsibleUserId, dto.adopterId);
+    const mockAdopter = await this.findAvailableMockAdopter(
+      dto.petResponsibleUserId,
+      dto.adopterId,
+    );
 
     await this.validateSimulationPrerequisites(dto, mockAdopter);
 
@@ -112,6 +148,7 @@ export class AdoptionRequestSimulationService {
         petId: dto.petId,
         responsibleUserId: dto.petResponsibleUserId,
         adopterId: mockAdopter.id,
+        adopterContactShareConsent: dto.adopterContactShareConsent ?? false,
         responsibleContactShareConsent: dto.responsibleContactShareConsent ?? false,
         message: dto.message ?? 'Olá! Tenho interesse em adotar este pet.',
         status: dto.initialStatus ?? AdoptionRequestStatus.PENDING,

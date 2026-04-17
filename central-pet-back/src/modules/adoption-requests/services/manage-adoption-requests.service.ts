@@ -79,9 +79,6 @@ if (!currentRequest.adopterContactShareConsent) {
           'O tutor deve autorizar o compartilhamento de contato antes desta etapa ser concluída',
         );
       }*/
-      if (!currentRequest.responsibleContactShareConsent) {
-        throw new BadRequestException('O contato já foi compartilhado para este pedido.');
-      }
       return this.shareContactUseCase.execute(requestId, userId, dto);
     }
 

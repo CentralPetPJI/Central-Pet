@@ -70,6 +70,7 @@ export class AdoptionRequestsService {
         adopter: adopterForResponse,
         message: r.message,
         adopterContactShareConsent: r.adopterContactShareConsent,
+        responsibleContactShareConsent: r.responsibleContactShareConsent,
         status: r.status as unknown as AdoptionRequestStatus,
         note: r.note ?? undefined,
         requestedAt: r.requestedAt.toISOString(),
