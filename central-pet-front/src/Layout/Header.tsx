@@ -7,7 +7,7 @@ import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import {shouldDisplayMockUsers} from '@/lib/dev-mode';
+import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
 
 const roleLabelMap = {
@@ -54,8 +54,7 @@ const Header = () => {
   const institutionsMenuItems: MenuItem[] = [
     {
       label: 'Consultar',
-      disabled: true,
-      tooltip: 'Em breve',
+      path: routes.institutions.list.path,
       icon: <Compass className="h-4 w-4 text-amber-600" />,
     },
     {
@@ -202,16 +201,12 @@ const Header = () => {
                   </span>
                 </NavLink>
               )}
-              <button
-                className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 opacity-50 cursor-not-allowed"
-                disabled
-                title="Em breve"
-              >
+              <NavLink to={routes.institutions.list.path}>
                 <span className="inline-flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-amber-600" />
                   <span>Instituições</span>
                 </span>
-              </button>
+              </NavLink>
             </div>
 
             {/* Divisor */}

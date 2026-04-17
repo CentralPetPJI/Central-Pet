@@ -26,6 +26,8 @@ const App: React.FC = () => {
     routes.login,
     routes.register,
     routes.profile,
+    routes.institutions.list,
+    routes.institutions.detail,
     routes.pets.new,
     routes.pets.mine,
     routes.pets.edit,
