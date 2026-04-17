@@ -11,9 +11,6 @@ import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 export class ShareContactUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Mark request as contact_shared. Uses only IDs; does not perform response mapping.
-   */
   async execute(
     requestId: string,
     _responsibleUserId: string,
@@ -31,32 +28,24 @@ export class ShareContactUseCase {
       throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
     }
 
-    const { count: updatedCount } = await this.prisma.adoptionRequest.updateMany({
+    const updatedRequest = await this.prisma.adoptionRequest.update({
       where: {
         id: requestId,
         version: currentRequest.version,
       },
       data: {
+        responsibleContactShareConsent: true,
         status: AdoptionRequestStatus.CONTACT_SHARED,
         note: dto.note?.trim() || null,
         version: { increment: 1 },
       },
     });
 
-    if (updatedCount === 0) {
-      throw new ConflictException(
-        'Esta solicitação de adoção foi modificada por outro processo. Por favor, recarregue e tente novamente.',
-      );
-    }
-
-    const updatedRequest = await this.prisma.adoptionRequest.findUnique({
-      where: { id: requestId },
-    });
-
     if (!updatedRequest) {
       throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
     }
 
+    // TODO: Acredito que podemos modififcar para o manage criar a notificacao
     const notification = {
       id: `${requestId}-notification-contact-shared`,
       requestId,

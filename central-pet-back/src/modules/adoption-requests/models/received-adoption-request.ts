@@ -27,6 +27,7 @@ export type ReceivedAdoptionRequest = {
   adopter: ReceivedAdoptionRequestAdopter;
   message: string;
   adopterContactShareConsent: boolean;
+  responsibleContactShareConsent: boolean;
   status: AdoptionRequestStatus;
   note?: string;
   requestedAt: string;

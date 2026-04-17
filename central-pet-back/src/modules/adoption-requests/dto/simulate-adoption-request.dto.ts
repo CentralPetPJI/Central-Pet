@@ -25,7 +25,7 @@ export class SimulateAdoptionRequestDto {
 
   @IsOptional()
   @IsBoolean()
-  adopterContactShareConsent?: boolean;
+  responsibleContactShareConsent?: boolean;
 
   @IsOptional()
   @IsString()

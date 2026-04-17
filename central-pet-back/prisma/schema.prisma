@@ -136,6 +136,7 @@ model AdoptionRequest {
   responsibleUserId          String
   adopterId                  String
   adopterContactShareConsent Boolean               @default(false)
+  responsibleContactShareConsent Boolean @default(false)
   message                    String
   status                     AdoptionRequestStatus @default(PENDING)
   note                       String?
@@ -151,7 +152,7 @@ model AdoptionRequest {
   @@index([adopterId])
   @@index([petId])
 
-  @@unique([id, version])
+  @@unique([petId, adopterId])
 }
 
 model PetHistory {

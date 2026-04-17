@@ -112,7 +112,7 @@ export class AdoptionRequestSimulationService {
         petId: dto.petId,
         responsibleUserId: dto.petResponsibleUserId,
         adopterId: mockAdopter.id,
-        adopterContactShareConsent: dto.adopterContactShareConsent ?? false,
+        responsibleContactShareConsent: dto.responsibleContactShareConsent ?? false,
         message: dto.message ?? 'Olá! Tenho interesse em adotar este pet.',
         status: dto.initialStatus ?? AdoptionRequestStatus.PENDING,
       },

@@ -26,10 +26,6 @@ export class ManageAdoptionRequestsService {
     private readonly rejectAdoptionUseCase: RejectAdoptionUseCase,
   ) {}
 
-  /**
-   * Manage a received adoption request. Returns raw DB-level result; response assembly
-   * is done by a higher layer.
-   */
   async manageReceived(
     requestId: string,
     userId: string,
@@ -48,7 +44,6 @@ export class ManageAdoptionRequestsService {
       throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
     }
 
-    // only the responsible user may manage received requests
     if (currentRequest.responsibleUserId !== userId) {
       throw new BadRequestException(
         'Você não pode gerenciar solicitações de pets que você não possui',
@@ -62,8 +57,11 @@ export class ManageAdoptionRequestsService {
 
     if (dto.action === 'approve') {
       if (!canApproveForStatus(currentRequest.status as unknown as AdoptionRequestStatus)) {
-        throw new ConflictException(
-          'Para aprovar uma solicitação de adoção, o status anterior deve ser "Compartilhado".',
+        throw new ConflictException('Esta solicitação não pode ser aprovada no momento.');
+      }
+      if (!currentRequest.responsibleContactShareConsent) {
+        throw new BadRequestException(
+          'O adotante deve autorizar o compartilhamento de contato antes desta etapa ser concluída',
         );
       }
       return this.approveAdoptionUseCase.execute(requestId, userId, dto);
@@ -71,18 +69,19 @@ export class ManageAdoptionRequestsService {
 
     if (dto.action === 'share_contact') {
       if (!canShareContactForStatus(currentRequest.status as unknown as AdoptionRequestStatus)) {
-        throw new BadRequestException(
+        throw new ConflictException(
           'Para compartilhar o contato, o status anterior deve ser "Pendente".',
-        );
-      }
-      if (!currentRequest.adopterContactShareConsent) {
-        throw new BadRequestException(
-          'O adotante deve autorizar o compartilhamento de contato antes desta etapa ser concluída',
         );
       }
       return this.shareContactUseCase.execute(requestId, userId, dto);
     }
 
-    return this.rejectAdoptionUseCase.execute(requestId, userId, dto);
+    const rejectResult = await this.rejectAdoptionUseCase.execute(requestId, userId, dto);
+    return {
+      message: rejectResult.message,
+      updatedReq: rejectResult.updatedReq,
+      notification: rejectResult.notification,
+      autoRejectedCount: rejectResult.autoRejectedCount,
+    };
   }
 }

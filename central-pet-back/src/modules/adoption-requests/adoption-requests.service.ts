@@ -144,7 +144,6 @@ export class AdoptionRequestsService {
       );
     }
 
-    // ensure persisted users exist and build persisted map
     await this.userPersistence.ensurePersistedUsersExist(
       [updatedReq.adopterId],
       this.mockUsersById,
