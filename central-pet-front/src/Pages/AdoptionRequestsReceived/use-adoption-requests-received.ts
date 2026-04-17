@@ -12,6 +12,7 @@ type UseAdoptionRequestsReceivedParams = {
   isAuthLoading: boolean;
 };
 
+// TODO: refatorar esse hook, talvez usar zustand para organizar melhor os estados e funcoes relacionados as solicitacoes recebidas, e separar a logica de simulacao em um hook a parte
 export function useAdoptionRequestsReceived({
   currentUserId,
   isAuthLoading,
@@ -26,11 +27,10 @@ export function useAdoptionRequestsReceived({
   const [isSimulationPanelOpen, setIsSimulationPanelOpen] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState('');
   const [isSimulating, setIsSimulating] = useState(false);
-  const [simulateWithSharedContact, setSimulateWithSharedContact] = useState(true);
+  const [simulateResponsibleContactShareConsent, setSimulateResponsibleContactShareConsent] =
+    useState(true);
   const [simulateAdopterContactShareConsent, setSimulateAdopterContactShareConsent] =
     useState(true);
-  const [simulateResponsibleContactShareConsent, setSimulateResponsibleContactShareConsent] =
-    useState(false);
   const [rejectionModalData, setRejectionModalData] = useState<AdoptionRequestModalData | null>(
     null,
   );
@@ -230,7 +230,7 @@ export function useAdoptionRequestsReceived({
         {
           petId: pet.id,
           petResponsibleUserId: pet.responsibleUserId,
-          initialStatus: simulateWithSharedContact ? 'CONTACT_SHARED' : 'PENDING',
+          initialStatus: simulateResponsibleContactShareConsent ? 'CONTACT_SHARED' : 'PENDING',
           adopterContactShareConsent: simulateAdopterContactShareConsent,
           responsibleContactShareConsent: simulateResponsibleContactShareConsent,
         },
@@ -253,7 +253,6 @@ export function useAdoptionRequestsReceived({
     selectedPetId,
     simulateAdopterContactShareConsent,
     simulateResponsibleContactShareConsent,
-    simulateWithSharedContact,
   ]);
 
   const openApprovalModal = useCallback((request: ReceivedAdoptionRequest) => {
@@ -283,17 +282,15 @@ export function useAdoptionRequestsReceived({
     isSimulationPanelOpen,
     selectedPetId,
     isSimulating,
-    simulateWithSharedContact,
-    simulateAdopterContactShareConsent,
     simulateResponsibleContactShareConsent,
+    simulateAdopterContactShareConsent,
     rejectionModalData,
     rejectionReason,
     approvalModalData,
     approvalNote,
     setSelectedPetId,
-    setSimulateWithSharedContact,
+    setSimulateResponsibleContactShareConsent: setSimulateResponsibleContactShareConsent,
     setSimulateAdopterContactShareConsent,
-    setSimulateResponsibleContactShareConsent,
     setRejectionReason,
     setApprovalNote,
     loadOwnPets,

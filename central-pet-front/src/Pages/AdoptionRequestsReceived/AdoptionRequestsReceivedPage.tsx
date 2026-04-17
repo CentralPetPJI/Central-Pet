@@ -23,17 +23,15 @@ export default function AdoptionRequestsReceivedPage() {
     isSimulationPanelOpen,
     selectedPetId,
     isSimulating,
-    simulateWithSharedContact,
-    simulateAdopterContactShareConsent,
     simulateResponsibleContactShareConsent,
+    simulateAdopterContactShareConsent,
     rejectionModalData,
     rejectionReason,
     approvalModalData,
     approvalNote,
     setSelectedPetId,
-    setSimulateWithSharedContact,
-    setSimulateAdopterContactShareConsent,
     setSimulateResponsibleContactShareConsent,
+    setSimulateAdopterContactShareConsent,
     setRejectionReason,
     setApprovalNote,
     loadOwnPets,
@@ -75,13 +73,11 @@ export default function AdoptionRequestsReceivedPage() {
           selectedPetId={selectedPetId}
           isLoadingOwnPets={isLoadingOwnPets}
           isSimulating={isSimulating}
-          simulateWithSharedContact={simulateWithSharedContact}
-          simulateAdopterContactShareConsent={simulateAdopterContactShareConsent}
           simulateResponsibleContactShareConsent={simulateResponsibleContactShareConsent}
+          simulateAdopterContactShareConsent={simulateAdopterContactShareConsent}
           onSelectedPetIdChange={setSelectedPetId}
-          onSimulateWithSharedContactChange={setSimulateWithSharedContact}
-          onSimulateAdopterContactShareConsentChange={setSimulateAdopterContactShareConsent}
           onSimulateResponsibleContactShareConsentChange={setSimulateResponsibleContactShareConsent}
+          onSimulateAdopterContactShareConsentChange={setSimulateAdopterContactShareConsent}
           onSimulate={() => void simulateRequest()}
         />
       ) : null}
