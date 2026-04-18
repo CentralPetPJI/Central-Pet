@@ -229,7 +229,6 @@ export class PetsService {
         email: mockUser.email,
         role: mockUser.role,
         birthDate: mockUser.birthDate ?? null,
-        organizationName: mockUser.organizationName ?? null,
       },
       create: {
         id: mockUser.id,
@@ -238,11 +237,18 @@ export class PetsService {
         role: mockUser.role,
         birthDate: mockUser.birthDate ?? null,
         cpf: null,
-        organizationName: mockUser.organizationName ?? null,
-        cnpj: null,
         passwordHash: MOCK_PASSWORD_HASH,
       },
     });
+
+    // If mock user represents an organization, ensure Institution exists
+    if (mockUser.organizationName) {
+      await this.prisma.institution.upsert({
+        where: { userId: mockUser.id },
+        update: { name: mockUser.organizationName },
+        create: { userId: mockUser.id, name: mockUser.organizationName },
+      });
+    }
   }
 
   private async ensureResponsibleUserExists(responsibleUserId: string) {

@@ -1,70 +1,116 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { CreateInstitutionDto, UpdateInstitutionDto } from './dto/institution.dto';
 
 @Injectable()
 export class InstitutionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // TODO: Hoje ong é um tipo de usuário, mas talvez seja interessante criar uma entidade separada para instituições, caso seja necessário armazenar informações específicas ou permitir que pessoas físicas criem instituições. Por enquanto, vamos manter como está, mas é algo a se considerar para o futuro.
-  // Considerar que uma ong pode ter varios abrigos (instituicoes)
-  async findAllPublic() {
-    const users = await this.prisma.user.findMany({
-      where: { role: 'ONG' },
-      select: {
-        id: true,
-        organizationName: true,
-        city: true,
-        state: true,
-        email: true,
-        createdAt: true,
-        birthDate: true,
-        fullName: true,
-        _count: {
-          select: { responsiblePets: true },
-        },
-      },
-      orderBy: { organizationName: 'asc' },
+  async create(userId: string, dto: CreateInstitutionDto) {
+    const existing = await this.prisma.institution.findUnique({
+      where: { userId },
     });
 
-    return users.map((u) => ({
-      id: u.id,
-      name: u.organizationName ?? u.fullName ?? 'Instituição',
-      city: u.city,
-      state: u.state,
-      email: u.email,
-      createdAt: u.createdAt.toISOString(),
-      petsCount: u._count?.responsiblePets ?? 0,
+    if (existing) {
+      throw new ConflictException('O usuário já possui uma instituição cadastrada');
+    }
+
+    return this.prisma.institution.create({
+      data: {
+        ...dto,
+        userId,
+      },
+    });
+  }
+
+  async update(userId: string, dto: UpdateInstitutionDto) {
+    const existing = await this.prisma.institution.findUnique({
+      where: { userId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Instituição não encontrada para este usuário');
+    }
+
+    return this.prisma.institution.update({
+      where: { userId },
+      data: dto,
+    });
+  }
+
+  async findByUserId(userId: string) {
+    return this.prisma.institution.findUnique({
+      where: { userId },
+    });
+  }
+
+  async findAllPublic() {
+    const institutions = await this.prisma.institution.findMany({
+      include: {
+        user: {
+          select: {
+            city: true,
+            state: true,
+            email: true,
+            _count: {
+              select: { responsiblePets: true },
+            },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return institutions.map((inst) => ({
+      id: inst.id,
+      userId: inst.userId,
+      name: inst.name,
+      city: inst.user.city,
+      state: inst.user.state,
+      email: inst.user.email, // Use user email as fallback or primary
+      verified: inst.verified,
+      createdAt: inst.createdAt.toISOString(),
+      petsCount: inst.user._count?.responsiblePets ?? 0,
     }));
   }
 
   async findByIdPublic(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const institution = await this.prisma.institution.findUnique({
       where: { id },
-      select: {
-        id: true,
-        organizationName: true,
-        city: true,
-        state: true,
-        email: true,
-        createdAt: true,
-        birthDate: true,
-        fullName: true,
-        _count: {
-          select: { responsiblePets: true },
+      include: {
+        user: {
+          select: {
+            city: true,
+            state: true,
+            email: true,
+            phone: true,
+            mobile: true,
+            _count: {
+              select: { responsiblePets: true },
+            },
+          },
         },
       },
     });
 
-    if (!user) throw new NotFoundException('Instituição não encontrada');
+    if (!institution) throw new NotFoundException('Instituição não encontrada');
 
     return {
-      id: user.id,
-      name: user.organizationName ?? user.fullName ?? 'Instituição',
-      city: user.city,
-      state: user.state,
-      email: user.email,
-      createdAt: user.createdAt.toISOString(),
-      petsCount: user._count?.responsiblePets ?? 0,
+      id: institution.id,
+      userId: institution.userId,
+      name: institution.name,
+      description: institution.description,
+      city: institution.user.city,
+      state: institution.user.state,
+      email: institution.user.email,
+      phone: institution.user.phone,
+      mobile: institution.user.mobile,
+      instagram: institution.instagram,
+      facebook: institution.facebook,
+      website: institution.website,
+      verified: institution.verified,
+      createdAt: institution.createdAt.toISOString(),
+      petsCount: institution.user._count?.responsiblePets ?? 0,
     };
   }
 }
