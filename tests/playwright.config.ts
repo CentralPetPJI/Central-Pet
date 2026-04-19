@@ -19,7 +19,7 @@ export default defineConfig({
     },
     {
       command:
-        "cross-env VITE_API_URL=http://localhost:3001/api VITE_AUTH_STRATEGY=session pnpm dev:front --host 0.0.0.0 --port 5174",
+        "VITE_API_URL=http://localhost:3001/api VITE_AUTH_STRATEGY=session pnpm dev:front --host 0.0.0.0 --port 5174",
       url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
