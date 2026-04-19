@@ -25,26 +25,47 @@ export function formatPetSpecies(species: string): string {
 
 /**
  * Formata CPF para exibição (XXX.XXX.XXX-XX)
+ * Aceita apenas dígitos (CPF nunca terá letras)
  * @param cpf - CPF sem formatação
- * @returns CPF formatado
+ * @returns CPF formatado ou valor original se inválido
  */
 export function formatCpf(cpf: string | undefined): string {
   if (!cpf) return '';
+  // Remove tudo que não for dígito
   const digits = cpf.replace(/\D/g, '');
   if (digits.length !== 11) return cpf;
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
 /**
- * Formata CNPJ para exibição (XX.XXX.XXX/XXXX-XX)
+ * Formata CNPJ para exibição.
+ * - CNPJ antigo: apenas dígitos (XX.XXX.XXX/XXXX-XX)
+ * - CNPJ novo (a partir de 07/2026): pode ser alfanumérico (A1.B2C.3D4/0001-EF)
+ *
+ * A função detecta se o CNPJ contém letras:
+ *   - Se só dígitos e 14 caracteres: aplica máscara tradicional
+ *   - Se contém letras: aplica máscara flexível (mantém letras e dígitos, separa por blocos)
  * @param cnpj - CNPJ sem formatação
  * @returns CNPJ formatado
  */
 export function formatCnpj(cnpj: string | undefined): string {
   if (!cnpj) return '';
-  const digits = cnpj.replace(/\D/g, '');
-  if (digits.length !== 14) return cnpj;
-  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  const clean = cnpj.replace(/[^\dA-Za-z]/g, '');
+  // CNPJ tradicional: só dígitos
+  if (/^\d{14}$/.test(clean)) {
+    return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  // Novo CNPJ alfanumérico (exemplo: A1B2C3D40001EF)
+  // Aplica máscara flexível: AA.BBB.CCC/DDDD-EE (mantendo letras e dígitos)
+  // Para simplificar, divide em blocos: 2-3-3-4-2
+  if (/^[\dA-Za-z]{14}$/.test(clean)) {
+    return clean.replace(
+      /([\dA-Za-z]{2})([\dA-Za-z]{3})([\dA-Za-z]{3})([\dA-Za-z]{4})([\dA-Za-z]{2})/,
+      '$1.$2.$3/$4-$5',
+    );
+  }
+  // Se não bate com nenhum formato esperado, retorna valor original
+  return cnpj;
 }
 
 /**
@@ -111,14 +132,30 @@ export function formatState(state: string | undefined): string {
  * @param role - 'PESSOA_FISICA' | 'ONG'
  */
 export function formatDocumentInput(raw: string | undefined, role: string): string {
-  const digits = (raw ?? '').replace(/\D/g, '');
+  const digits = sanitizeDocument(raw, role);
   const limited = role === 'ONG' ? digits.slice(0, 14) : digits.slice(0, 11);
   return role === 'ONG' ? formatCnpj(limited) : formatCpf(limited);
 }
 
 /**
- * Retorna apenas os dígitos do documento (limpeza para envio ao backend).
+ * Retorna apenas os caracteres válidos do documento para envio ao backend.
+ * - Para CPF: mantém apenas dígitos (11 dígitos)
+ * - Para CNPJ: a partir de julho/2026, aceita letras (A-Z) e dígitos (alfanumérico)
+ * @param _raw - Valor bruto do documento (pode conter letras, símbolos, etc.)
+ * @param role - 'PESSOA_FISICA' | 'ONG'
+ * @returns Documento limpo, pronto para validação/envio
  */
-export function sanitizeDocument(raw: string | undefined): string {
-  return (raw ?? '').replace(/\D/g, '');
+export function sanitizeDocument(_raw: string | undefined, role: string): string {
+  if (!_raw) return '';
+  if (role === 'PESSOA_FISICA') {
+    // CPF: só dígitos
+    return _raw.replace(/\D/g, '');
+  }
+  if (role === 'ONG') {
+    // CNPJ: a partir de julho/2026, aceita letras e dígitos
+    // Remove tudo que não for letra (A-Z, case-insensitive) ou dígito
+    return _raw.replace(/[^\dA-Za-z]/g, '');
+  }
+  // fallback: remove tudo que não for dígito
+  return _raw.replace(/\D/g, '');
 }

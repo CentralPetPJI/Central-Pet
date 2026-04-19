@@ -19,10 +19,10 @@ const PetRegisterLocationSection = () => {
       title="Localizacao e contato"
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <FormField label="Tutor Responsavel" error={errors.tutor?.message}>
+        <FormField label="Tutor" error={errors.tutor?.message}>
           <FormInput {...register('tutor')} placeholder="Ex: Maria Silva" />
         </FormField>
-        <FormField label="Abrigo / Origem" error={errors.shelter?.message}>
+        <FormField label="Abrigo" error={errors.shelter?.message}>
           <FormInput {...register('shelter')} placeholder="Ex: Abrigo Esperanca" />
         </FormField>
         <FormField label="Cidade" error={errors.city?.message}>
@@ -38,7 +38,7 @@ const PetRegisterLocationSection = () => {
             ))}
           </FormSelect>
         </FormField>
-        <FormField label="Contato para Adocao" error={errors.contact?.message}>
+        <FormField label="Contato" error={errors.contact?.message}>
           <FormInput {...register('contact')} accent="emerald" placeholder="(00) 00000-0000" />
         </FormField>
       </div>

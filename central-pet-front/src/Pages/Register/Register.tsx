@@ -92,7 +92,6 @@ export default function Register() {
   });
 
   const role = watch('role');
-  const documentValue = watch('documentValue');
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -115,7 +114,7 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormValues) => {
     setFeedback(null);
 
-    const sanitizedDocument = sanitizeDocument(data.documentValue);
+    const sanitizedDocument = sanitizeDocument(data.documentValue, data.role);
     const payload: RegisterData =
       data.role === 'ONG'
         ? {
@@ -198,8 +197,9 @@ export default function Register() {
               </label>
               <input
                 id="register-document"
-                value={documentValue}
-                onChange={handleDocumentChange}
+                {...register('documentValue', {
+                  onChange: handleDocumentChange,
+                })}
                 type="text"
                 inputMode="text"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"

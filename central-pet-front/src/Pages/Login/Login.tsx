@@ -96,7 +96,6 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     setFeedback(null);
-
     try {
       await login(data);
       navigate(routes.home.path, { replace: true });
