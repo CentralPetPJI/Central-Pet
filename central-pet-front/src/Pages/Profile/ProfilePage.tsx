@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const handleDeleteInstitution = async () => {
     if (
       !confirm(
-        'Tem certeza que deseja desativar sua página de abrigo? Esta ação não pode ser desfeita facilmente.',
+        'Tem certeza que deseja desativar sua página institucional? Esta ação não pode ser desfeita facilmente.',
       )
     )
       return;
@@ -65,7 +65,7 @@ export default function ProfilePage() {
     try {
       await deleteMyInstitution();
       await refetchInst();
-      setSuccessMessage('Página de abrigo desativada com sucesso.');
+      setSuccessMessage('Página institucional desativada com sucesso.');
     } catch (_err) {
       setErrorMessage('Erro ao desativar página.');
     } finally {
@@ -172,15 +172,15 @@ export default function ProfilePage() {
       const payloadInst = { ...data, cnpj: data.cnpj ? data.cnpj.replace(/\D/g, '') : undefined };
       if (institution) {
         await updateInstitution(payloadInst);
-        setSuccessMessage('Vitrine atualizada!');
+        setSuccessMessage('Perfil atualizado!');
       } else {
         await createInstitution(payloadInst);
-        setSuccessMessage('Vitrine criada com sucesso!');
+        setSuccessMessage('Perfil criado com sucesso!');
       }
       await refetchInst();
       setIsCreatingInst(false);
     } catch (_err) {
-      setErrorMessage('Erro ao salvar vitrine.');
+      setErrorMessage('Erro ao salvar perfil.');
     } finally {
       setIsSavingInst(false);
     }
@@ -554,34 +554,43 @@ export default function ProfilePage() {
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                     <Store className="text-cyan-600" size={28} />
-                    Vitrine Pública
+                    Perfil Institucional
                   </h2>
                   <p className="text-slate-500 font-medium mt-1">
-                    Configure como seu abrigo ou perfil de protetor aparece para o público.
+                    Aqui você configura sua página institucional, onde as pessoas podem conhecer seu
+                    trabalho e entrar em contato para adoção.
                   </p>
                 </div>
 
                 {!institution && !isCreatingInst && (
-                  <div className="flex-1 rounded-3xl bg-slate-900 p-6 md:p-8 shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/20 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div className="flex items-center gap-4 text-center md:text-left">
-                        <div className="h-14 w-14 flex-shrink-0 flex items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                          <Store size={28} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black text-white tracking-tight">
-                            Potencialize seu trabalho
-                          </h3>
-                          <p className="text-slate-400 font-medium text-sm">
-                            Ative sua vitrine pública para ganhar visibilidade.
-                          </p>
-                        </div>
+                  <div className="relative overflow-hidden rounded-3xl border border-cyan-100 bg-gradient-to-br from-white via-cyan-50/40 to-white p-8 md:p-10 shadow-sm transition hover:shadow-md">
+                    {/* Glow decorativo */}
+                    <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-cyan-200/30 blur-3xl" />
+
+                    <div className="flex flex-col items-center text-center gap-6 relative z-10">
+                      {/* Ícone */}
+                      <div className="h-16 w-16 flex items-center justify-center rounded-2xl bg-cyan-500 text-white shadow-lg shadow-cyan-200">
+                        <Store size={28} />
                       </div>
+
+                      {/* Texto */}
+                      <div className="max-w-md space-y-2">
+                        <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+                          Dê mais visibilidade ao seu trabalho
+                        </h3>
+                        <p className="text-slate-600 text-sm md:text-base leading-relaxed">
+                          Mostre os animais que você protege, conte sua história e conecte-se com
+                          pessoas prontas para adotar.
+                        </p>
+                      </div>
+
+                      {/* CTA */}
                       <button
                         onClick={() => setIsCreatingInst(true)}
-                        className="whitespace-nowrap rounded-2xl bg-cyan-500 px-8 py-4 text-sm font-black text-slate-950 transition hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95"
+                        className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 py-3.5 text-sm font-black text-slate-900 transition-all hover:bg-cyan-400 hover:shadow-lg hover:shadow-cyan-200 active:scale-95"
                       >
-                        Ativar Perfil de Abrigo
+                        Ativar Perfil Institucional
+                        <span className="transition-transform group-hover:translate-x-1">→</span>
                       </button>
                     </div>
                   </div>
@@ -609,8 +618,8 @@ export default function ProfilePage() {
                             </p>
                             <p className="text-xs text-slate-500 font-medium">
                               {institution.verified
-                                ? 'Sua vitrine possui o selo de confiança.'
-                                : 'Sua vitrine está visível, mas aguarda validação.'}
+                                ? 'Seu perfil possui o selo de confiança.'
+                                : 'Seu perfil está visível, mas aguarda validação.'}
                             </p>
                           </div>
                         </div>
@@ -620,7 +629,7 @@ export default function ProfilePage() {
                             <Store size={20} />
                           </div>
                           <div>
-                            <p className="text-sm font-black text-slate-900">Nova Vitrine</p>
+                            <p className="text-sm font-black text-slate-900">Novo Perfil Público</p>
                             <p className="text-xs text-slate-500 font-medium">
                               Preencha os dados abaixo para ativar seu perfil público.
                             </p>
@@ -646,7 +655,7 @@ export default function ProfilePage() {
                           className="rounded-2xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
                         >
                           <Save size={18} className="mr-2 inline" />
-                          {isSavingInst ? 'Salvando...' : 'Salvar Vitrine'}
+                          {isSavingInst ? 'Salvando...' : 'Salvar Perfil'}
                         </button>
                       </div>
                     </div>
@@ -654,7 +663,7 @@ export default function ProfilePage() {
                     <div className="grid gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-800 ml-1">
-                          Nome da Vitrine (Ex: Abrigo Felizes)
+                          Nome da Entidade / Proteção (Ex: Abrigo Felizes)
                         </label>
                         <input
                           type="text"

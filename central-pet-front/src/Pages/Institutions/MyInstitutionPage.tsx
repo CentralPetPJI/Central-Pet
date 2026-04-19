@@ -44,12 +44,12 @@ export default function MyInstitutionPage() {
     }
   }, [institution, reset]);
 
-  if (isLoading) return <div className="p-8 text-center">Carregando dados da instituição...</div>;
+  if (isLoading) return <div className="p-8 text-center">Carregando dados do perfil...</div>;
 
   if (!institution) {
     return (
       <div className="p-8 text-center">
-        <h2 className="text-xl font-bold">Você ainda não possui uma vitrine institucional.</h2>
+        <h2 className="text-xl font-bold">Você ainda não possui um perfil público.</h2>
         <Link
           to={routes.institutions.register.path}
           className="mt-4 inline-block text-cyan-600 hover:underline"
@@ -64,7 +64,14 @@ export default function MyInstitutionPage() {
     setIsSaving(true);
     setMessage(null);
     try {
-      const payload = { ...data, cnpj: data.cnpj ? sanitizeDocument(data.cnpj) : undefined };
+      if (!currentUser || !currentUser.role) {
+        setMessage({ type: 'error', text: 'Usuário não autenticado.' });
+        return;
+      }
+      const payload = {
+        ...data,
+        cnpj: data.cnpj ? sanitizeDocument(data.cnpj, currentUser.role) : undefined,
+      };
       await updateInstitution(payload);
       setMessage({ type: 'success', text: 'Dados atualizados com sucesso!' });
       await refetch();
@@ -78,7 +85,7 @@ export default function MyInstitutionPage() {
   const handleDelete = async () => {
     if (
       !confirm(
-        'Tem certeza que deseja desativar sua página de abrigo? Esta ação não pode ser desfeita facilmente.',
+        'Tem certeza que deseja desativar sua página pública? Esta ação não pode ser desfeita facilmente.',
       )
     )
       return;
@@ -104,9 +111,9 @@ export default function MyInstitutionPage() {
           >
             <ArrowLeft size={16} /> Voltar ao Perfil
           </Link>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Minha Instituição</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Meu Perfil Público</h1>
           <p className="text-slate-500 font-medium">
-            Gerencie como seu abrigo aparece para o público.
+            Gerencie como seu projeto ou perfil de protetor aparece para o público.
           </p>
         </div>
 
@@ -145,7 +152,7 @@ export default function MyInstitutionPage() {
 
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-800 ml-1">Nome da Vitrine</label>
+              <label className="text-sm font-bold text-slate-800 ml-1">Nome do Perfil</label>
               <input
                 type="text"
                 {...register('name')}
@@ -187,7 +194,7 @@ export default function MyInstitutionPage() {
             </div>
 
             <div className="md:col-span-2 space-y-2">
-              <label className="text-sm font-bold text-slate-800 ml-1">Descrição do Abrigo</label>
+              <label className="text-sm font-bold text-slate-800 ml-1">Descrição do Projeto</label>
               <textarea
                 rows={4}
                 {...register('description')}

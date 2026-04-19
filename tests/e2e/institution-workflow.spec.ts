@@ -69,7 +69,7 @@ test.describe("Fluxo de Instituições", () => {
       .getByPlaceholder("Conte um pouco sobre seu trabalho...")
       .fill("Descrição de teste");
 
-    await page.getByRole("button", { name: "Ativar Minha Vitrine" }).click();
+    await page.getByRole("button", { name: "Ativar Perfil Público" }).click();
 
     // 4. Validação de redirecionamento e criação
     await expect(page).toHaveURL("/institutions/mine");
