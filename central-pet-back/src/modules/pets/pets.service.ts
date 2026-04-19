@@ -9,6 +9,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { UserPersistenceService } from '../users/user-persistence.service';
 
 type PetRecord = {
   id: string;
@@ -55,19 +56,15 @@ export type PetForAdoptionRequest = Pick<
   | 'adoptionStatus'
 >;
 
-const MOCK_PASSWORD_HASH = 'mock-password-hash';
-
 @Injectable()
 export class PetsService {
   private readonly isMockPetModeEnabled = process.env.ENABLE_MOCK_PETS === 'true';
   private hasSeededMockPets = false;
-  private readonly mockUsersById = new Map<string, MockUser>(
-    mockUsers.map((user) => [user.id, user] as const),
-  );
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly personalityTraitsService: PersonalityTraitsService,
+    private readonly userPersistence: UserPersistenceService,
   ) {}
 
   private normalizeSpeciesForPersistence(species: string): 'DOG' | 'CAT' {
@@ -220,66 +217,14 @@ export class PetsService {
     }
   }
 
-  // TODO: Remover logica de user daqui, foi criado MockUserPersistenceService para isso
-  private async upsertMockUser(mockUser: MockUser) {
-    await this.prisma.user.upsert({
-      where: { id: mockUser.id },
-      update: {
-        fullName: mockUser.fullName,
-        email: mockUser.email,
-        role: mockUser.role,
-        birthDate: mockUser.birthDate ?? null,
-      },
-      create: {
-        id: mockUser.id,
-        fullName: mockUser.fullName,
-        email: mockUser.email,
-        role: mockUser.role,
-        birthDate: mockUser.birthDate ?? null,
-        cpf: null,
-        passwordHash: MOCK_PASSWORD_HASH,
-      },
-    });
-
-    // If mock user represents an organization, ensure Institution exists
-    if (mockUser.organizationName) {
-      await this.prisma.institution.upsert({
-        where: { userId: mockUser.id },
-        update: { name: mockUser.organizationName },
-        create: { userId: mockUser.id, name: mockUser.organizationName },
-      });
-    }
-  }
-
-  private async ensureResponsibleUserExists(responsibleUserId: string) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id: responsibleUserId },
-      select: { id: true },
-    });
-
-    if (existingUser) {
-      return;
-    }
-
-    const mockUser = this.mockUsersById.get(responsibleUserId);
-
-    if (!mockUser) {
-      throw new BadRequestException(
-        'responsibleUserId inválido: usuário não encontrado para vincular o pet.',
-      );
-    }
-
-    await this.upsertMockUser(mockUser);
-  }
-
   private async ensureMockPetsSeededIfEnabled() {
     if (!this.isMockPetModeEnabled || this.hasSeededMockPets) {
       return;
     }
 
-    for (const user of mockUsers) {
-      await this.upsertMockUser(user);
-    }
+    // Garante que todos os usuários mock existam no banco
+    const mockUserIds = mockUsers.map((u) => u.id);
+    await this.userPersistence.ensureUsersExist(mockUserIds);
 
     for (const pet of mockPets) {
       await this.prisma.pet.upsert({
@@ -328,7 +273,9 @@ export class PetsService {
 
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
     this.validateSelectedPersonalities(selectedPersonalities);
-    await this.ensureResponsibleUserExists(createPetDto.responsibleUserId);
+
+    // Garante que o responsável existe (seja mock ou real)
+    await this.userPersistence.validateUser(createPetDto.responsibleUserId);
 
     const createdPet = await this.prisma.pet.create({
       data: {

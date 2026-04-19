@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import { mockUserIds } from '@/mocks';
+import { mockUserIds, mockUsers } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PetHistoryService } from '../pet-history/pet-history.service';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
@@ -8,8 +8,8 @@ import { AdoptionRequestsService } from './adoption-requests.service';
 import { ApproveAdoptionUseCase, ShareContactUseCase, RejectAdoptionUseCase } from './use-cases';
 
 import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
-import { MockUserPersistenceService } from '../mock-auth';
 import { AdoptionRequestStatus } from './models/adoption-request-status';
+import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 type DbAdoptionRequest = {
   id: string;
@@ -41,6 +41,7 @@ describe('Servico de solicitacoes de adocao', () => {
       findMany: jest.Mock;
       findUnique: jest.Mock;
       upsert: jest.Mock;
+      count: jest.Mock;
     };
     pet: {
       findUnique: jest.Mock;
@@ -50,6 +51,9 @@ describe('Servico de solicitacoes de adocao', () => {
     };
     petHistory: {
       create: jest.Mock;
+    };
+    institution: {
+      upsert: jest.Mock;
     };
     $transaction: jest.Mock;
   };
@@ -88,6 +92,8 @@ describe('Servico de solicitacoes de adocao', () => {
 
     records = [];
     let index = 0;
+    type PersistedUser = { id: string; fullName?: string; email?: string };
+    const persistedUsers: PersistedUser[] = [];
 
     prismaMock = {
       adoptionRequest: {
@@ -219,9 +225,23 @@ describe('Servico de solicitacoes de adocao', () => {
         ),
       },
       user: {
-        findMany: jest.fn(() => []),
-        findUnique: jest.fn(() => null),
-        upsert: jest.fn((args: { create: { id: string } }) => ({ id: args.create.id })),
+        findMany: jest.fn(() => persistedUsers),
+        findUnique: jest.fn(
+          (args: { where: { id: string } }) =>
+            persistedUsers.find((u) => u.id === args.where.id) ?? null,
+        ),
+        upsert: jest.fn((args: { create: { id: string } }) => {
+          const found = mockUsers.find((u) => u.id === args.create.id);
+          const created = found
+            ? { id: found.id, fullName: found.fullName, email: found.email }
+            : { id: args.create.id, fullName: 'Usuário não encontrado' };
+          // persist for subsequent findMany/findUnique calls
+          persistedUsers.push(created);
+          return created;
+        }),
+        count: jest.fn((args: { where: { id: string; deleted: boolean } }) =>
+          persistedUsers.some((u) => u.id === args.where.id) ? 1 : 0,
+        ),
       },
       pet: {
         findUnique: jest.fn((args: { where: { id: string } }) => {
@@ -326,6 +346,19 @@ describe('Servico de solicitacoes de adocao', () => {
         })),
       },
 
+      institution: {
+        upsert: jest.fn(
+          (args: {
+            where: { userId: string };
+            create?: { name?: string };
+            update?: { name?: string };
+          }) => ({
+            userId: args.where.userId,
+            name: args.create?.name ?? args.update?.name,
+          }),
+        ),
+      },
+
       $transaction: jest.fn(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (callback: (tx: any) => Promise<any>) => {
@@ -368,7 +401,7 @@ describe('Servico de solicitacoes de adocao', () => {
       prismaMock as unknown as PrismaService,
     );
 
-    const userPersistence = new MockUserPersistenceService(prismaMock as unknown as PrismaService);
+    const userPersistence = new UserPersistenceService(prismaMock as unknown as PrismaService);
     const simulationService = new AdoptionRequestSimulationService(
       prismaMock as unknown as PrismaService,
       userPersistence,

@@ -14,6 +14,12 @@ export const CurrentUser = createParamDecorator(
       throw new UnauthorizedException('Authentication required');
     }
 
+    if (request.user.deleted) {
+      throw new UnauthorizedException(
+        'Esta conta foi desativada. Entre em contato com o suporte para mais informações.',
+      );
+    }
+
     return request.user;
   },
 );

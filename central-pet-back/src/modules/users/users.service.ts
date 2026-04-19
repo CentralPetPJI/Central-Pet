@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPassword } from '../auth/password.util';
 import { PrismaService } from '@/prisma/prisma.service';
+import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 type UserRecord = Awaited<ReturnType<PrismaService['user']['findUnique']>>;
 type PersistedUser = NonNullable<UserRecord>;
@@ -16,7 +17,10 @@ export type PublicUser = Omit<PersistedUser, 'passwordHash'>;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userPersistence: UserPersistenceService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
@@ -25,31 +29,42 @@ export class UsersService {
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
     const normalizedCnpj = createUserDto.cnpj?.trim().toUpperCase();
     const passwordHash = await hashPassword(createUserDto.password);
+
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: normalizedEmail },
-          ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
-          ...(normalizedCnpj ? [{ cnpj: normalizedCnpj }] : []),
-        ],
+        OR: [{ email: normalizedEmail }, ...(normalizedCpf ? [{ cpf: normalizedCpf }] : [])],
       },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Usuário com esse email ou CPF já existe');
     }
 
-    const user = await this.prisma.user.create({
-      data: {
-        fullName: createUserDto.fullName.trim(),
-        email: normalizedEmail,
-        role: createUserDto.role,
-        birthDate: createUserDto.birthDate,
-        cpf: normalizedCpf,
-        organizationName: createUserDto.organizationName?.trim(),
-        cnpj: normalizedCnpj,
-        passwordHash,
-      },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          fullName: createUserDto.fullName.trim(),
+          email: normalizedEmail,
+          role: createUserDto.role,
+          birthDate: createUserDto.birthDate,
+          cpf: normalizedCpf,
+          passwordHash,
+        },
+      });
+
+      if (createUserDto.role === 'ONG') {
+        await tx.institution.create({
+          data: {
+            userId: newUser.id,
+            name: createUserDto.organizationName?.trim() || newUser.fullName,
+            cnpj: normalizedCnpj,
+            // TODO: Acho que podemos verificar automaticamente por enquanto, ja que temos CNPJ (podemos validar em breve)
+            verified: true,
+          },
+        });
+      }
+
+      return newUser;
     });
 
     return {
@@ -64,6 +79,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
+    await this.userPersistence.validateUser(id);
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -74,26 +90,11 @@ export class UsersService {
   }
 
   async findProfileById(id: string) {
+    await this.userPersistence.validateUser(id);
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        birthDate: true,
-        cpf: true,
-        organizationName: true,
-        cnpj: true,
-        city: true,
-        state: true,
-        phone: true,
-        mobile: true,
-        instagram: true,
-        facebook: true,
-        website: true,
-        foundedAt: true,
-        createdAt: true,
+      include: {
+        institution: true,
         _count: {
           select: {
             responsiblePets: true,
@@ -115,18 +116,20 @@ export class UsersService {
         role: user.role,
         birthDate: user.birthDate,
         cpf: user.cpf,
-        organizationName: user.organizationName,
-        cnpj: user.cnpj,
         city: user.city,
         state: user.state,
         phone: user.phone,
         mobile: user.mobile,
-        instagram: user.instagram,
-        facebook: user.facebook,
-        website: user.website,
-        foundedAt: user.foundedAt,
         createdAt: user.createdAt.toISOString(),
         petsCount: user._count.responsiblePets,
+        // Legacy fields mapping for compatibility if needed,
+        // or frontend will be updated to read from institution
+        organizationName: user.institution?.name,
+        cnpj: user.institution?.cnpj,
+        instagram: user.institution?.instagram,
+        facebook: user.institution?.facebook,
+        website: user.institution?.website,
+        foundedAt: user.institution?.foundedAt,
       },
     };
   }
@@ -152,22 +155,8 @@ export class UsersService {
         }),
         ...(updateUserDto.city !== undefined && { city: updateUserDto.city ?? null }),
         ...(updateUserDto.state !== undefined && { state: updateUserDto.state ?? null }),
-        ...(updateUserDto.organizationName !== undefined && {
-          organizationName:
-            typeof updateUserDto.organizationName === 'string'
-              ? updateUserDto.organizationName.trim()
-              : (updateUserDto.organizationName ?? null),
-        }),
         ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
         ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),
-        ...(updateUserDto.instagram !== undefined && {
-          instagram: updateUserDto.instagram ?? null,
-        }),
-        ...(updateUserDto.facebook !== undefined && { facebook: updateUserDto.facebook ?? null }),
-        ...(updateUserDto.website !== undefined && { website: updateUserDto.website ?? null }),
-        ...(updateUserDto.foundedAt !== undefined && {
-          foundedAt: updateUserDto.foundedAt ?? null,
-        }),
       },
     });
 

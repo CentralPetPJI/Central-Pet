@@ -73,6 +73,7 @@ export class TestDatabaseHelper {
     await this.prisma.petHistory.deleteMany();
     await this.prisma.session.deleteMany();
     await this.prisma.pet.deleteMany();
+    await this.prisma.institution.deleteMany();
     await this.prisma.user.deleteMany();
   }
 

@@ -19,8 +19,16 @@ describe('AuthService', () => {
     } as unknown as jest.Mocked<UsersService>;
 
     prismaMock = makePrismaMock();
-    prismaMock.session.create.mockResolvedValue({ id: 'session-1' });
-    prismaMock.session.delete.mockResolvedValue(undefined);
+    prismaMock.session.create.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-1',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    prismaMock.session.delete.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-1',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
     prismaMock.session.deleteMany.mockResolvedValue({ count: 1 });
 
     authService = new AuthService(usersService, prismaMock as unknown as PrismaService);
@@ -33,7 +41,7 @@ describe('AuthService', () => {
     passwordHash: await hashPassword('Senha123!'),
     role: 'PESSOA_FISICA' as const,
     cpf: '12345678901',
-    birthDate: '1995-05-10',
+    birthDate: new Date('1995-05-10'),
     organizationName: null,
     cnpj: null,
     city: null,
@@ -57,7 +65,7 @@ describe('AuthService', () => {
       email: 'maria@example.com',
       role: 'PESSOA_FISICA',
       cpf: '12345678901',
-      birthDate: '1995-05-10',
+      birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
       city: null,
@@ -71,7 +79,7 @@ describe('AuthService', () => {
       deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await authService.login({
       email: 'maria@example.com',
@@ -97,14 +105,18 @@ describe('AuthService', () => {
   it('deve retornar usuário autenticado de uma sessão válida', async () => {
     usersService.findByEmail.mockResolvedValue(await makePersistedUser());
     usersService.findById.mockResolvedValue(await makePersistedUser());
-    prismaMock.session.findUnique.mockResolvedValue({ id: 'session-1', userId: 'user-1' });
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-1',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
     usersService.toPublicUser.mockReturnValue({
       id: 'user-1',
       fullName: 'Maria Silva',
       email: 'maria@example.com',
       role: 'PESSOA_FISICA',
       cpf: '12345678901',
-      birthDate: '1995-05-10',
+      birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
       city: null,
@@ -118,7 +130,7 @@ describe('AuthService', () => {
       deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const loginResult = await authService.login({
       email: 'maria@example.com',

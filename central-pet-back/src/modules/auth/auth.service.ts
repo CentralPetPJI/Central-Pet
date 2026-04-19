@@ -61,6 +61,12 @@ export class AuthService {
     // TODO: Se é so para validar autenticacao, talvez seja melhor so retornar o necessario e nao o user inteiro, pra evitar expor dados desnecessarios. Mas por ora tá ok retornar o user inteiro mesmo.
     const user = await this.usersService.findById(session.userId);
 
+    if (user.deleted) {
+      throw new UnauthorizedException(
+        'Esta conta foi desativada. Entre em contato com o suporte para mais informações.',
+      );
+    }
+
     if (!user) {
       await this.prisma.session.delete({
         where: { id: sessionId },

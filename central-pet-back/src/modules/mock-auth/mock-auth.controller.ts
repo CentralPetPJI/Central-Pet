@@ -10,7 +10,6 @@ import {
 import { Cookies } from '@/decorators/cookies.decorator';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { CookieInterceptor } from '@/interceptors/cookie.interceptor';
-import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import {
   buildSessionCookieValue,
   isMockAuthEnabled,
@@ -21,6 +20,7 @@ import type { MockUser } from '@/mocks';
 import type { PublicUser } from '@/modules/users/users.service';
 import { MockAuthService } from './mock-auth.service';
 import { SelectMockUserDto } from './dto/select-mock-user.dto';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
 
 @Controller('mock-auth')
 export class MockAuthController {

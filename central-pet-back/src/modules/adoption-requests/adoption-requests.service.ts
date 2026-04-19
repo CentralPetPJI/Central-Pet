@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import type {
   ReceivedAdoptionRequest,
@@ -11,20 +10,16 @@ import { type ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto
 import type { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
 import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
-import { MockUserPersistenceService } from '../mock-auth';
+import { UserPersistenceService } from '../users/user-persistence.service';
 
 @Injectable()
 export class AdoptionRequestsService {
-  private readonly mockUsersById = new Map<string, MockUser>(
-    mockUsers.map((u) => [u.id, u] as const),
-  );
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly simulationService: AdoptionRequestSimulationService,
     private readonly manageService: ManageAdoptionRequestsService,
     private readonly petsService: PetsService,
-    private readonly userPersistence: MockUserPersistenceService,
+    private readonly userPersistence: UserPersistenceService,
   ) {}
 
   /**
@@ -36,11 +31,8 @@ export class AdoptionRequestsService {
     requests: AdoptionRequestRecord[],
   ): Promise<ReceivedAdoptionRequest[]> {
     const adopterIds = Array.from(new Set(requests.map((r) => r.adopterId)));
-    await this.userPersistence.ensurePersistedUsersExist(adopterIds, this.mockUsersById);
-    const persistedUsersById = await this.userPersistence.buildPersistedUserMap(
-      adopterIds,
-      this.mockUsersById,
-    );
+    await this.userPersistence.ensureUsersExist(adopterIds);
+    const persistedUsersById = await this.userPersistence.buildUserMap(adopterIds);
 
     const petsById = new Map<string, PetForAdoptionRequest | null>();
     await Promise.all(
@@ -58,11 +50,7 @@ export class AdoptionRequestsService {
       }
 
       const petForResponse = mapPetForResponse(petFound);
-      const adopterForResponse = mapAdopterForResponse(
-        r.adopterId,
-        this.mockUsersById,
-        persistedUsersById,
-      );
+      const adopterForResponse = mapAdopterForResponse(r.adopterId, persistedUsersById);
 
       return {
         id: r.id,
@@ -145,14 +133,8 @@ export class AdoptionRequestsService {
       );
     }
 
-    await this.userPersistence.ensurePersistedUsersExist(
-      [updatedReq.adopterId],
-      this.mockUsersById,
-    );
-    const persistedUsersById = await this.userPersistence.buildPersistedUserMap(
-      [updatedReq.adopterId],
-      this.mockUsersById,
-    );
+    await this.userPersistence.ensureUsersExist([updatedReq.adopterId]);
+    const persistedUsersById = await this.userPersistence.buildUserMap([updatedReq.adopterId]);
 
     const petFound = await this.petsService.findByIdForAdoption(updatedReq.petId);
     if (!petFound) {
@@ -160,11 +142,7 @@ export class AdoptionRequestsService {
     }
 
     const petForResponse = mapPetForResponse(petFound);
-    const adopterForResponse = mapAdopterForResponse(
-      updatedReq.adopterId,
-      this.mockUsersById,
-      persistedUsersById,
-    );
+    const adopterForResponse = mapAdopterForResponse(updatedReq.adopterId, persistedUsersById);
 
     const data = {
       id: updatedReq.id,
