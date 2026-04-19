@@ -1,93 +1,36 @@
-import { jest } from '@jest/globals';
+import { PrismaClient } from '../../generated/prisma/client';
+import { mockDeep, mockReset, DeepMockProxy } from 'jest-mock-extended';
 
-type MockFn = ReturnType<typeof jest.fn>;
-
-export type MockedPrismaClient = {
-  user: {
-    findFirst: MockFn;
-    findUnique: MockFn;
-    create: MockFn;
-    update: MockFn;
-    delete: MockFn;
-    findMany: MockFn;
-  };
-  session: {
-    create: MockFn;
-    findUnique: MockFn;
-    delete: MockFn;
-    deleteMany: MockFn;
-  };
-  pet: {
-    findFirst: MockFn;
-    findUnique: MockFn;
-    create: MockFn;
-    update: MockFn;
-    delete: MockFn;
-    findMany: MockFn;
-  };
-  adoptionRequest: {
-    findFirst: MockFn;
-    findUnique: MockFn;
-    create: MockFn;
-    update: MockFn;
-    findMany: MockFn;
-  };
-  personalityTrait: {
-    findMany: MockFn;
-  };
-  petHistory: {
-    create: MockFn;
-    findMany: MockFn;
-  };
-};
-
-export type MockContext = {
-  prisma: MockedPrismaClient;
-};
+export type MockContext = { prisma: DeepMockProxy<PrismaClient> };
 
 export const createMockContext = (): MockContext => {
-  return {
-    prisma: {
-      user: {
-        findFirst: jest.fn(),
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        findMany: jest.fn(),
-      },
-      session: {
-        create: jest.fn(),
-        findUnique: jest.fn(),
-        delete: jest.fn(),
-        deleteMany: jest.fn(),
-      },
-      pet: {
-        findFirst: jest.fn(),
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        findMany: jest.fn(),
-      },
-      adoptionRequest: {
-        findFirst: jest.fn(),
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        findMany: jest.fn(),
-      },
-      personalityTrait: {
-        findMany: jest.fn(),
-      },
-      petHistory: {
-        create: jest.fn(),
-        findMany: jest.fn(),
-      },
+  const prisma = mockDeep<PrismaClient>();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+  (prisma as any).$transaction = jest.fn(
+    async (cb: (tx: DeepMockProxy<PrismaClient>) => Promise<unknown>) => {
+      return cb(prisma);
     },
-  };
+  );
+
+  return { prisma };
 };
 
-export const makePrismaMock = (): MockedPrismaClient => {
+export const makePrismaMock = (): DeepMockProxy<PrismaClient> => {
   return createMockContext().prisma;
+};
+
+// Singleton mock: re-initialize with the same robust configuration
+const sharedMock = createMockContext().prisma;
+export const prismaMock = sharedMock;
+
+export const resetPrismaMock = (): void => {
+  mockReset(prismaMock);
+  // Re-apply $transaction mock after reset
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+  (prismaMock as any).$transaction = jest.fn(
+    async (cb: (tx: DeepMockProxy<PrismaClient>) => Promise<unknown>) => {
+      return cb(prismaMock);
+    },
+  );
 };

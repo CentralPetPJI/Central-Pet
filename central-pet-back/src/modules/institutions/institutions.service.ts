@@ -1,10 +1,38 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateInstitutionDto, UpdateInstitutionDto } from './dto/institution.dto';
+import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 @Injectable()
 export class InstitutionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userPersistence: UserPersistenceService,
+  ) {}
+
+  async remove(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (user?.role === 'ONG') {
+      throw new ConflictException('ONGs não podem desativar sua página de instituição.');
+    }
+
+    const existing = await this.prisma.institution.findUnique({
+      where: { userId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Instituição não encontrada para este usuário');
+    }
+
+    return this.prisma.institution.update({
+      where: { userId },
+      data: { deleted: true },
+    });
+  }
 
   async create(userId: string, dto: CreateInstitutionDto) {
     const existing = await this.prisma.institution.findUnique({
@@ -39,13 +67,15 @@ export class InstitutionsService {
   }
 
   async findByUserId(userId: string) {
+    await this.userPersistence.validateUser(userId);
     return this.prisma.institution.findUnique({
-      where: { userId },
+      where: { userId, deleted: false },
     });
   }
 
   async findAllPublic() {
     const institutions = await this.prisma.institution.findMany({
+      where: { deleted: false },
       include: {
         user: {
           select: {
@@ -76,7 +106,7 @@ export class InstitutionsService {
 
   async findByIdPublic(id: string) {
     const institution = await this.prisma.institution.findUnique({
-      where: { id },
+      where: { id, deleted: false },
       include: {
         user: {
           select: {
