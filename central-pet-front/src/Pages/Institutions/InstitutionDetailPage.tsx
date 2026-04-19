@@ -26,11 +26,11 @@ export default function InstitutionDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!institution?.userId) return;
     setIsPetsLoading(true);
     (async () => {
       try {
-        const response = await api.get(`/pets?responsibleUserId=${id}`);
+        const response = await api.get(`/pets?responsibleUserId=${institution.userId}`);
         const payload = response.data && (response.data.data ?? response.data);
         if (Array.isArray(payload)) {
           ensureAllPublicIds(payload);
@@ -45,7 +45,7 @@ export default function InstitutionDetailPage() {
         setIsPetsLoading(false);
       }
     })();
-  }, [id]);
+  }, [institution?.userId]);
 
   if (isLoading) return <div className="p-4">Carregando instituição...</div>;
   if (error) return <div className="p-4 text-red-600">Erro: {error.message}</div>;
@@ -67,7 +67,7 @@ export default function InstitutionDetailPage() {
           </div>
 
           <div className="text-right">
-            {(institution.foundedAt ?? institution.birthDate) && (
+            {(institution.foundedAt ?? institution.foundedAt) && (
               <>
                 <div className="text-sm text-gray-500">Fundada em</div>
                 {/*TODO: Arrumar data de fundação*/}

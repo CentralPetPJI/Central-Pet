@@ -6,6 +6,7 @@ import DropdownMenu from '../Components/DropdownMenu';
 import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
+import { useMyInstitution } from '@/lib/institutions/use-institutions';
 import { routes } from '@/routes';
 import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
@@ -17,6 +18,7 @@ const roleLabelMap = {
 
 const Header = () => {
   const { currentUser, users, selectUser, logout } = useAuth();
+  const { institution } = useMyInstitution();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -55,14 +57,25 @@ const Header = () => {
     {
       label: 'Consultar',
       path: routes.institutions.list.path,
-      icon: <Compass className="h-4 w-4 text-amber-600" />,
+      icon: <Compass className="h-4 w-4 text-cyan-700" />,
     },
-    {
-      label: 'Cadastrar Nova',
-      disabled: true,
-      tooltip: 'Em breve',
-      icon: <Building2 className="h-4 w-4 text-amber-600" />,
-    },
+    ...(institution
+      ? [
+          {
+            label: 'Minha Instituição',
+            path: routes.institutions.mine.path,
+            icon: <Building2 className="h-4 w-4 text-amber-600" />,
+            requiresAuth: true,
+          },
+        ]
+      : [
+          {
+            label: 'Ativar Perfil',
+            path: routes.institutions.register.path,
+            icon: <Building2 className="h-4 w-4 text-amber-600" />,
+            requiresAuth: true,
+          },
+        ]),
   ];
 
   return (

@@ -44,12 +44,19 @@ export default function InstitutionsPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">{inst.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-slate-900">{inst.name}</h2>
+                      {inst.verified && (
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                          Verificado
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 text-sm text-gray-600">
                       {[inst.city, inst.state].filter(Boolean).join(' • ') || '—'}
                     </p>
                     <p className="mt-2 text-sm text-gray-700 line-clamp-2">
-                      {inst.email ?? 'Sem e-mail público'}
+                      {inst.description || inst.email || 'Sem e-mail público'}
                     </p>
                   </div>
                   <div className="text-sm text-gray-500 text-right">

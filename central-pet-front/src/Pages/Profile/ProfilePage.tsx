@@ -1,13 +1,22 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { formatDocument, brazilianStates } from '@/lib/formatters';
+import { formatDocument, brazilianStates, formatDocumentInput } from '@/lib/formatters';
 import FormSelect from '@/Components/Form/FormSelect';
 import { routes } from '@/routes';
 import type { UserProfile } from '@/Models/user';
-import { UserX } from 'lucide-react';
-import { userProfileSchema } from '@/lib/validation/profile';
+import { UserX, Store, CheckCircle, AlertCircle, Save } from 'lucide-react';
+import { userProfileSchema, type UserProfileFormData } from '@/lib/validation/profile';
+import {
+  useMyInstitution,
+  createInstitution,
+  updateInstitution,
+  deleteMyInstitution,
+} from '@/lib/institutions/use-institutions';
+import { institutionSchema, type InstitutionFormData } from '@/lib/validation/institution';
 
 export default function ProfilePage() {
   const { currentUser, isLoading: isAuthLoading, logout } = useAuth();
@@ -16,51 +25,80 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const logoutTimerRef = useRef<number | null>(null);
 
-  const editableKeys: (keyof UserProfile)[] = [
-    'fullName',
-    'birthDate',
-    'city',
-    'state',
-    'organizationName',
-    'phone',
-    'mobile',
-    'instagram',
-    'facebook',
-    'website',
-    'foundedAt',
-  ];
+  const {
+    register: registerProfile,
+    handleSubmit: handleSubmitProfile,
+    reset: resetProfile,
+    formState: { errors: profileErrors, isDirty: profileIsDirty },
+  } = useForm<UserProfileFormData>({
+    resolver: zodResolver(userProfileSchema),
+  });
 
-  const hasChanges = !!(
-    profile &&
-    editableKeys.some(
-      (k) => String(editForm[k] ?? '') !== String((profile as UserProfile)[k] ?? ''),
+  // Institution State
+  const { institution, refetch: refetchInst } = useMyInstitution();
+  const [isSavingInst, setIsSavingInst] = useState(false);
+  const [isCreatingInst, setIsCreatingInst] = useState(false);
+  const [isDeletingInst, setIsDeletingInst] = useState(false);
+
+  const {
+    register: registerInst,
+    handleSubmit: handleSubmitInst,
+    reset: resetInst,
+    getValues: getInstValues,
+    formState: { errors: instErrors },
+  } = useForm<InstitutionFormData>({
+    resolver: zodResolver(institutionSchema),
+  });
+
+  const handleDeleteInstitution = async () => {
+    if (
+      !confirm(
+        'Tem certeza que deseja desativar sua página de abrigo? Esta ação não pode ser desfeita facilmente.',
+      )
     )
-  );
+      return;
 
-  const profileToEditForm = (p: UserProfile) => ({
+    setIsDeletingInst(true);
+    try {
+      await deleteMyInstitution();
+      await refetchInst();
+      setSuccessMessage('Página de abrigo desativada com sucesso.');
+    } catch (_err) {
+      setErrorMessage('Erro ao desativar página.');
+    } finally {
+      setIsDeletingInst(false);
+    }
+  };
+
+  useEffect(() => {
+    if (institution) {
+      resetInst({
+        name: institution.name,
+        description: institution.description ?? '',
+        cnpj: institution.cnpj ?? '',
+        instagram: institution.instagram ?? '',
+        website: institution.website ?? '',
+        foundedAt: institution.foundedAt ? institution.foundedAt.split('T')[0] : '',
+      });
+    } else if (profile && !institution) {
+      resetInst({
+        name: profile.organizationName || profile.fullName,
+        cnpj: profile.cnpj || '',
+      });
+    }
+  }, [institution, profile, resetInst]);
+
+  const profileToFormData = (p: UserProfile): UserProfileFormData => ({
     fullName: p.fullName,
     birthDate: p.birthDate ?? '',
     city: p.city ?? '',
     state: p.state ?? '',
-    organizationName: p.organizationName ?? '',
     phone: p.phone ?? '',
     mobile: p.mobile ?? '',
-    instagram: p.instagram ?? '',
-    facebook: p.facebook ?? '',
-    website: p.website ?? '',
-    foundedAt: p.foundedAt ?? '',
   });
-
-  const resetEditForm = () => {
-    if (!profile) return;
-    setEditForm(profileToEditForm(profile));
-    setValidationErrors({});
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -85,8 +123,9 @@ export default function ProfilePage() {
           return;
         }
 
-        setProfile(response.data.data);
-        setEditForm(profileToEditForm(response.data.data));
+        const data = response.data.data;
+        setProfile(data);
+        resetProfile(profileToFormData(data));
       } catch (_error) {
         if (!isMounted) {
           return;
@@ -104,61 +143,46 @@ export default function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [currentUser?.id, isAuthLoading]);
+  }, [currentUser?.id, isAuthLoading, resetProfile]);
 
-  const validate = () => {
-    const result = userProfileSchema.safeParse(editForm);
-    if (result.success) {
-      setValidationErrors({});
-      return true;
-    }
-
-    const errors: Record<string, string> = {};
-    result.error.issues.forEach((issue) => {
-      const path = issue.path[0]?.toString();
-      if (path) {
-        errors[path] = issue.message;
-      }
-    });
-    setValidationErrors(errors);
-    return false;
-  };
-
-  const handleInputChange = (field: keyof Partial<UserProfile>, value: string | undefined) => {
-    setEditForm((prev) => ({
-      ...prev,
-      [field]: value === '' ? undefined : value,
-    }));
-    // Clear error for the field being changed
-    if (validationErrors[field]) {
-      setValidationErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  };
-
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile = async (data: UserProfileFormData) => {
     if (!profile || !currentUser?.id) return;
-
-    if (!validate()) {
-      return;
-    }
 
     setIsSaving(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
     try {
-      const response = await api.patch<{ data: UserProfile }>(`/users/me`, editForm);
-
-      setProfile(response.data.data);
+      const response = await api.patch<{ data: UserProfile }>(`/users/me`, data);
+      const updatedProfile = response.data.data;
+      setProfile(updatedProfile);
+      resetProfile(profileToFormData(updatedProfile));
       setSuccessMessage('Perfil atualizado com sucesso!');
     } catch (_error) {
       setErrorMessage('Não foi possível atualizar o perfil.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveInstitution = async (data: InstitutionFormData) => {
+    setIsSavingInst(true);
+    try {
+      // sanitize CNPJ (digits only) before sending
+      const payloadInst = { ...data, cnpj: data.cnpj ? data.cnpj.replace(/\D/g, '') : undefined };
+      if (institution) {
+        await updateInstitution(payloadInst);
+        setSuccessMessage('Vitrine atualizada!');
+      } else {
+        await createInstitution(payloadInst);
+        setSuccessMessage('Vitrine criada com sucesso!');
+      }
+      await refetchInst();
+      setIsCreatingInst(false);
+    } catch (_err) {
+      setErrorMessage('Erro ao salvar vitrine.');
+    } finally {
+      setIsSavingInst(false);
     }
   };
 
@@ -324,303 +348,403 @@ export default function ProfilePage() {
 
         {!deleteConfirm && (
           <div className="mt-10">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                Informações Pessoais
-              </h2>
+            <form onSubmit={handleSubmitProfile(handleUpdateProfile)}>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                  Informações Pessoais
+                </h2>
 
-              {hasChanges && (
-                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
-                  <button
-                    onClick={resetEditForm}
-                    className="text-sm font-bold text-slate-500 hover:text-slate-800 px-3 py-2 transition"
-                  >
-                    Descartar
-                  </button>
-                  <button
-                    onClick={handleUpdateProfile}
-                    disabled={isSaving}
-                    className="rounded-2xl bg-cyan-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-700 disabled:opacity-50 shadow-lg shadow-cyan-100"
-                  >
-                    {isSaving ? 'Salvando...' : 'Salvar alterações'}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
-              {/* Editable Fields */}
-              <div className="space-y-2">
-                <label htmlFor="fullName" className="text-sm font-bold text-slate-800 ml-1">
-                  Nome completo
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  aria-invalid={!!validationErrors.fullName}
-                  aria-describedby={validationErrors.fullName ? 'fullName-error' : undefined}
-                  value={editForm.fullName ?? ''}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  className={`w-full rounded-2xl border ${
-                    validationErrors.fullName
-                      ? 'border-rose-500 ring-4 ring-rose-50'
-                      : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                  } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
-                  placeholder="Seu nome completo"
-                />
-                {validationErrors.fullName && (
-                  <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                    {validationErrors.fullName}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="birthDate" className="text-sm font-bold text-slate-800 ml-1">
-                  Data de nascimento
-                </label>
-                <input
-                  id="birthDate"
-                  type="date"
-                  aria-invalid={!!validationErrors.birthDate}
-                  aria-describedby={validationErrors.birthDate ? 'birthDate-error' : undefined}
-                  max={new Date().toISOString().split('T')[0]}
-                  value={editForm.birthDate ?? ''}
-                  onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                  className={`w-full rounded-2xl border ${
-                    validationErrors.birthDate
-                      ? 'border-rose-500 ring-4 ring-rose-50'
-                      : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                  } bg-white px-5 py-3.5 text-slate-900 outline-none transition`}
-                />
-                {validationErrors.birthDate && (
-                  <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                    {validationErrors.birthDate}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="city" className="text-sm font-bold text-slate-800 ml-1">
-                  Cidade
-                </label>
-                <input
-                  id="city"
-                  type="text"
-                  aria-invalid={!!validationErrors.city}
-                  aria-describedby={validationErrors.city ? 'city-error' : undefined}
-                  value={editForm.city ?? ''}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  className={`w-full rounded-2xl border ${
-                    validationErrors.city
-                      ? 'border-rose-500 ring-4 ring-rose-50'
-                      : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                  } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
-                  placeholder="Sua cidade"
-                />
-                {validationErrors.city && (
-                  <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                    {validationErrors.city}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="state" className="text-sm font-bold text-slate-800 ml-1">
-                  Estado
-                </label>
-                <FormSelect
-                  id="state"
-                  aria-invalid={!!validationErrors.state}
-                  aria-describedby={validationErrors.state ? 'state-error' : undefined}
-                  value={editForm.state || ''}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                  className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
-                >
-                  <option value="">Selecione seu estado</option>
-                  {brazilianStates.map((state) => (
-                    <option key={state.value} value={state.value}>
-                      {state.label}
-                    </option>
-                  ))}
-                </FormSelect>
-                {validationErrors.state && (
-                  <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                    {validationErrors.state}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-bold text-slate-800 ml-1">
-                  Telefone Fixo (opcional)
-                </label>
-                <input
-                  id="phone"
-                  type="text"
-                  aria-invalid={!!validationErrors.phone}
-                  aria-describedby={validationErrors.phone ? 'phone-error' : undefined}
-                  value={editForm.phone ?? ''}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                  placeholder="(00) 0000-0000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="mobile" className="text-sm font-bold text-slate-800 ml-1">
-                  Celular / WhatsApp (opcional)
-                </label>
-                <input
-                  id="mobile"
-                  type="text"
-                  aria-invalid={!!validationErrors.mobile}
-                  aria-describedby={validationErrors.mobile ? 'mobile-error' : undefined}
-                  value={editForm.mobile ?? ''}
-                  onChange={(e) => handleInputChange('mobile', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="instagram" className="text-sm font-bold text-slate-800 ml-1">
-                  Instagram (opcional)
-                </label>
-                <input
-                  id="instagram"
-                  type="text"
-                  aria-invalid={!!validationErrors.instagram}
-                  aria-describedby={validationErrors.instagram ? 'instagram-error' : undefined}
-                  value={editForm.instagram ?? ''}
-                  onChange={(e) => handleInputChange('instagram', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                  placeholder="@seu_perfil"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="facebook" className="text-sm font-bold text-slate-800 ml-1">
-                  Facebook (opcional)
-                </label>
-                <input
-                  id="facebook"
-                  type="text"
-                  aria-invalid={!!validationErrors.facebook}
-                  aria-describedby={validationErrors.facebook ? 'facebook-error' : undefined}
-                  value={editForm.facebook ?? ''}
-                  onChange={(e) => handleInputChange('facebook', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                  placeholder="facebook.com/seu_perfil"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="website" className="text-sm font-bold text-slate-800 ml-1">
-                  Website (opcional)
-                </label>
-                <input
-                  id="website"
-                  type="text"
-                  aria-invalid={!!validationErrors.website}
-                  aria-describedby={validationErrors.website ? 'website-error' : undefined}
-                  value={editForm.website ?? ''}
-                  onChange={(e) => handleInputChange('website', e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                  placeholder="https://sua-ong.org"
-                />
-              </div>
-
-              {profile.role === 'ONG' && (
-                <>
-                  <div className="space-y-2">
-                    <label htmlFor="foundedAt" className="text-sm font-bold text-slate-800 ml-1">
-                      Data de Fundação
-                    </label>
-                    <input
-                      id="foundedAt"
-                      type="date"
-                      aria-invalid={!!validationErrors.foundedAt}
-                      aria-describedby={validationErrors.foundedAt ? 'foundedAt-error' : undefined}
-                      max={new Date().toISOString().split('T')[0]}
-                      value={editForm.foundedAt ?? ''}
-                      onChange={(e) => handleInputChange('foundedAt', e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="organizationName"
-                      className="text-sm font-bold text-slate-800 ml-1"
+                {profileIsDirty && (
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+                    <button
+                      type="button"
+                      onClick={() => resetProfile()}
+                      className="text-sm font-bold text-slate-500 hover:text-slate-800 px-3 py-2 transition"
                     >
-                      Nome da Organização
-                    </label>
-                    <input
-                      id="organizationName"
-                      type="text"
-                      aria-invalid={!!validationErrors.organizationName}
-                      aria-describedby={
-                        validationErrors.organizationName ? 'organizationName-error' : undefined
-                      }
-                      value={editForm.organizationName ?? ''}
-                      onChange={(e) => handleInputChange('organizationName', e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                      placeholder="Ex: Abrigo Felizes"
-                    />
+                      Descartar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="rounded-2xl bg-cyan-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-700 disabled:opacity-50 shadow-lg shadow-cyan-100"
+                    >
+                      {isSaving ? 'Salvando...' : 'Salvar alterações'}
+                    </button>
                   </div>
-                </>
-              )}
+                )}
+              </div>
 
-              {/* Divider for Read-only information */}
-              <div className="sm:col-span-2 pt-6 mt-4 border-t border-slate-100">
-                <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6">
-                  Informações da Conta
-                </h3>
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="space-y-1">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      E-mail
-                    </span>
-                    <p className="text-slate-600 font-medium">{profile.email}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      CPF / CNPJ
-                    </span>
-                    <p className="text-slate-600 font-medium">
-                      {formatDocument(
-                        profile.role === 'PESSOA_FISICA' ? profile.cpf : profile.cnpj,
-                        profile.role,
-                      ) || '—'}
+              <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
+                {/* Editable Fields */}
+                <div className="space-y-2">
+                  <label htmlFor="fullName" className="text-sm font-bold text-slate-800 ml-1">
+                    Nome completo
+                  </label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    {...registerProfile('fullName')}
+                    aria-invalid={!!profileErrors.fullName}
+                    className={`w-full rounded-2xl border ${
+                      profileErrors.fullName
+                        ? 'border-rose-500 ring-4 ring-rose-50'
+                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
+                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
+                    placeholder="Seu nome completo"
+                  />
+                  {profileErrors.fullName && (
+                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
+                      {profileErrors.fullName.message}
                     </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Tipo
-                    </span>
-                    <p className="text-slate-600 font-medium">
-                      {profile.role === 'PESSOA_FISICA' ? 'Pessoa Física' : 'ONG'}
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="birthDate" className="text-sm font-bold text-slate-800 ml-1">
+                    Data de nascimento
+                  </label>
+                  <input
+                    id="birthDate"
+                    type="date"
+                    {...registerProfile('birthDate')}
+                    aria-invalid={!!profileErrors.birthDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    className={`w-full rounded-2xl border ${
+                      profileErrors.birthDate
+                        ? 'border-rose-500 ring-4 ring-rose-50'
+                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
+                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition`}
+                  />
+                  {profileErrors.birthDate && (
+                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
+                      {profileErrors.birthDate.message}
                     </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Membro desde
-                    </span>
-                    <p className="text-slate-600 font-medium">
-                      {new Date(profile.createdAt).toLocaleDateString('pt-BR', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="city" className="text-sm font-bold text-slate-800 ml-1">
+                    Cidade
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    {...registerProfile('city')}
+                    aria-invalid={!!profileErrors.city}
+                    className={`w-full rounded-2xl border ${
+                      profileErrors.city
+                        ? 'border-rose-500 ring-4 ring-rose-50'
+                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
+                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
+                    placeholder="Sua cidade"
+                  />
+                  {profileErrors.city && (
+                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
+                      {profileErrors.city.message}
                     </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                      Pets Cadastrados
-                    </span>
-                    <p className="text-slate-600 font-medium">{profile.petsCount} pets</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="state" className="text-sm font-bold text-slate-800 ml-1">
+                    Estado
+                  </label>
+                  <FormSelect
+                    id="state"
+                    {...registerProfile('state')}
+                    aria-invalid={!!profileErrors.state}
+                    className={`${profileErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
+                  >
+                    <option value="">Selecione seu estado</option>
+                    {brazilianStates.map((state) => (
+                      <option key={state.value} value={state.value}>
+                        {state.label}
+                      </option>
+                    ))}
+                  </FormSelect>
+                  {profileErrors.state && (
+                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
+                      {profileErrors.state.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-bold text-slate-800 ml-1">
+                    Telefone Fixo (opcional)
+                  </label>
+                  <input
+                    id="phone"
+                    type="text"
+                    {...registerProfile('phone')}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
+                    placeholder="(00) 0000-0000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="mobile" className="text-sm font-bold text-slate-800 ml-1">
+                    Celular / WhatsApp (opcional)
+                  </label>
+                  <input
+                    id="mobile"
+                    type="text"
+                    {...registerProfile('mobile')}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+
+                {/* Divider for Read-only information */}
+                <div className="sm:col-span-2 pt-6 mt-4 border-t border-slate-100">
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6">
+                    Informações da Conta
+                  </h3>
+                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        E-mail
+                      </span>
+                      <p className="text-slate-600 font-medium">{profile.email}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        CPF / CNPJ
+                      </span>
+                      <p className="text-slate-600 font-medium">
+                        {formatDocument(
+                          profile.role === 'PESSOA_FISICA' ? profile.cpf : profile.cnpj,
+                          profile.role,
+                        ) || '—'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Tipo
+                      </span>
+                      <p className="text-slate-600 font-medium">
+                        {profile.role === 'PESSOA_FISICA' ? 'Pessoa Física' : 'ONG'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Membro desde
+                      </span>
+                      <p className="text-slate-600 font-medium">
+                        {new Date(profile.createdAt).toLocaleDateString('pt-BR', {
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Pets Cadastrados
+                      </span>
+                      <p className="text-slate-600 font-medium">{profile.petsCount} pets</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            </form>
+
+            {/* Public Showcase Section */}
+            <div className="mt-12 pt-10 border-t border-slate-200">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <Store className="text-cyan-600" size={28} />
+                    Vitrine Pública
+                  </h2>
+                  <p className="text-slate-500 font-medium mt-1">
+                    Configure como seu abrigo ou perfil de protetor aparece para o público.
+                  </p>
+                </div>
+
+                {!institution && !isCreatingInst && (
+                  <div className="flex-1 rounded-3xl bg-slate-900 p-6 md:p-8 shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/20 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-4 text-center md:text-left">
+                        <div className="h-14 w-14 flex-shrink-0 flex items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                          <Store size={28} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-white tracking-tight">
+                            Potencialize seu trabalho
+                          </h3>
+                          <p className="text-slate-400 font-medium text-sm">
+                            Ative sua vitrine pública para ganhar visibilidade.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsCreatingInst(true)}
+                        className="whitespace-nowrap rounded-2xl bg-cyan-500 px-8 py-4 text-sm font-black text-slate-950 transition hover:bg-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95"
+                      >
+                        Ativar Perfil de Abrigo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {(institution || isCreatingInst) && (
+                <div className="rounded-3xl bg-slate-50 border border-slate-100 p-6 md:p-8 animate-in fade-in slide-in-from-bottom-4">
+                  <form onSubmit={handleSubmitInst(handleSaveInstitution)}>
+                    <div className="flex items-center justify-between mb-8">
+                      {institution?.id ? (
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`flex h-10 w-10 items-center justify-center rounded-full ${institution.verified ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}
+                          >
+                            {institution.verified ? (
+                              <CheckCircle size={20} />
+                            ) : (
+                              <AlertCircle size={20} />
+                            )}
+                          </span>
+                          <div>
+                            <p className="text-sm font-black text-slate-900">
+                              {institution.verified ? 'Perfil Verificado' : 'Perfil em Análise'}
+                            </p>
+                            <p className="text-xs text-slate-500 font-medium">
+                              {institution.verified
+                                ? 'Sua vitrine possui o selo de confiança.'
+                                : 'Sua vitrine está visível, mas aguarda validação.'}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                            <Store size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-900">Nova Vitrine</p>
+                            <p className="text-xs text-slate-500 font-medium">
+                              Preencha os dados abaixo para ativar seu perfil público.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        {institution && currentUser?.role === 'PESSOA_FISICA' && (
+                          <button
+                            type="button"
+                            onClick={handleDeleteInstitution}
+                            disabled={isDeletingInst}
+                            className="rounded-2xl bg-rose-50 px-6 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50"
+                          >
+                            {isDeletingInst ? 'Desativando...' : 'Desativar Página'}
+                          </button>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={isSavingInst}
+                          className="rounded-2xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
+                        >
+                          <Save size={18} className="mr-2 inline" />
+                          {isSavingInst ? 'Salvando...' : 'Salvar Vitrine'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-800 ml-1">
+                          Nome da Vitrine (Ex: Abrigo Felizes)
+                        </label>
+                        <input
+                          type="text"
+                          {...registerInst('name')}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
+                        />
+                        {instErrors.name && (
+                          <p className="text-xs text-rose-500 font-bold ml-1">
+                            {instErrors.name.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-800 ml-1">
+                          CNPJ (Opcional para Protetores)
+                        </label>
+                        <input
+                          type="text"
+                          {...registerInst('cnpj', {
+                            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                              const formatted = formatDocumentInput(e.target.value, 'ONG');
+                              resetInst(
+                                { ...getInstValues(), cnpj: formatted },
+                                { keepDefaultValues: true },
+                              );
+                            },
+                          })}
+                          inputMode="numeric"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
+                        />
+                        {instErrors.cnpj && (
+                          <p className="text-xs text-rose-500 font-bold ml-1">
+                            {instErrors.cnpj.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-2">
+                        <label className="text-sm font-bold text-slate-800 ml-1">
+                          Descrição / História
+                        </label>
+                        <textarea
+                          rows={3}
+                          {...registerInst('description')}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition resize-none"
+                          placeholder="Conte um pouco sobre o seu trabalho com os animais..."
+                        />
+                        {instErrors.description && (
+                          <p className="text-xs text-rose-500 font-bold ml-1">
+                            {instErrors.description.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-800 ml-1">
+                          Instagram da Instituição
+                        </label>
+                        <input
+                          type="text"
+                          {...registerInst('instagram')}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
+                          placeholder="@seu_abrigo"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-800 ml-1">Website</label>
+                        <input
+                          type="text"
+                          {...registerInst('website')}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
+                          placeholder="https://sua-ong.org"
+                        />
+                        {instErrors.website && (
+                          <p className="text-xs text-rose-500 font-bold ml-1">
+                            {instErrors.website.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </form>
+
+                  <p className="mt-6 text-xs text-slate-400 font-medium italic">
+                    * A localização (Cidade/Estado) e o contato principal são sincronizados com seus
+                    dados pessoais acima.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

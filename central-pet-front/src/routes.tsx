@@ -10,6 +10,8 @@ import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
 import InstitutionsPage from '@/Pages/Institutions/InstitutionsPage';
 import InstitutionDetailPage from '@/Pages/Institutions/InstitutionDetailPage';
+import MyInstitutionPage from '@/Pages/Institutions/MyInstitutionPage';
+import InstitutionRegistrationPage from '@/Pages/Institutions/InstitutionRegistrationPage';
 
 type AppRoute = RouteObject & {
   element?: ReactNode;
@@ -52,6 +54,14 @@ export const routes = {
       element: <InstitutionDetailPage />,
       build: (id: number | string) => `/institutions/${id}`,
     } satisfies DynamicAppRoute,
+    mine: {
+      path: '/institutions/mine',
+      element: <MyInstitutionPage />,
+    } satisfies AppRoute,
+    register: {
+      path: '/institutions/register',
+      element: <InstitutionRegistrationPage />,
+    } satisfies AppRoute,
   },
   pets: {
     new: {

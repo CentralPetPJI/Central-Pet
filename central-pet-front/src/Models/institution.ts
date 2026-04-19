@@ -1,11 +1,19 @@
 export type Institution = {
   id: string;
+  userId: string;
   name: string;
-  city?: string | null;
-  state?: string | null;
+  description?: string | null;
+  cnpj?: string | null;
+  city: string;
+  state: string;
   email?: string | null;
-  createdAt?: string;
-  foundedAt?: string | null; // quando disponível
-  birthDate?: string | null; // para ONGs podemos usar como data de fundação
+  phone?: string | null;
+  mobile?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  website?: string | null;
+  verified: boolean;
+  createdAt: string;
+  foundedAt?: string | null;
   petsCount?: number;
 };

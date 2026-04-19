@@ -11,12 +11,12 @@ export type UserProfile = {
   state?: string;
   phone?: string;
   mobile?: string;
+  createdAt: string;
+  petsCount: number;
   instagram?: string;
   facebook?: string;
   website?: string;
   foundedAt?: string;
-  createdAt: string;
-  petsCount: number;
 };
 
 export type UpdateProfileData = {
@@ -24,11 +24,6 @@ export type UpdateProfileData = {
   birthDate?: string;
   city?: string;
   state?: string;
-  organizationName?: string;
   phone?: string;
   mobile?: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
-  foundedAt?: string;
 };

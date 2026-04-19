@@ -103,3 +103,22 @@ export function formatState(state: string | undefined): string {
   const found = brazilianStates.find((s) => s.value === state);
   return found?.label ?? state;
 }
+
+/**
+ * Formata valor de input de documento (CPF/CNPJ) aplicando máscara e limitando dígitos.
+ * Útil para usar em onChange de inputs onde queremos evitar digitação além do permitido.
+ * @param raw - Valor bruto do input
+ * @param role - 'PESSOA_FISICA' | 'ONG'
+ */
+export function formatDocumentInput(raw: string | undefined, role: string): string {
+  const digits = (raw ?? '').replace(/\D/g, '');
+  const limited = role === 'ONG' ? digits.slice(0, 14) : digits.slice(0, 11);
+  return role === 'ONG' ? formatCnpj(limited) : formatCpf(limited);
+}
+
+/**
+ * Retorna apenas os dígitos do documento (limpeza para envio ao backend).
+ */
+export function sanitizeDocument(raw: string | undefined): string {
+  return (raw ?? '').replace(/\D/g, '');
+}

@@ -67,7 +67,7 @@ export const useMyInstitution = () => {
 
     void fetchMyInstitution();
     // Re-fetch whenever currentUser changes (important for mock mode)
-  }, [currentUser?.id]);
+  }, [currentUser, currentUser?.id]);
 
   return { institution, isLoading, error, refetch: fetchMyInstitution };
 };
@@ -84,6 +84,11 @@ export const createInstitution = async (data: Partial<Institution>) => {
 };
 
 export const updateInstitution = async (data: Partial<Institution>) => {
-  const response = await api.patch('/institutions/me', data);
+  const response = await api.patch('/institutions/mine', data);
   return response.data.data ?? response.data;
+};
+
+export const deleteMyInstitution = async () => {
+  const response = await api.delete('/institutions/me');
+  return response.data;
 };

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
@@ -21,12 +23,6 @@ import {
 } from '@/storage/pets';
 import { routes } from '@/routes';
 
-type FormErrors = Partial<Record<keyof PetRegisterFormData, string>>;
-type ValidationIssue = {
-  path: PropertyKey[];
-  message: string;
-};
-
 interface PetRegisterFormProps {
   petId?: string;
 }
@@ -34,19 +30,25 @@ interface PetRegisterFormProps {
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const isEditMode = Boolean(petId);
+
+  const methods = useForm<PetRegisterFormData>({
+    resolver: zodResolver(petRegisterFormSchema),
+    defaultValues: initialPetRegisterFormData,
+  });
+
+  const { reset, handleSubmit, watch, setValue } = methods;
+  const formData = watch();
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
 
     if (!isEditMode || !petId) {
-      setFormData(initialPetRegisterFormData);
+      reset(initialPetRegisterFormData);
       setSelectedPersonalities([]);
       return;
     }
@@ -64,8 +66,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
           return;
         }
 
-        setFormData(mapPetApiResponseToRegisterFormData(response.data.data));
-        setSelectedPersonalities(response.data.data.selectedPersonalities ?? []);
+        const petData = response.data.data;
+        const mappedData = mapPetApiResponseToRegisterFormData(petData);
+        reset(mappedData);
+        setSelectedPersonalities(petData.selectedPersonalities ?? []);
       } catch {
         if (!isMounted) {
           return;
@@ -83,29 +87,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     return () => {
       isMounted = false;
     };
-  }, [isEditMode, petId]);
-
-  const updateField = <K extends keyof PetRegisterFormData>(
-    field: K,
-    value: PetRegisterFormData[K],
-  ) => {
-    setFormErrors((currentErrors) => {
-      if (!currentErrors[field]) {
-        return currentErrors;
-      }
-
-      const updatedErrors = { ...currentErrors };
-      delete updatedErrors[field];
-      return updatedErrors;
-    });
-
-    setFormData((currentData) => {
-      const updatedData = { ...currentData, [field]: value };
-      window.localStorage.setItem(petRegisterStorageKey, JSON.stringify(updatedData));
-
-      return updatedData;
-    });
-  };
+  }, [isEditMode, petId, reset]);
 
   const togglePersonality = (personalityId: string) => {
     setSelectedPersonalities((currentOptions) => {
@@ -117,6 +99,63 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
       return updatedOptions;
     });
+  };
+
+  const handleSavePet = async (data: PetRegisterFormData) => {
+    if (isAuthLoading || isInitializing) {
+      setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
+      return;
+    }
+
+    if (!currentUser?.id) {
+      setSaveMessage('Nao foi possivel identificar o usuario atual.');
+      return;
+    }
+
+    const normalizedFormData = {
+      ...data,
+      name: data.name.trim(),
+      breed: data.breed.trim() || 'SRD',
+      age: data.age.trim(),
+      tutor: data.tutor.trim(),
+      shelter: data.shelter.trim(),
+      city: data.city.trim(),
+      contact: data.contact.trim(),
+      sourceType: currentUser.role,
+      sourceName: currentUser.organizationName || currentUser.fullName,
+      state: data.state.trim() || 'SP',
+      selectedPersonalities: selectedPersonalities, // Merge personalities
+    };
+
+    try {
+      let response: { data: { message: string; data: PetApiResponse } };
+
+      if (isEditMode && petId) {
+        const backendId = resolveBackendId(petId);
+        response = await api.patch<{ message: string; data: PetApiResponse }>(
+          `/pets/${String(backendId)}`,
+          normalizedFormData,
+        );
+      } else {
+        response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
+          ...normalizedFormData,
+          responsibleUserId: currentUser.id,
+        });
+      }
+
+      const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
+
+      window.localStorage.removeItem(petRegisterStorageKey);
+      window.localStorage.removeItem(petPersonalityStorageKey);
+
+      navigate(routes.pets.detail.build(publicId), {
+        state: {
+          successMessage: isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.',
+        },
+      });
+    } catch {
+      setSaveMessage('Nao foi possivel salvar o pet no momento.');
+    }
   };
 
   const readFilesAsDataUrls = async (files: FileList | null) => {
@@ -145,7 +184,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    updateField('profilePhoto', photo);
+    setValue('profilePhoto', photo, { shouldDirty: true, shouldValidate: true });
   };
 
   const handleGalleryPhotosChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,142 +194,53 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    updateField('galleryPhotos', photos);
+    setValue('galleryPhotos', [...formData.galleryPhotos, ...photos], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const removeGalleryPhoto = (photoIndex: number) => {
-    updateField(
+    setValue(
       'galleryPhotos',
       formData.galleryPhotos.filter((_, index) => index !== photoIndex),
+      { shouldDirty: true, shouldValidate: true },
     );
   };
 
-  const mapIssuesToErrors = (issues: ValidationIssue[]): FormErrors =>
-    issues.reduce<FormErrors>((errors, issue) => {
-      const fieldName = issue.path[0];
-
-      if (typeof fieldName === 'string' && !(fieldName in errors)) {
-        errors[fieldName as keyof PetRegisterFormData] = issue.message;
-      }
-
-      return errors;
-    }, {});
-
-  const handleSavePet = async () => {
-    if (isAuthLoading || isInitializing) {
-      setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
-      return;
-    }
-
-    if (!currentUser?.id) {
-      setSaveMessage('Nao foi possivel identificar o usuario atual.');
-      return;
-    }
-
-    const normalizedFormData = {
-      ...formData,
-      name: formData.name.trim(),
-      breed: formData.breed.trim() || 'SRD',
-      age: formData.age.trim(),
-      tutor: formData.tutor.trim(),
-      shelter: formData.shelter.trim(),
-      city: formData.city.trim(),
-      contact: formData.contact.trim(),
-      sourceType: currentUser.role,
-      sourceName: currentUser.organizationName || currentUser.fullName,
-      state: formData.state.trim() || 'SP',
-    };
-    const validationResult = petRegisterFormSchema.safeParse(normalizedFormData);
-
-    if (!validationResult.success) {
-      setFormErrors(mapIssuesToErrors(validationResult.error.issues));
-      setSaveMessage(
-        'Ocorreu um erro de validacao. Verifique os campos destacados e tente novamente.',
-      );
-      return;
-    }
-
-    setFormErrors({});
-
-    try {
-      let response: { data: { message: string; data: PetApiResponse } };
-
-      if (isEditMode && petId) {
-        const backendId = resolveBackendId(petId);
-        response = await api.patch<{ message: string; data: PetApiResponse }>(
-          `/pets/${String(backendId)}`,
-          normalizedFormData,
-        );
-      } else {
-        response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
-          ...normalizedFormData,
-          responsibleUserId: currentUser.id,
-        });
-      }
-
-      const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
-
-      setFormData({
-        ...validationResult.data,
-        responsibleUserId: currentUser.id,
-        sourceType: currentUser.role === 'ONG' ? 'ONG' : 'PESSOA_FISICA',
-        sourceName:
-          currentUser.role === 'ONG'
-            ? currentUser.organizationName || currentUser.fullName
-            : currentUser.fullName,
-      });
-      window.localStorage.removeItem(petRegisterStorageKey);
-      window.localStorage.removeItem(petPersonalityStorageKey);
-
-      navigate(routes.pets.detail.build(publicId), {
-        state: {
-          successMessage: isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.',
-        },
-      });
-    } catch {
-      setSaveMessage('Nao foi possivel salvar o pet no momento.');
-    }
-  };
-
   return (
-    <section className="mx-auto w-full max-w-345 px-1 pb-16 pt-4">
-      <div className="rounded-[1.75rem] bg-linear-to-br from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 shadow-[0_20px_60px_rgba(14,116,144,0.10)]">
-        <PetRegisterHeader isEditMode={isEditMode} />
-        <PetRegisterActions
-          isEditMode={isEditMode}
-          petId={petId}
-          onSave={handleSavePet}
-          saveMessage={saveMessage}
-          selectedPersonalitiesCount={selectedPersonalities.length}
-        />
-        <PetRegisterPhotosSection
-          formData={formData}
-          profilePhotoError={formErrors.profilePhoto}
-          onGalleryPhotosChange={handleGalleryPhotosChange}
-          onProfilePhotoChange={handleProfilePhotoChange}
-          onRemoveGalleryPhoto={removeGalleryPhoto}
-        />
-
-        <div className="mt-4 grid gap-4 xl:grid-cols-2">
-          <PetRegisterInfoSection
-            formData={formData}
-            formErrors={formErrors}
-            onUpdateField={updateField}
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(handleSavePet)}
+        className="mx-auto w-full max-w-345 px-1 pb-16 pt-4"
+      >
+        <div className="rounded-[1.75rem] bg-linear-to-br from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 shadow-[0_20px_60px_rgba(14,116,144,0.10)]">
+          <PetRegisterHeader isEditMode={isEditMode} />
+          <PetRegisterActions
+            isEditMode={isEditMode}
+            petId={petId}
+            saveMessage={saveMessage}
+            selectedPersonalitiesCount={selectedPersonalities.length}
           />
-          <PetRegisterLocationSection
-            formData={formData}
-            formErrors={formErrors}
-            onUpdateField={updateField}
+          <PetRegisterPhotosSection
+            onGalleryPhotosChange={handleGalleryPhotosChange}
+            onProfilePhotoChange={handleProfilePhotoChange}
+            onRemoveGalleryPhoto={removeGalleryPhoto}
+          />
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-2">
+            <PetRegisterInfoSection />
+            <PetRegisterLocationSection />
+          </div>
+
+          <PetRegisterHealthSection />
+          <PetRegisterBehaviorSection
+            selectedPersonalities={selectedPersonalities}
+            onTogglePersonality={togglePersonality}
           />
         </div>
-
-        <PetRegisterHealthSection formData={formData} onUpdateField={updateField} />
-        <PetRegisterBehaviorSection
-          selectedPersonalities={selectedPersonalities}
-          onTogglePersonality={togglePersonality}
-        />
-      </div>
-    </section>
+      </form>
+    </FormProvider>
   );
 };
 
