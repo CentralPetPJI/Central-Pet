@@ -21,7 +21,6 @@ const PetRegisterPhotosSection = ({
   } = useFormContext<PetRegisterFormData>();
 
   const formData = watch();
-
   return (
     <FormSection className="mt-6" accentClassName="text-sky-700" eyebrow="Fotos">
       <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
@@ -65,7 +64,7 @@ const PetRegisterPhotosSection = ({
             />
           </div>
 
-          {formData.galleryPhotos.length > 0 ? (
+          {formData.galleryPhotos && formData.galleryPhotos.length > 0 ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {formData.galleryPhotos.map((photo, index) => (
                 <div

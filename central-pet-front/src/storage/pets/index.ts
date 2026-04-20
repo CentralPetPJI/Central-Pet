@@ -1,5 +1,4 @@
 export {
-  buildPetFromRegisterForm,
   buildRegisterFormDataFromPet,
   getPetById,
   getPetProfileById,
@@ -10,9 +9,7 @@ export {
   type PetProfileRecord,
 } from './pets-storage';
 export {
-  initialPetRegisterFormData,
   isPetRegisterFormDataLike,
-  normalizePetRegisterFormData,
   petRegisterFormSchema,
   petRegisterStorageKey,
   petSexOptions,

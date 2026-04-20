@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 interface PetRegisterActionsProps {
   isEditMode: boolean;
   petId?: string;
-  onSave: () => void;
   saveMessage: string;
   selectedPersonalitiesCount: number;
 }
@@ -12,7 +11,6 @@ interface PetRegisterActionsProps {
 const PetRegisterActions = ({
   isEditMode,
   petId,
-  onSave,
   saveMessage,
   selectedPersonalitiesCount,
 }: PetRegisterActionsProps) => {
@@ -29,8 +27,7 @@ const PetRegisterActions = ({
           {selectedPersonalitiesCount} selecionada(s)
         </span>
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
           className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
         >
           {isEditMode ? 'Salvar alteracoes' : 'Salvar pet'}
