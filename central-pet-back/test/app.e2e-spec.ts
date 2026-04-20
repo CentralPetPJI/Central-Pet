@@ -81,7 +81,7 @@ describe('App (e2e)', () => {
     };
     const setCookie = response.headers['set-cookie'] as unknown as string[] | undefined;
 
-    expect(body.message).toBe('Login successful');
+    expect(body.message).toBe('Login bem-sucedido');
     expect(body.data.user.email).toBe('maria@example.com');
     expect(body.data.sessionId).toBeUndefined();
     expect(setCookie).toBeDefined();
