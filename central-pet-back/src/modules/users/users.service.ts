@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPassword } from '../auth/password.util';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
@@ -102,6 +103,52 @@ export class UsersService {
         birthDate: user.birthDate,
         cpf: user.cpf,
       },
+    };
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(updateUserDto.fullName !== undefined && {
+          fullName:
+            typeof updateUserDto.fullName === 'string'
+              ? updateUserDto.fullName.trim()
+              : (updateUserDto.fullName ?? null),
+        }),
+        ...(updateUserDto.birthDate !== undefined && {
+          birthDate: updateUserDto.birthDate ?? null,
+        }),
+        ...(updateUserDto.city !== undefined && { city: updateUserDto.city ?? null }),
+        ...(updateUserDto.state !== undefined && { state: updateUserDto.state ?? null }),
+        ...(updateUserDto.organizationName !== undefined && {
+          organizationName:
+            typeof updateUserDto.organizationName === 'string'
+              ? updateUserDto.organizationName.trim()
+              : (updateUserDto.organizationName ?? null),
+        }),
+        ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
+        ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),
+        ...(updateUserDto.instagram !== undefined && {
+          instagram: updateUserDto.instagram ?? null,
+        }),
+        ...(updateUserDto.facebook !== undefined && { facebook: updateUserDto.facebook ?? null }),
+        ...(updateUserDto.website !== undefined && { website: updateUserDto.website ?? null }),
+        ...(updateUserDto.foundedAt !== undefined && {
+          foundedAt: updateUserDto.foundedAt ?? null,
+        }),
+      },
+    });
+
+    return {
+      message: 'User updated successfully',
+      data: this.toPublicUser(updatedUser),
     };
   }
 

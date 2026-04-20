@@ -66,6 +66,14 @@ model User {
   cpf                  String?            @unique
   organizationName     String?
   cnpj                 String?            @unique
+  city                 String?
+  state                String?
+  phone                String?
+  mobile               String?
+  instagram            String?
+  facebook             String?
+  website              String?
+  foundedAt            DateTime?          @db.Date
   passwordHash         String
   deleted              Boolean            @default(false)
   createdAt            DateTime           @default(now())

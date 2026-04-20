@@ -24,6 +24,7 @@ import type {
   RegisterData,
 } from '@/Models';
 import { createAuthStrategy } from './strategies/factory';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Cria a estratégia uma única vez na montagem
   const strategyRef = useRef<AuthStrategy | null>(null);
@@ -61,10 +63,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [strategy],
   );
 
-  const logout = useCallback(async () => {
-    await strategy.logout();
-    setCurrentUser(null);
-  }, [strategy]);
+  const logout = useCallback(
+    async (redirectTo?: string) => {
+      try {
+        await strategy.logout();
+      } finally {
+        setCurrentUser(null);
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate('/');
+        }
+      }
+    },
+    [strategy, navigate],
+  );
 
   const register = useCallback(
     async (data: RegisterData) => {

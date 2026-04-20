@@ -116,7 +116,7 @@ export type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   users: AuthUser[];
   selectUser: (userId: string) => Promise<void>;
