@@ -45,19 +45,52 @@ export async function criarUsuarioViaApi(
   request: APIRequestContext,
   usuario: UsuarioE2E,
 ): Promise<UsuarioCriadoE2E> {
-  const resposta = await request.post(`${API_BASE_URL}/users`, {
-    data: {
-      fullName: usuario.fullName,
-      email: usuario.email,
-      password: usuario.password,
-      role: "PESSOA_FISICA",
-      cpf: usuario.cpf,
-    },
-  });
+  const maxRetries = 3;
+  let attempt = 0;
+  let lastError: unknown = null;
 
-  expect(resposta.ok()).toBeTruthy();
-  const payload = (await resposta.json()) as { data: UsuarioCriadoE2E };
-  return payload.data;
+  while (attempt < maxRetries) {
+    try {
+      const resposta = await request.post(`${API_BASE_URL}/users`, {
+        data: {
+          fullName: usuario.fullName,
+          email: usuario.email,
+          password: usuario.password,
+          role: "PESSOA_FISICA",
+          cpf: usuario.cpf,
+        },
+      });
+
+      expect(resposta.ok()).toBeTruthy();
+      const payload = (await resposta.json()) as { data: UsuarioCriadoE2E };
+      return payload.data;
+    } catch (err: unknown) {
+      lastError = err;
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? (err as any).message
+          : "";
+      // Retry on transient connection errors
+      if (
+        typeof message === "string" &&
+        (message.includes("ECONNRESET") ||
+          message.includes("ECONNREFUSED") ||
+          message.includes("socket hang up"))
+      ) {
+        attempt += 1;
+        const backoff = 200 * attempt;
+        // small delay before retry
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, backoff));
+        continue;
+      }
+      // Non-transient error, rethrow
+      throw err;
+    }
+  }
+
+  // If we exhausted retries, throw last error
+  throw lastError;
 }
 
 /**
