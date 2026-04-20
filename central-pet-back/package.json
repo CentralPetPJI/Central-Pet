@@ -27,7 +27,7 @@
     "test:clean": "node scripts/clean-test-db.js",
     "prisma:generate": "prisma generate",
     "postinstall": "prisma generate",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "dotenv -e .env.development prisma studio"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.17",
