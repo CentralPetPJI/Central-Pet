@@ -88,4 +88,57 @@ test.describe("profile-workflow", () => {
     await page.goto("/");
     await expect(page.getByRole("img", { name: "Pet Segredo" })).toHaveCount(0);
   });
+
+  test("edita, salva, navega e verifica persistência do perfil do usuário", async ({
+    page,
+    request,
+  }) => {
+    const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
+
+    // 1. Criar usuário e login
+    const usuario = gerarUsuarioUnico("profilePersist");
+    await criarUsuarioViaApi(request, usuario);
+    await fazerLogin(page, usuario);
+
+    // 2. Ir para profile e editar campos
+    await page.goto("/profile");
+
+    const newCity = "Cidade Teste";
+    const newState = "CE";
+    const newPhone = "(11) 4000-0000";
+    const newMobile = "(11) 99999-0000";
+    const newWebsite = "https://example.org";
+
+    await page.getByLabel("Cidade").fill(newCity);
+    await page.getByLabel("Estado").selectOption(newState);
+    await page.getByLabel("Telefone Fixo (opcional)").fill(newPhone);
+    await page.getByLabel("Celular / WhatsApp (opcional)").fill(newMobile);
+    await page.getByLabel("Website (opcional)").fill(newWebsite);
+
+    // 3. Salvar
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
+    await expect(
+      page.getByText("Perfil atualizado com sucesso!"),
+    ).toBeVisible();
+
+    // 4. Navegar para home e voltar
+    await page.goto("/");
+    await expect(page).toHaveURL("/");
+    await page.goto("/profile");
+    await expect(page).toHaveURL("/profile");
+
+    // 5. Verificar persistência nos campos editáveis
+    await expect(page.getByLabel("Cidade")).toHaveValue(newCity);
+    await expect(page.getByLabel("Estado")).toHaveValue(newState);
+    await expect(page.getByLabel("Telefone Fixo (opcional)")).toHaveValue(
+      newPhone,
+    );
+    await expect(page.getByLabel("Celular / WhatsApp (opcional)")).toHaveValue(
+      newMobile,
+    );
+    await expect(page.getByLabel("Website (opcional)")).toHaveValue(newWebsite);
+
+    // 6. Verificar seção de Informações da Conta mostra a cidade
+    await expect(page.getByText(newCity, { exact: false })).toBeVisible();
+  });
 });
