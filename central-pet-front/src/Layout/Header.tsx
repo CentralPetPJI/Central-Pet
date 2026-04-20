@@ -7,7 +7,7 @@ import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import {shouldDisplayMockUsers} from '@/lib/dev-mode';
+import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
 
 const roleLabelMap = {
