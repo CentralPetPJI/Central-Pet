@@ -36,6 +36,15 @@ describe('AuthService', () => {
     birthDate: new Date('1995-05-10'),
     organizationName: null,
     cnpj: null,
+    city: null,
+    state: null,
+    phone: null,
+    mobile: null,
+    instagram: null,
+    facebook: null,
+    website: null,
+    foundedAt: null,
+    deleted: false,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     deleted: false,
@@ -52,6 +61,15 @@ describe('AuthService', () => {
       birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
+      city: null,
+      state: null,
+      phone: null,
+      mobile: null,
+      instagram: null,
+      facebook: null,
+      website: null,
+      foundedAt: null,
+      deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       deleted: false,
@@ -62,7 +80,7 @@ describe('AuthService', () => {
       password: 'Senha123!',
     });
 
-    expect(result.message).toBe('Login successful');
+    expect(result.message).toBe('Login bem-sucedido');
     expect(result.data.sessionId).toBeDefined();
     expect(result.data.user.email).toBe('maria@example.com');
   });
@@ -91,6 +109,15 @@ describe('AuthService', () => {
       birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
+      city: null,
+      state: null,
+      phone: null,
+      mobile: null,
+      instagram: null,
+      facebook: null,
+      website: null,
+      foundedAt: null,
+      deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       deleted: false,

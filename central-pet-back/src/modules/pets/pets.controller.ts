@@ -21,6 +21,7 @@ interface AuthenticatedRequest extends ExpressRequest {
   user?: { id: string };
 }
 
+// TODO: Colocar guards para proteger rotas de criação, atualização e remoção, garantindo que apenas usuários autenticados possam realizar essas ações. Além disso, implementar validação de entrada usando Pipes para garantir que os dados recebidos estejam no formato correto e evitar erros de processamento.
 @Controller('pets')
 export class PetsController {
   constructor(private readonly petsService: PetsService) {}
