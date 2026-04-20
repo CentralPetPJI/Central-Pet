@@ -7,7 +7,7 @@ CREATE TABLE "User" (
     "fullName" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "role" "UserRole" NOT NULL,
-    "birthDate" TEXT,
+    "birthDate" DATE,
     "cpf" TEXT,
     "organizationName" TEXT,
     "cnpj" TEXT,

@@ -33,11 +33,12 @@ describe('AuthService', () => {
     passwordHash: await hashPassword('Senha123!'),
     role: 'PESSOA_FISICA' as const,
     cpf: '12345678901',
-    birthDate: '1995-05-10',
+    birthDate: new Date('1995-05-10'),
     organizationName: null,
     cnpj: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    deleted: false,
   });
 
   it('deve autenticar um usuário existente', async () => {
@@ -48,11 +49,12 @@ describe('AuthService', () => {
       email: 'maria@example.com',
       role: 'PESSOA_FISICA',
       cpf: '12345678901',
-      birthDate: '1995-05-10',
+      birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      deleted: false,
     });
 
     const result = await authService.login({
@@ -86,11 +88,12 @@ describe('AuthService', () => {
       email: 'maria@example.com',
       role: 'PESSOA_FISICA',
       cpf: '12345678901',
-      birthDate: '1995-05-10',
+      birthDate: new Date('1995-05-10'),
       organizationName: null,
       cnpj: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      deleted: false,
     });
 
     const loginResult = await authService.login({
