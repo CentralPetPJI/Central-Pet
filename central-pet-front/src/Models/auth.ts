@@ -123,6 +123,7 @@ export type AuthContextValue = {
   currentUser: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  syncCurrentUser: (user: AuthUser | null) => void;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: (redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;

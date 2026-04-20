@@ -25,7 +25,6 @@ import {
   type PetRegisterFormData,
 } from '@/storage/pets';
 import { routes } from '@/routes';
-import type { UserProfile } from '@/Models/user';
 
 interface PetRegisterFormProps {
   petId?: string;
@@ -37,8 +36,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [responsibleLocation, setResponsibleLocation] = useState({ city: '', state: '' });
-  const [isLoadingResponsibleLocation, setIsLoadingResponsibleLocation] = useState(false);
   const isEditMode = Boolean(petId);
 
   const methods = useForm<PetRegisterFormData>({
@@ -47,6 +44,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const { reset, handleSubmit, watch, setValue } = methods;
   const formData = watch();
+  const responsibleLocation = {
+    city: currentUser?.city?.trim() ?? '',
+    state: currentUser?.state?.trim() ?? '',
+  };
   const isResponsibleLocationMissing = !isProfileLocationComplete(responsibleLocation);
 
   useEffect(() => {
@@ -57,55 +58,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
     syncLocationIntoForm();
   }, [responsibleLocation.city, responsibleLocation.state, setValue]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadResponsibleLocation = async () => {
-      if (isAuthLoading || !currentUser?.id) {
-        return;
-      }
-
-      if (currentUser.city && currentUser.state) {
-        setResponsibleLocation({
-          city: currentUser.city,
-          state: currentUser.state,
-        });
-        return;
-      }
-
-      setIsLoadingResponsibleLocation(true);
-
-      try {
-        const response = await api.get<{ data: UserProfile }>('/users/me');
-
-        if (!isMounted) {
-          return;
-        }
-
-        setResponsibleLocation({
-          city: response.data.data.city ?? '',
-          state: response.data.data.state ?? '',
-        });
-      } catch {
-        if (!isMounted) {
-          return;
-        }
-
-        setResponsibleLocation({ city: '', state: '' });
-      } finally {
-        if (isMounted) {
-          setIsLoadingResponsibleLocation(false);
-        }
-      }
-    };
-
-    void loadResponsibleLocation();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUser?.city, currentUser?.id, currentUser?.state, isAuthLoading]);
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
@@ -166,7 +118,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   };
 
   const handleSavePet = async (data: PetRegisterFormData) => {
-    if (isAuthLoading || isInitializing || isLoadingResponsibleLocation) {
+    if (isAuthLoading || isInitializing) {
       setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
       return;
     }
@@ -284,7 +236,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             petId={petId}
             saveMessage={saveMessage}
             selectedPersonalitiesCount={selectedPersonalities.length}
-            isSaveDisabled={isLoadingResponsibleLocation || isResponsibleLocationMissing}
+            isSaveDisabled={isResponsibleLocationMissing}
           />
           <PetRegisterPhotosSection
             onGalleryPhotosChange={handleGalleryPhotosChange}
@@ -297,7 +249,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             <PetRegisterLocationSection
               city={responsibleLocation.city}
               state={responsibleLocation.state}
-              isLoading={isLoadingResponsibleLocation}
               isLocationMissing={isResponsibleLocationMissing}
             />
           </div>

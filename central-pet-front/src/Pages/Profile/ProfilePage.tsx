@@ -5,12 +5,13 @@ import { useAuth } from '@/lib/auth-context';
 import { formatDocument, brazilianStates } from '@/lib/formatters';
 import FormSelect from '@/Components/Form/FormSelect';
 import { routes } from '@/routes';
+import type { AuthUser } from '@/Models/auth';
 import type { UserProfile } from '@/Models/user';
 import { UserX } from 'lucide-react';
 import { userProfileSchema } from '@/lib/validation/profile';
 
 export default function ProfilePage() {
-  const { currentUser, isLoading: isAuthLoading, logout } = useAuth();
+  const { currentUser, isLoading: isAuthLoading, logout, syncCurrentUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -154,6 +155,11 @@ export default function ProfilePage() {
       const response = await api.patch<{ data: UserProfile }>(`/users/me`, editForm);
 
       setProfile(response.data.data);
+      syncCurrentUser({
+        ...(currentUser as AuthUser),
+        ...response.data.data,
+        updatedAt: new Date().toISOString(),
+      });
       setSuccessMessage('Perfil atualizado com sucesso!');
     } catch (_error) {
       setErrorMessage('Não foi possível atualizar o perfil.');
