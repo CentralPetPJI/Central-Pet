@@ -586,6 +586,7 @@ export default function ProfilePage() {
                     </span>
                     <p className="text-slate-600 font-medium">{profile.email}</p>
                   </div>
+
                   <div className="space-y-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-400">
                       CPF / CNPJ
@@ -597,6 +598,7 @@ export default function ProfilePage() {
                       ) || '—'}
                     </p>
                   </div>
+
                   <div className="space-y-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-400">
                       Tipo
@@ -605,6 +607,63 @@ export default function ProfilePage() {
                       {profile.role === 'PESSOA_FISICA' ? 'Pessoa Física' : 'ONG'}
                     </p>
                   </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Localização
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                      {profile.city || '—'}
+                      {profile.city && profile.state ? ' / ' : ''}
+                      {profile.state || ''}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Telefone
+                    </span>
+                    <p className="text-slate-600 font-medium">{profile.phone || '—'}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Celular
+                    </span>
+                    <p className="text-slate-600 font-medium">{profile.mobile || '—'}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Site
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                      {profile.website ? (
+                        <a
+                          href={profile.website}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          {profile.website}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </p>
+                  </div>
+
+                  {profile.role === 'ONG' && (
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Organização
+                      </span>
+                      <p className="text-slate-600 font-medium">
+                        {profile.organizationName || '—'}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-400">
                       Membro desde
@@ -616,6 +675,7 @@ export default function ProfilePage() {
                       })}
                     </p>
                   </div>
+
                   <div className="space-y-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-400">
                       Pets Cadastrados

@@ -16,6 +16,14 @@ export type AuthUser = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  mobile?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
+  foundedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
