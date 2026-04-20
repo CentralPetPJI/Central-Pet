@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { formatDocument, brazilianStates, formatDocumentInput } from '@/lib/formatters';
-import FormSelect from '@/Components/Form/FormSelect';
 import { routes } from '@/routes';
 import type { UserProfile } from '@/Models/user';
 import { UserX, Store, CheckCircle, AlertCircle, Save } from 'lucide-react';
@@ -17,6 +15,8 @@ import {
   deleteMyInstitution,
 } from '@/lib/institutions/use-institutions';
 import { institutionSchema, type InstitutionFormData } from '@/lib/validation/institution';
+import { UserProfileFields, InstitutionProfileFields } from '@/Components/Profile';
+import { formatDocument } from '@/lib/formatters.ts';
 
 export default function ProfilePage() {
   const { currentUser, isLoading: isAuthLoading, logout } = useAuth();
@@ -28,14 +28,15 @@ export default function ProfilePage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const logoutTimerRef = useRef<number | null>(null);
 
-  const {
-    register: registerProfile,
-    handleSubmit: handleSubmitProfile,
-    reset: resetProfile,
-    formState: { errors: profileErrors, isDirty: profileIsDirty },
-  } = useForm<UserProfileFormData>({
+  const profileMethods = useForm<UserProfileFormData>({
     resolver: zodResolver(userProfileSchema),
   });
+  const {
+    register: _registerProfile,
+    handleSubmit: handleSubmitProfile,
+    reset: resetProfile,
+    formState: { errors: _profileErrors, isDirty: profileIsDirty },
+  } = profileMethods;
 
   // Institution State
   const { institution, refetch: refetchInst } = useMyInstitution();
@@ -43,15 +44,16 @@ export default function ProfilePage() {
   const [isCreatingInst, setIsCreatingInst] = useState(false);
   const [isDeletingInst, setIsDeletingInst] = useState(false);
 
-  const {
-    register: registerInst,
-    handleSubmit: handleSubmitInst,
-    reset: resetInst,
-    getValues: getInstValues,
-    formState: { errors: instErrors },
-  } = useForm<InstitutionFormData>({
+  const instMethods = useForm<InstitutionFormData>({
     resolver: zodResolver(institutionSchema),
   });
+  const {
+    register: _registerInst,
+    handleSubmit: handleSubmitInst,
+    reset: resetInst,
+    getValues: _getInstValues,
+    formState: { errors: _instErrors },
+  } = instMethods;
 
   const handleDeleteInstitution = async () => {
     if (
@@ -374,175 +376,59 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
-                {/* Editable Fields */}
-                <div className="space-y-2">
-                  <label htmlFor="fullName" className="text-sm font-bold text-slate-800 ml-1">
-                    Nome completo
-                  </label>
-                  <input
-                    id="fullName"
-                    type="text"
-                    {...registerProfile('fullName')}
-                    aria-invalid={!!profileErrors.fullName}
-                    className={`w-full rounded-2xl border ${
-                      profileErrors.fullName
-                        ? 'border-rose-500 ring-4 ring-rose-50'
-                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
-                    placeholder="Seu nome completo"
-                  />
-                  {profileErrors.fullName && (
-                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                      {profileErrors.fullName.message}
+              <FormProvider {...profileMethods}>
+                <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">
+                  <UserProfileFields />
+                </div>
+              </FormProvider>
+
+              {/* Divider for Read-only information */}
+              <div className="sm:col-span-2 pt-6 mt-4 border-t border-slate-100">
+                <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6">
+                  Informações da Conta
+                </h3>
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      E-mail
+                    </span>
+                    <p className="text-slate-600 font-medium">{profile.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      CPF / CNPJ
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                      {formatDocument(
+                        profile.role === 'PESSOA_FISICA' ? profile.cpf : profile.cnpj,
+                        profile.role,
+                      ) || '—'}
                     </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="birthDate" className="text-sm font-bold text-slate-800 ml-1">
-                    Data de nascimento
-                  </label>
-                  <input
-                    id="birthDate"
-                    type="date"
-                    {...registerProfile('birthDate')}
-                    aria-invalid={!!profileErrors.birthDate}
-                    max={new Date().toISOString().split('T')[0]}
-                    className={`w-full rounded-2xl border ${
-                      profileErrors.birthDate
-                        ? 'border-rose-500 ring-4 ring-rose-50'
-                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition`}
-                  />
-                  {profileErrors.birthDate && (
-                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                      {profileErrors.birthDate.message}
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Tipo
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                      {profile.role === 'PESSOA_FISICA' ? 'Pessoa Física' : 'ONG'}
                     </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="city" className="text-sm font-bold text-slate-800 ml-1">
-                    Cidade
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    {...registerProfile('city')}
-                    aria-invalid={!!profileErrors.city}
-                    className={`w-full rounded-2xl border ${
-                      profileErrors.city
-                        ? 'border-rose-500 ring-4 ring-rose-50'
-                        : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'
-                    } bg-white px-5 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-300`}
-                    placeholder="Sua cidade"
-                  />
-                  {profileErrors.city && (
-                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                      {profileErrors.city.message}
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Membro desde
+                    </span>
+                    <p className="text-slate-600 font-medium">
+                      {new Date(profile.createdAt).toLocaleDateString('pt-BR', {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
                     </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="state" className="text-sm font-bold text-slate-800 ml-1">
-                    Estado
-                  </label>
-                  <FormSelect
-                    id="state"
-                    {...registerProfile('state')}
-                    aria-invalid={!!profileErrors.state}
-                    className={`${profileErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
-                  >
-                    <option value="">Selecione seu estado</option>
-                    {brazilianStates.map((state) => (
-                      <option key={state.value} value={state.value}>
-                        {state.label}
-                      </option>
-                    ))}
-                  </FormSelect>
-                  {profileErrors.state && (
-                    <p className="text-xs font-bold text-rose-500 ml-1 mt-1.5">
-                      {profileErrors.state.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="phone" className="text-sm font-bold text-slate-800 ml-1">
-                    Telefone Fixo (opcional)
-                  </label>
-                  <input
-                    id="phone"
-                    type="text"
-                    {...registerProfile('phone')}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                    placeholder="(00) 0000-0000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="mobile" className="text-sm font-bold text-slate-800 ml-1">
-                    Celular / WhatsApp (opcional)
-                  </label>
-                  <input
-                    id="mobile"
-                    type="text"
-                    {...registerProfile('mobile')}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 placeholder:text-slate-300"
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-
-                {/* Divider for Read-only information */}
-                <div className="sm:col-span-2 pt-6 mt-4 border-t border-slate-100">
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight mb-6">
-                    Informações da Conta
-                  </h3>
-                  <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="space-y-1">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        E-mail
-                      </span>
-                      <p className="text-slate-600 font-medium">{profile.email}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        CPF / CNPJ
-                      </span>
-                      <p className="text-slate-600 font-medium">
-                        {formatDocument(
-                          profile.role === 'PESSOA_FISICA' ? profile.cpf : profile.cnpj,
-                          profile.role,
-                        ) || '—'}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        Tipo
-                      </span>
-                      <p className="text-slate-600 font-medium">
-                        {profile.role === 'PESSOA_FISICA' ? 'Pessoa Física' : 'ONG'}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        Membro desde
-                      </span>
-                      <p className="text-slate-600 font-medium">
-                        {new Date(profile.createdAt).toLocaleDateString('pt-BR', {
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                        Pets Cadastrados
-                      </span>
-                      <p className="text-slate-600 font-medium">{profile.petsCount} pets</p>
-                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Pets Cadastrados
+                    </span>
+                    <p className="text-slate-600 font-medium">{profile.petsCount} pets</p>
                   </div>
                 </div>
               </div>
@@ -660,92 +546,9 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-800 ml-1">
-                          Nome da Entidade / Proteção (Ex: Abrigo Felizes)
-                        </label>
-                        <input
-                          type="text"
-                          {...registerInst('name')}
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
-                        />
-                        {instErrors.name && (
-                          <p className="text-xs text-rose-500 font-bold ml-1">
-                            {instErrors.name.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-800 ml-1">
-                          CNPJ (Opcional para Protetores)
-                        </label>
-                        <input
-                          type="text"
-                          {...registerInst('cnpj', {
-                            onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                              const formatted = formatDocumentInput(e.target.value, 'ONG');
-                              resetInst(
-                                { ...getInstValues(), cnpj: formatted },
-                                { keepDefaultValues: true },
-                              );
-                            },
-                          })}
-                          inputMode="numeric"
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
-                        />
-                        {instErrors.cnpj && (
-                          <p className="text-xs text-rose-500 font-bold ml-1">
-                            {instErrors.cnpj.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="sm:col-span-2 space-y-2">
-                        <label className="text-sm font-bold text-slate-800 ml-1">
-                          Descrição / História
-                        </label>
-                        <textarea
-                          rows={3}
-                          {...registerInst('description')}
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition resize-none"
-                          placeholder="Conte um pouco sobre o seu trabalho com os animais..."
-                        />
-                        {instErrors.description && (
-                          <p className="text-xs text-rose-500 font-bold ml-1">
-                            {instErrors.description.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-800 ml-1">
-                          Instagram da Instituição
-                        </label>
-                        <input
-                          type="text"
-                          {...registerInst('instagram')}
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
-                          placeholder="@seu_abrigo"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-800 ml-1">Website</label>
-                        <input
-                          type="text"
-                          {...registerInst('website')}
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-slate-900 outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50 transition"
-                          placeholder="https://sua-ong.org"
-                        />
-                        {instErrors.website && (
-                          <p className="text-xs text-rose-500 font-bold ml-1">
-                            {instErrors.website.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    <FormProvider {...instMethods}>
+                      <InstitutionProfileFields user={currentUser} />
+                    </FormProvider>
                   </form>
 
                   <p className="mt-6 text-xs text-slate-400 font-medium italic">

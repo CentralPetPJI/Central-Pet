@@ -61,7 +61,7 @@ test.describe("Fluxo de Instituições", () => {
     await page.waitForLoadState("networkidle");
 
     // 3. Preencher formulário com seletores baseados em placeholder
-    const nomeInput = page.getByPlaceholder("Ex: Patas Amigas");
+    const nomeInput = page.getByPlaceholder("Ex: Projeto Patas Amigas");
     await nomeInput.waitFor({ state: "visible" });
     await nomeInput.fill("Abrigo PF Teste");
 
