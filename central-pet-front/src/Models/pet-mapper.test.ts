@@ -37,7 +37,7 @@ describe('mapPetApiResponseToPetListItem', () => {
     expect(mapped).toEqual({
       id: 'pet-1',
       name: 'Luna',
-      species: 'CAT',
+      species: 'cat',
       breed: 'SRD',
       city: 'São Paulo',
       state: 'SP',
