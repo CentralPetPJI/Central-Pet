@@ -66,8 +66,8 @@ test.describe("Fluxo de Instituições", () => {
     await nomeInput.fill("Abrigo PF Teste");
 
     await page
-      .getByPlaceholder("Conte um pouco sobre seu trabalho...")
-      .fill("Conte um pouco sobre seu trabalho e missão...");
+      .getByPlaceholder("Conte um pouco sobre seu trabalho e missão...")
+      .fill("Descrição do Abrigo PF Teste");
 
     await page.getByRole("button", { name: "Ativar Perfil Público" }).click();
 
