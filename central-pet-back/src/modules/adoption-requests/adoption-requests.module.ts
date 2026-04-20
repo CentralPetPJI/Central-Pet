@@ -9,7 +9,7 @@ import { ApproveAdoptionUseCase, ShareContactUseCase, RejectAdoptionUseCase } fr
 import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
 
 @Module({
-  imports: [PetsModule, PetHistoryModule, UsersModule],
+  imports: [AuthModule, PetsModule, PetHistoryModule, UsersModule],
   controllers: [AdoptionRequestsController],
   providers: [
     AdoptionRequestsService,

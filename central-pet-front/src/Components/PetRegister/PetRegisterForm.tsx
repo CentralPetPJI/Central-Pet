@@ -16,7 +16,6 @@ import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotos
 import { ensurePublicId, resolveBackendId } from '@/storage/pets';
 import { petPersonalityStorageKey } from '@/storage/pets';
 import {
-  initialPetRegisterFormData,
   petRegisterFormSchema,
   petRegisterStorageKey,
   type PetRegisterFormData,
@@ -37,7 +36,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const methods = useForm<PetRegisterFormData>({
     resolver: zodResolver(petRegisterFormSchema),
-    defaultValues: initialPetRegisterFormData,
   });
 
   const { reset, handleSubmit, watch, setValue } = methods;
@@ -48,7 +46,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     window.localStorage.removeItem(petPersonalityStorageKey);
 
     if (!isEditMode || !petId) {
-      reset(initialPetRegisterFormData);
+      reset();
       setSelectedPersonalities([]);
       return;
     }
@@ -162,7 +160,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     if (!files || files.length === 0) {
       return [];
     }
-
     return Promise.all(
       Array.from(files).map(
         (file) =>
@@ -179,7 +176,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const handleProfilePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const [photo] = await readFilesAsDataUrls(event.target.files);
-
     if (!photo) {
       return;
     }
@@ -194,13 +190,17 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    setValue('galleryPhotos', [...formData.galleryPhotos, ...photos], {
+    setValue('galleryPhotos', [...(formData.galleryPhotos || []), ...photos], {
       shouldDirty: true,
       shouldValidate: true,
     });
   };
 
   const removeGalleryPhoto = (photoIndex: number) => {
+    if (!formData.galleryPhotos || photoIndex < 0 || photoIndex >= formData.galleryPhotos.length) {
+      return;
+    }
+
     setValue(
       'galleryPhotos',
       formData.galleryPhotos.filter((_, index) => index !== photoIndex),
@@ -208,6 +208,11 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     );
   };
 
+  /*  const onErrors = (errors: any) => {
+    // caso de erro no formulario, podemos colocar isso no onSubimit
+    //  onSubmit={handleSubmit(handleSavePet, onErrors)}
+    console.error(errors);
+  }*/
   return (
     <FormProvider {...methods}>
       <form

@@ -9,7 +9,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString()
@@ -31,8 +31,11 @@ export class CreateUserDto {
   role: 'PESSOA_FISICA' | 'ONG';
 
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === '') return null;
+    return value as Date | null;
+  })
   @IsDate()
-  @Type(() => Date)
   birthDate?: Date;
 
   @IsOptional()

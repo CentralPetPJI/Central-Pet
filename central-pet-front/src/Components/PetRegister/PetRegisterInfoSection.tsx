@@ -41,8 +41,8 @@ const PetRegisterInfoSection = () => {
         <FormField label="Sexo" error={errors.sex?.message}>
           <FormSelect {...register('sex')}>
             {petSexOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </FormSelect>
@@ -50,8 +50,8 @@ const PetRegisterInfoSection = () => {
         <FormField label="Porte" error={errors.size?.message}>
           <FormSelect {...register('size')}>
             {petSizeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </FormSelect>

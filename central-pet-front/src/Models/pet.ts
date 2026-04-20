@@ -3,7 +3,7 @@ import type { AdoptionRequestStatus } from './adoption-request-status';
 export interface Pet {
   id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
   name: string;
-  species: string;
+  species: 'dog' | 'cat';
   physicalCharacteristics: string;
   behavioralCharacteristics: string;
   notes: string;
@@ -26,9 +26,9 @@ export interface PetApiResponse {
   galleryPhotos: string[];
   name: string;
   age: string;
-  species: string;
+  species: 'dog' | 'cat';
   breed: string;
-  sex: string;
+  sex: 'male' | 'female';
   size: string;
   microchipped: boolean;
   tutor: string;

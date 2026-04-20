@@ -80,11 +80,11 @@ export class PetsService {
   private normalizeSizeForPersistence(size: string): 'SMALL' | 'MEDIUM' | 'LARGE' {
     const normalized = size.toLowerCase();
 
-    if (normalized.includes('peq')) {
+    if (normalized.includes('small')) {
       return 'SMALL';
     }
 
-    if (normalized.includes('gran')) {
+    if (normalized.includes('lar')) {
       return 'LARGE';
     }
 
@@ -96,19 +96,19 @@ export class PetsService {
   }
 
   private normalizeSexForResponse(sex: 'FEMALE' | 'MALE'): string {
-    return sex === 'FEMALE' ? 'Femea' : 'Macho';
+    return sex === 'FEMALE' ? 'female' : 'male';
   }
 
   private normalizeSizeForResponse(size: 'SMALL' | 'MEDIUM' | 'LARGE'): string {
     if (size === 'SMALL') {
-      return 'Pequeno';
+      return 'small';
     }
 
     if (size === 'LARGE') {
-      return 'Grande';
+      return 'large';
     }
 
-    return 'Medio';
+    return 'medium';
   }
 
   private normalizeAdoptionStatusForResponse(
@@ -236,8 +236,8 @@ export class PetsService {
           ageText: pet.ageMonths ? `${pet.ageMonths} meses` : 'Idade não informada',
           species: this.normalizeSpeciesForPersistence(pet.species),
           breed: pet.breed ?? 'SRD',
-          sex: this.normalizeSexForPersistence(pet.sex ?? 'Macho'),
-          size: this.normalizeSizeForPersistence(pet.size ?? 'Medio'),
+          sex: this.normalizeSexForPersistence(pet.sex ?? 'male'),
+          size: this.normalizeSizeForPersistence(pet.size ?? 'medium'),
           profilePhoto: pet.photo ?? '',
           galleryPhotosJson: '[]',
           microchipped: false,

@@ -13,7 +13,7 @@ import PetProfileSection from '@/Components/PetProfile/PetProfileSection';
 import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
 import type { PetApiResponse } from '@/Models/pet';
 import { petPersonalityOptions } from '@/storage/pets';
-import { initialPetRegisterFormData, type PetRegisterFormData } from '@/storage/pets';
+import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
 
@@ -23,7 +23,7 @@ const PetPersonalityProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
-  const [formData, setFormData] = useState<PetRegisterFormData>(initialPetRegisterFormData);
+  const [formData, setFormData] = useState<PetRegisterFormData>();
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -81,7 +81,11 @@ const PetPersonalityProfilePage = () => {
     };
   }, [petId]);
 
-  const isOwner = currentUser?.id === formData.responsibleUserId;
+  if (!formData) {
+    return null;
+  }
+
+  const isOwner = currentUser?.id;
   const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
 
   const activeOptions = petPersonalityOptions.filter((option) =>

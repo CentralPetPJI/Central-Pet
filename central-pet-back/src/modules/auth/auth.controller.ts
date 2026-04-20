@@ -18,11 +18,6 @@ import {
   SESSION_COOKIE_NAME,
 } from '@/utils/session-cookie';
 import { Throttle } from '@nestjs/throttler';
-import {
-  Resolvable,
-  ThrottlerGenerateKeyFunction,
-  ThrottlerGetTrackerFunction,
-} from '@nestjs/throttler/dist/throttler-module-options.interface';
 
 @Controller('auth')
 export class AuthController {

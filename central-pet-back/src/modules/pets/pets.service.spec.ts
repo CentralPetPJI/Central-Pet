@@ -68,8 +68,8 @@ describe('PetsService', () => {
     age: '3 anos',
     species: 'dog',
     breed: 'SRD',
-    sex: 'Femea',
-    size: 'Medio',
+    sex: 'female',
+    size: 'medium',
     microchipped: true,
     tutor: 'ONG Patas do Centro',
     shelter: 'Abrigo Reencontro',
@@ -293,12 +293,12 @@ describe('PetsService', () => {
 
   it('deve atualizar campos informados e manter os demais', async () => {
     const created = await service.create(await validateCreateDto(makeCreateDto()));
-    const updateDto = await validateUpdateDto({ name: 'Luna Renomeada', size: 'Grande' });
+    const updateDto = await validateUpdateDto({ name: 'Luna Renomeada', size: 'large' });
 
     const result = await service.update(created.data.id, updateDto);
 
     expect(result.data.name).toBe('Luna Renomeada');
-    expect(result.data.size).toBe('Grande');
+    expect(result.data.size).toBe('large');
     expect(result.data.species).toBe(created.data.species);
   });
 

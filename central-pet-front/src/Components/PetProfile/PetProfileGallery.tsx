@@ -4,7 +4,7 @@ import PetProfileEmptyState from '@/Components/PetProfile/PetProfileEmptyState';
 interface PetProfileGalleryProps {
   editPath?: string;
   name: string;
-  photos: string[];
+  photos: string[] | undefined;
 }
 
 const PetProfileGallery = ({ editPath, name, photos }: PetProfileGalleryProps) => (
@@ -20,7 +20,7 @@ const PetProfileGallery = ({ editPath, name, photos }: PetProfileGalleryProps) =
         </Link>
       ) : null}
     </div>
-    {photos.length > 0 ? (
+    {photos && photos.length > 0 ? (
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {photos.map((photo, index) => (
           <img

@@ -68,6 +68,18 @@ export class AuthService {
     }
 
     if (!user) {
+      throw new UnauthorizedException(
+        'Usuário associado à sessão não encontrado. A sessão será encerrada.',
+      );
+    }
+
+    if (user.deleted) {
+      throw new UnauthorizedException(
+        'Esta conta foi desativada. Entre em contato com o suporte para mais informações.',
+      );
+    }
+
+    if (!user) {
       await this.prisma.session.delete({
         where: { id: sessionId },
       });

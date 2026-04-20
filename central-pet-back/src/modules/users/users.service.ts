@@ -116,20 +116,8 @@ export class UsersService {
         role: user.role,
         birthDate: user.birthDate,
         cpf: user.cpf,
-        city: user.city,
-        state: user.state,
-        phone: user.phone,
-        mobile: user.mobile,
         createdAt: user.createdAt.toISOString(),
         petsCount: user._count.responsiblePets,
-        // Legacy fields mapping for compatibility if needed,
-        // or frontend will be updated to read from institution
-        organizationName: user.institution?.name,
-        cnpj: user.institution?.cnpj,
-        instagram: user.institution?.instagram,
-        facebook: user.institution?.facebook,
-        website: user.institution?.website,
-        foundedAt: user.institution?.foundedAt,
       },
     };
   }

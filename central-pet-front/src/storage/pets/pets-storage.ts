@@ -1,11 +1,5 @@
 import type { Pet } from '@/Models/pet';
-import {
-  initialPetRegisterFormData,
-  isPetRegisterFormDataLike,
-  normalizePetRegisterFormData,
-  type PetRegisterFormData,
-} from './pet-register-form';
-import { petPersonalityOptions } from './pet-personality-options';
+import { type PetRegisterFormData } from './pet-register-form';
 
 export const petsStorageKey = 'central-pet:pets';
 export const petProfilesStorageKey = 'central-pet:pet-profiles';
@@ -27,10 +21,10 @@ const normalizePetProfileRecord = (value: unknown): PetProfileRecord | undefined
     return undefined;
   }
 
-  const formData = isPetRegisterFormDataLike(value.formData)
-    ? normalizePetRegisterFormData(value.formData)
-    : initialPetRegisterFormData;
-
+  const formData = value.formData as PetRegisterFormData;
+  if (!formData) {
+    return undefined;
+  }
   return {
     id: value.id,
     formData,
@@ -88,37 +82,6 @@ export const getStoredPets = (): Pet[] => {
   }
 };
 
-export const buildPetFromRegisterForm = (
-  formData: PetRegisterFormData,
-  selectedPersonalities: string[],
-  petId?: number,
-  responsibleUserId?: string,
-): Pet => {
-  const personalityLabels = petPersonalityOptions
-    .filter((option) => selectedPersonalities.includes(option.id))
-    .map((option) => option.title);
-
-  const currentPets = getStoredPets();
-  const nextId = currentPets.reduce((highestId, pet) => Math.max(highestId, pet.id), 0) + 1;
-  const resolvedPetId = petId ?? nextId;
-
-  return {
-    id: resolvedPetId,
-    name: formData.name,
-    species: formData.species,
-    photo: formData.profilePhoto,
-    physicalCharacteristics: `${formData.breed}, ${formData.age}, ${formData.sex}, porte ${formData.size}`,
-    behavioralCharacteristics:
-      personalityLabels.length > 0
-        ? personalityLabels.join(', ')
-        : 'Perfil comportamental nao informado',
-    notes: `Tutor: ${formData.tutor}. Cidade: ${formData.city}. Contato: ${formData.contact}.`,
-    responsibleUserId: responsibleUserId ?? formData.responsibleUserId,
-    sourceType: formData.sourceType,
-    sourceName: formData.sourceName,
-  };
-};
-
 export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
   const currentPets = getStoredPets();
   const filteredPets = currentPets.filter((currentPet) => currentPet.id !== pet.id);
@@ -158,18 +121,31 @@ const normalizeTextForComparison = (value: string) =>
 
 export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
   const physicalParts = pet.physicalCharacteristics.split(',').map((part) => part.trim());
-  const [breed = 'SRD', age = '', sex = 'Macho', sizePart = 'porte Medio'] = physicalParts;
+  const [breed = 'SRD', age = '', sex = 'male', sizePart = 'porte Medio'] = physicalParts;
   const normalizedSexSource = normalizeTextForComparison(sex);
   const normalizedSizeSource = normalizeTextForComparison(sizePart);
-  const normalizedSex = normalizedSexSource.includes('femea') ? 'Femea' : 'Macho';
-  const normalizedSize = normalizedSizeSource.includes('pequeno')
-    ? 'Pequeno'
-    : normalizedSizeSource.includes('grande')
-      ? 'Grande'
-      : 'Medio';
+  const normalizedSex = normalizedSexSource.includes('female') ? 'female' : 'male';
+  const normalizedSize = normalizedSizeSource.includes('small')
+    ? 'small'
+    : normalizedSizeSource.includes('large')
+      ? 'large'
+      : 'medium';
 
   return {
-    ...initialPetRegisterFormData,
+    city: '',
+    contact: '',
+    dewormed: false,
+    galleryPhotos: [],
+    hearingLimitation: false,
+    microchipped: false,
+    needsHealthCare: false,
+    neutered: false,
+    physicalLimitation: false,
+    shelter: '',
+    state: '',
+    tutor: '',
+    vaccinated: false,
+    visualLimitation: false,
     name: pet.name,
     species: pet.species,
     breed,
@@ -177,9 +153,6 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
     sex: normalizedSex,
     size: normalizedSize,
     profilePhoto: pet.photo,
-    responsibleUserId: pet.responsibleUserId,
-    sourceType: pet.sourceType,
-    sourceName: pet.sourceName,
   };
 };
 
