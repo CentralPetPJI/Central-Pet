@@ -22,7 +22,7 @@ const InstitutionProfileFields: React.FC<InstitutionProfileFieldsProps> = ({ use
   return (
     <div className="grid gap-6 sm:grid-cols-2">
       <FormField label="Nome do Perfil" error={errors.name?.message}>
-        <FormInput {...register('name')} placeholder="Ex: Projeto Patas Felizes" />
+        <FormInput {...register('name')} placeholder="Ex: Patas Amigas" />
       </FormField>
 
       <FormField label="CNPJ (Opcional)" error={errors.cnpj?.message}>
