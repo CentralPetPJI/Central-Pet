@@ -61,13 +61,15 @@ export class CreatePetDto {
   @IsNotEmpty()
   shelter: string;
 
+  // Compatibilidade temporária: o backend ignora esses campos e usa a localização do responsável.
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  city: string;
+  city?: string;
 
+  // Compatibilidade temporária: o backend ignora esses campos e usa a localização do responsável.
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  state: string;
+  state?: string;
 
   @IsString()
   @IsNotEmpty()

@@ -10,6 +10,11 @@ export class UpdateUserDto {
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {
     if (value === '') return null;
+    if (typeof value === 'string') {
+      const date = new Date(value);
+      return date as Date | null;
+    }
+
     return value as Date | null;
   })
   @IsDate()

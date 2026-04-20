@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
   const profileToEditForm = (p: UserProfile) => ({
     fullName: p.fullName,
-    birthDate: p.birthDate ?? '',
+    birthDate: p.birthDate ? new Date(p.birthDate).toISOString() : '',
     city: p.city ?? '',
     state: p.state ?? '',
     organizationName: p.organizationName ?? '',
@@ -240,7 +240,7 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-100">
           <div className="flex items-center gap-5">
             <div
-              className="h-20 w-20 flex-shrink-0 flex items-center justify-center rounded-3xl bg-cyan-600 text-white text-2xl font-bold shadow-lg shadow-cyan-100"
+              className="h-20 w-20 shrink-0 flex items-center justify-center rounded-3xl bg-cyan-600 text-white text-2xl font-bold shadow-lg shadow-cyan-100"
               aria-hidden
             >
               {profile.fullName
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                   aria-describedby={validationErrors.state ? 'state-error' : undefined}
                   value={editForm.state || ''}
                   onChange={(e) => handleInputChange('state', e.target.value)}
-                  className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
+                  className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} bg-white! py-3.5! px-5!`}
                 >
                   <option value="">Selecione seu estado</option>
                   {brazilianStates.map((state) => (

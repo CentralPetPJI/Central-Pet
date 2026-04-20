@@ -16,6 +16,8 @@ export type AuthUser = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
   createdAt: string;
   updatedAt: string;
 };

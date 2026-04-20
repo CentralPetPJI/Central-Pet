@@ -43,6 +43,11 @@ type PetRecord = {
   updatedAt: string;
 };
 
+type ResponsibleLocation = {
+  city: string;
+  state: string;
+};
+
 export type PetForAdoptionRequest = Pick<
   PetRecord,
   | 'id'
@@ -139,37 +144,76 @@ export class PetsService {
     }
   }
 
-  private toRecord(pet: {
-    id: string;
-    profilePhoto: string;
-    galleryPhotosJson: string | null;
-    name: string;
-    ageText: string;
-    species: 'DOG' | 'CAT';
-    breed: string;
-    sex: 'FEMALE' | 'MALE';
-    size: 'SMALL' | 'MEDIUM' | 'LARGE';
-    microchipped: boolean;
-    tutor: string;
-    shelter: string;
-    city: string;
-    state: string;
-    contact: string;
-    vaccinated: boolean;
-    neutered: boolean;
-    dewormed: boolean;
-    needsHealthCare: boolean;
-    physicalLimitation: boolean;
-    visualLimitation: boolean;
-    hearingLimitation: boolean;
-    selectedPersonalitiesJson: string;
-    responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
-    sourceName: string;
-    status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
-    createdAt: Date;
-    updatedAt: Date;
-  }): PetRecord {
+  private normalizeResponsibleLocation(location?: {
+    city: string | null;
+    state: string | null;
+  }): ResponsibleLocation {
+    return {
+      city: location?.city ?? '',
+      state: location?.state ?? '',
+    };
+  }
+
+  private async buildResponsibleLocationMap(
+    responsibleUserIds: Array<string | null | undefined>,
+  ): Promise<Map<string, ResponsibleLocation>> {
+    const validIds = [...new Set(responsibleUserIds.filter((id): id is string => Boolean(id)))];
+
+    if (validIds.length === 0) {
+      return new Map();
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: validIds },
+        deleted: false,
+      },
+      select: {
+        id: true,
+        city: true,
+        state: true,
+      },
+    });
+
+    return new Map(
+      users.map((user) => [user.id, this.normalizeResponsibleLocation(user)] as const),
+    );
+  }
+
+  private toRecord(
+    pet: {
+      id: string;
+      profilePhoto: string;
+      galleryPhotosJson: string | null;
+      name: string;
+      ageText: string;
+      species: 'DOG' | 'CAT';
+      breed: string;
+      sex: 'FEMALE' | 'MALE';
+      size: 'SMALL' | 'MEDIUM' | 'LARGE';
+      microchipped: boolean;
+      tutor: string;
+      shelter: string;
+      contact: string;
+      vaccinated: boolean;
+      neutered: boolean;
+      dewormed: boolean;
+      needsHealthCare: boolean;
+      physicalLimitation: boolean;
+      visualLimitation: boolean;
+      hearingLimitation: boolean;
+      selectedPersonalitiesJson: string;
+      responsibleUserId: string;
+      sourceType: 'ONG' | 'PESSOA_FISICA';
+      sourceName: string;
+      status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    responsibleLocation?: ResponsibleLocation,
+  ): PetRecord {
+    const location = responsibleLocation ?? this.normalizeResponsibleLocation();
+
     return {
       id: pet.id,
       profilePhoto: pet.profilePhoto,
@@ -183,8 +227,8 @@ export class PetsService {
       microchipped: pet.microchipped,
       tutor: pet.tutor,
       shelter: pet.shelter,
-      city: pet.city,
-      state: pet.state,
+      city: location.city,
+      state: location.state,
       contact: pet.contact,
       vaccinated: pet.vaccinated,
       neutered: pet.neutered,
@@ -276,6 +320,11 @@ export class PetsService {
 
     // Garante que o responsável existe (seja mock ou real)
     await this.userPersistence.validateUser(createPetDto.responsibleUserId);
+    const responsibleUser = await this.prisma.user.findUnique({
+      where: { id: createPetDto.responsibleUserId },
+      select: { city: true, state: true },
+    });
+    const responsibleLocation = this.normalizeResponsibleLocation(responsibleUser ?? undefined);
 
     const createdPet = await this.prisma.pet.create({
       data: {
@@ -290,8 +339,8 @@ export class PetsService {
         microchipped: createPetDto.microchipped,
         tutor: createPetDto.tutor,
         shelter: createPetDto.shelter,
-        city: createPetDto.city,
-        state: createPetDto.state,
+        city: responsibleLocation.city,
+        state: responsibleLocation.state,
         contact: createPetDto.contact,
         vaccinated: createPetDto.vaccinated,
         neutered: createPetDto.neutered,
@@ -311,7 +360,7 @@ export class PetsService {
 
     return {
       message: 'Pet created successfully',
-      data: this.toRecord(createdPet),
+      data: this.toRecord(createdPet, responsibleLocation),
     };
   }
 
@@ -324,10 +373,13 @@ export class PetsService {
       where,
       orderBy: { createdAt: 'desc' },
     });
+    const responsibleLocations = await this.buildResponsibleLocationMap(
+      pets.map((pet) => pet.responsibleUserId),
+    );
 
     return {
       message: 'Pets retrieved successfully',
-      data: pets.map((pet) => this.toRecord(pet)),
+      data: pets.map((pet) => this.toRecord(pet, responsibleLocations.get(pet.responsibleUserId))),
     };
   }
 
@@ -342,9 +394,11 @@ export class PetsService {
       throw new NotFoundException(`Pet com id "${id}" não encontrado`);
     }
 
+    const responsibleLocations = await this.buildResponsibleLocationMap([pet.responsibleUserId]);
+
     return {
       message: 'Pet retrieved successfully',
-      data: this.toRecord(pet),
+      data: this.toRecord(pet, responsibleLocations.get(pet.responsibleUserId)),
     };
   }
 
@@ -357,8 +411,6 @@ export class PetsService {
         id: true,
         name: true,
         species: true,
-        city: true,
-        state: true,
         responsibleUserId: true,
         sourceType: true,
         sourceName: true,
@@ -370,13 +422,15 @@ export class PetsService {
     if (!pet || pet.deleted || !pet.responsibleUserId) {
       return null;
     }
+    const responsibleLocations = await this.buildResponsibleLocationMap([pet.responsibleUserId]);
+    const responsibleLocation = responsibleLocations.get(pet.responsibleUserId);
 
     return {
       id: pet.id,
       name: pet.name,
       species: this.normalizeSpeciesForResponse(pet.species),
-      city: pet.city,
-      state: pet.state,
+      city: responsibleLocation?.city ?? '',
+      state: responsibleLocation?.state ?? '',
       responsibleUserId: pet.responsibleUserId,
       sourceType: pet.sourceType,
       sourceName: pet.sourceName,
@@ -410,8 +464,12 @@ export class PetsService {
       },
     });
 
+    const responsibleLocations = await this.buildResponsibleLocationMap([
+      updatedPet.responsibleUserId,
+    ]);
+
     return {
-      pet: this.toRecord(updatedPet),
+      pet: this.toRecord(updatedPet, responsibleLocations.get(updatedPet.responsibleUserId)),
       previousResponsibleUserId: existingPet.responsibleUserId,
     };
   }
@@ -456,8 +514,6 @@ export class PetsService {
         microchipped: updatePetDto.microchipped,
         tutor: updatePetDto.tutor,
         shelter: updatePetDto.shelter,
-        city: updatePetDto.city,
-        state: updatePetDto.state,
         contact: updatePetDto.contact,
         vaccinated: updatePetDto.vaccinated,
         neutered: updatePetDto.neutered,
@@ -473,9 +529,13 @@ export class PetsService {
       },
     });
 
+    const responsibleLocations = await this.buildResponsibleLocationMap([
+      updatedPet.responsibleUserId,
+    ]);
+
     return {
       message: 'Pet updated successfully',
-      data: this.toRecord(updatedPet),
+      data: this.toRecord(updatedPet, responsibleLocations.get(updatedPet.responsibleUserId)),
     };
   }
 
@@ -501,9 +561,13 @@ export class PetsService {
       },
     });
 
+    const responsibleLocations = await this.buildResponsibleLocationMap([
+      deletedPet.responsibleUserId,
+    ]);
+
     return {
       message: 'Pet deleted successfully',
-      data: this.toRecord(deletedPet),
+      data: this.toRecord(deletedPet, responsibleLocations.get(deletedPet.responsibleUserId)),
     };
   }
 }

@@ -13,6 +13,10 @@ import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealth
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
 import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
+import {
+  buildPetSubmitPayload,
+  isProfileLocationComplete,
+} from '@/Components/PetRegister/pet-register-payload';
 import { ensurePublicId, resolveBackendId } from '@/storage/pets';
 import { petPersonalityStorageKey } from '@/storage/pets';
 import {
@@ -21,6 +25,7 @@ import {
   type PetRegisterFormData,
 } from '@/storage/pets';
 import { routes } from '@/routes';
+import type { UserProfile } from '@/Models/user';
 
 interface PetRegisterFormProps {
   petId?: string;
@@ -32,6 +37,8 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [responsibleLocation, setResponsibleLocation] = useState({ city: '', state: '' });
+  const [isLoadingResponsibleLocation, setIsLoadingResponsibleLocation] = useState(false);
   const isEditMode = Boolean(petId);
 
   const methods = useForm<PetRegisterFormData>({
@@ -40,6 +47,65 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const { reset, handleSubmit, watch, setValue } = methods;
   const formData = watch();
+  const isResponsibleLocationMissing = !isProfileLocationComplete(responsibleLocation);
+
+  useEffect(() => {
+    const syncLocationIntoForm = () => {
+      setValue('city', responsibleLocation.city, { shouldDirty: false, shouldValidate: false });
+      setValue('state', responsibleLocation.state, { shouldDirty: false, shouldValidate: false });
+    };
+
+    syncLocationIntoForm();
+  }, [responsibleLocation.city, responsibleLocation.state, setValue]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadResponsibleLocation = async () => {
+      if (isAuthLoading || !currentUser?.id) {
+        return;
+      }
+
+      if (currentUser.city && currentUser.state) {
+        setResponsibleLocation({
+          city: currentUser.city,
+          state: currentUser.state,
+        });
+        return;
+      }
+
+      setIsLoadingResponsibleLocation(true);
+
+      try {
+        const response = await api.get<{ data: UserProfile }>('/users/me');
+
+        if (!isMounted) {
+          return;
+        }
+
+        setResponsibleLocation({
+          city: response.data.data.city ?? '',
+          state: response.data.data.state ?? '',
+        });
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setResponsibleLocation({ city: '', state: '' });
+      } finally {
+        if (isMounted) {
+          setIsLoadingResponsibleLocation(false);
+        }
+      }
+    };
+
+    void loadResponsibleLocation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.city, currentUser?.id, currentUser?.state, isAuthLoading]);
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
@@ -100,7 +166,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   };
 
   const handleSavePet = async (data: PetRegisterFormData) => {
-    if (isAuthLoading || isInitializing) {
+    if (isAuthLoading || isInitializing || isLoadingResponsibleLocation) {
       setSaveMessage('Carregando usuario atual. Tente novamente em instantes.');
       return;
     }
@@ -110,20 +176,12 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    const normalizedFormData = {
-      ...data,
-      name: data.name.trim(),
-      breed: data.breed.trim() || 'SRD',
-      age: data.age.trim(),
-      tutor: data.tutor.trim(),
-      shelter: data.shelter.trim(),
-      city: data.city.trim(),
-      contact: data.contact.trim(),
-      sourceType: currentUser.role,
-      sourceName: currentUser.organizationName || currentUser.fullName,
-      state: data.state.trim() || 'SP',
-      selectedPersonalities: selectedPersonalities, // Merge personalities
-    };
+    if (isResponsibleLocationMissing) {
+      setSaveMessage('Atualize cidade e estado no seu perfil antes de publicar este pet.');
+      return;
+    }
+
+    const normalizedFormData = buildPetSubmitPayload(data, currentUser, selectedPersonalities);
 
     try {
       let response: { data: { message: string; data: PetApiResponse } };
@@ -226,6 +284,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             petId={petId}
             saveMessage={saveMessage}
             selectedPersonalitiesCount={selectedPersonalities.length}
+            isSaveDisabled={isLoadingResponsibleLocation || isResponsibleLocationMissing}
           />
           <PetRegisterPhotosSection
             onGalleryPhotosChange={handleGalleryPhotosChange}
@@ -235,7 +294,12 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
           <div className="mt-4 grid gap-4 xl:grid-cols-2">
             <PetRegisterInfoSection />
-            <PetRegisterLocationSection />
+            <PetRegisterLocationSection
+              city={responsibleLocation.city}
+              state={responsibleLocation.state}
+              isLoading={isLoadingResponsibleLocation}
+              isLocationMissing={isResponsibleLocationMissing}
+            />
           </div>
 
           <PetRegisterHealthSection />

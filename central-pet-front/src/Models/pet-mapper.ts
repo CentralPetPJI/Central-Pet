@@ -1,6 +1,14 @@
 import type { PetApiResponse, PetListItem, Pet } from './pet';
 import type { PetRegisterFormData } from '@/storage/pets';
 
+const normalizePetSize = (size: string): PetRegisterFormData['size'] => {
+  if (size === 'small' || size === 'medium' || size === 'large') {
+    return size;
+  }
+
+  return 'medium';
+};
+
 export const mapPetApiResponseToPetListItem = (pet: PetApiResponse): PetListItem => ({
   id: pet.id,
   name: pet.name,
@@ -26,12 +34,12 @@ export const mapPetApiResponseToRegisterFormData = (pet: PetApiResponse): PetReg
   species: pet.species,
   breed: pet.breed,
   sex: pet.sex,
-  size: pet.size,
+  size: normalizePetSize(pet.size),
   microchipped: pet.microchipped,
   tutor: pet.tutor,
   shelter: pet.shelter,
-  city: pet.city,
-  state: pet.state ?? 'SP',
+  city: pet.city ?? '',
+  state: pet.state ?? '',
   contact: pet.contact,
   vaccinated: pet.vaccinated,
   neutered: pet.neutered,
@@ -40,7 +48,4 @@ export const mapPetApiResponseToRegisterFormData = (pet: PetApiResponse): PetReg
   physicalLimitation: pet.physicalLimitation,
   visualLimitation: pet.visualLimitation,
   hearingLimitation: pet.hearingLimitation,
-  responsibleUserId: pet.responsibleUserId ?? '',
-  sourceType: pet.sourceType ?? 'ONG',
-  sourceName: pet.sourceName ?? '',
 });

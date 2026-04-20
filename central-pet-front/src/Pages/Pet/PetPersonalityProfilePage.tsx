@@ -114,7 +114,7 @@ const PetPersonalityProfilePage = () => {
   ];
 
   return (
-    <section className="mx-auto w-full max-w-[1320px] px-1 pb-16 pt-4">
+    <section className="mx-auto w-full max-w-330 px-1 pb-16 pt-4">
       {isLoading ? (
         <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
           Carregando perfil do pet...
