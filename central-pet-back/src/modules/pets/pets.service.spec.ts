@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mockUserIds } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
+import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
@@ -56,6 +57,7 @@ describe('PetsService', () => {
     user: {
       findUnique: jest.Mock;
       upsert: jest.Mock;
+      count: jest.Mock;
     };
   };
 
@@ -181,6 +183,9 @@ describe('PetsService', () => {
           persistedUserIds.add(args.create.id);
           return { id: args.create.id };
         }),
+        count: jest.fn((args: { where: { id: string; deleted: boolean } }) =>
+          persistedUserIds.has(args.where.id) ? 1 : 0,
+        ),
       },
     };
 
@@ -188,7 +193,34 @@ describe('PetsService', () => {
       getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
     } as unknown as PersonalityTraitsService;
 
-    service = new PetsService(prismaMock as unknown as PrismaService, personalityTraitsMock);
+    // Provide a lightweight UserPersistenceService mock that uses the prismaMock helpers
+    const userPersistenceMock = {
+      validateUser: jest.fn(async (userId: string) => {
+        // If the test's prisma mock already knows the user, return true
+        const found = prismaMock.user.findUnique({ where: { id: userId } });
+        if (found) return true;
+        // Only upsert when the id is one of the project's mockUserIds (replicates UserPersistenceService behavior)
+        const knownMockIds = Object.values(mockUserIds) as string[];
+        if (knownMockIds.includes(userId) && typeof prismaMock.user.upsert === 'function') {
+          await prismaMock.user.upsert({
+            where: { id: userId },
+            update: {},
+            create: { id: userId },
+          });
+          return true;
+        }
+        throw new NotFoundException(`Usuário com id "${userId}" não encontrado`);
+      }),
+      ensureUsersExist: jest.fn(async (userIds: string[]) => {
+        await Promise.all(userIds.map((id) => userPersistenceMock.validateUser(id)));
+      }),
+    } as unknown as UserPersistenceService;
+
+    service = new PetsService(
+      prismaMock as unknown as PrismaService,
+      personalityTraitsMock,
+      userPersistenceMock as unknown as UserPersistenceService,
+    );
 
     validationPipe = new ValidationPipe({
       whitelist: true,
@@ -216,7 +248,7 @@ describe('PetsService', () => {
       responsibleUserId: 'missing-user-id',
     });
 
-    await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     expect(prismaMock.pet.create).not.toHaveBeenCalled();
   });
 
