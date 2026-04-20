@@ -17,11 +17,18 @@ import {
   parseSessionCookieValue,
   SESSION_COOKIE_NAME,
 } from '@/utils/session-cookie';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60,
+    },
+  })
   @Post('login')
   @UseInterceptors(CookieInterceptor)
   async login(@Body() loginDto: LoginDto) {
