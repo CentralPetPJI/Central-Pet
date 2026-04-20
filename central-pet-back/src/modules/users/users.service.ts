@@ -112,6 +112,8 @@ export class UsersService {
         facebook: user.facebook,
         website: user.website,
         foundedAt: user.foundedAt,
+        createdAt: user.createdAt,
+        petsCount: user._count?.responsiblePets ?? 0,
       },
     };
   }
