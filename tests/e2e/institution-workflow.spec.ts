@@ -67,7 +67,7 @@ test.describe("Fluxo de Instituições", () => {
 
     await page
       .getByPlaceholder("Conte um pouco sobre seu trabalho...")
-      .fill("Descrição de teste");
+      .fill("Conte um pouco sobre seu trabalho e missão...");
 
     await page.getByRole("button", { name: "Ativar Perfil Público" }).click();
 
