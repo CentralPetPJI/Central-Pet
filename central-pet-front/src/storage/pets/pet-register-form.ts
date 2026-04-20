@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { petSpeciesOptions, petSexOptions, petSizeOptions } from '@/lib/formatters';
 
 export const petRegisterStorageKey = 'central-pet:register-form';
 
@@ -31,16 +32,5 @@ export type PetRegisterFormData = z.infer<typeof petRegisterFormSchema>;
 export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetRegisterFormData> =>
   typeof data === 'object' && data !== null && !Array.isArray(data);
 
-export const petSpeciesOptions = [
-  { value: 'dog', label: 'Cachorro' },
-  { value: 'cat', label: 'Gato' },
-];
-export const petSexOptions = [
-  { value: 'female', label: 'Fêmea' },
-  { value: 'male', label: 'Macho' },
-];
-export const petSizeOptions = [
-  { value: 'small', label: 'Pequeno' },
-  { value: 'medium', label: 'Médio' },
-  { value: 'large', label: 'Grande' },
-];
+// Re-exportamos as opções para manter a compatibilidade com os componentes que importam de '@/storage/pets'
+export { petSpeciesOptions, petSexOptions, petSizeOptions };

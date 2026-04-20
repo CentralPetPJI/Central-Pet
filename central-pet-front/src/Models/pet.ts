@@ -29,7 +29,7 @@ export interface PetApiResponse {
   species: 'dog' | 'cat';
   breed: string;
   sex: 'male' | 'female';
-  size: string;
+  size: 'small' | 'medium' | 'large';
   microchipped: boolean;
   tutor: string;
   shelter: string;

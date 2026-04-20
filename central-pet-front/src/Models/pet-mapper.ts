@@ -1,5 +1,5 @@
 import type { PetApiResponse, PetListItem, Pet } from './pet';
-import type { PetRegisterFormData } from '@/storage/pets';
+import { PetRegisterFormData } from '@/storage/pets';
 
 const normalizePetSize = (size: string): PetRegisterFormData['size'] => {
   if (size === 'small' || size === 'medium' || size === 'large') {

@@ -4,6 +4,7 @@ import {
   getBackendIdFromPublic,
   saveBatchPublicIdMappings,
 } from './public-id-mapping';
+import { formatPetSex, formatPetSize } from '@/lib/formatters';
 
 /**
  * Sincroniza múltiplos pets do backend em batch
@@ -27,9 +28,10 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
       ? apiPet.selectedPersonalities.join(', ')
       : 'Perfil comportamental não informado';
 
-  const physicalText = [apiPet.breed, apiPet.age, apiPet.sex, `porte ${apiPet.size}`]
-    .filter(Boolean)
-    .join(', ');
+  const sex = formatPetSex(apiPet.sex) || 'Não informado';
+  const size = formatPetSize(apiPet.size) || 'Não informado';
+
+  const physicalText = [apiPet.breed, apiPet.age, sex, `porte ${size}`].filter(Boolean).join(', ');
 
   const notesText = `Tutor: ${apiPet.tutor || apiPet.shelter || 'Não informado'}. Cidade: ${apiPet.city}${apiPet.state ? `/${apiPet.state}` : ''}. Contato: ${apiPet.contact}.`;
 
