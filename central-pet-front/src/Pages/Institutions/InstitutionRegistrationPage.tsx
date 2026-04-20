@@ -6,7 +6,7 @@ import { createInstitution } from '@/lib/institutions/use-institutions';
 import { Store, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
 import { SiInstagram } from '@icons-pack/react-simple-icons';
 import { routes } from '@/routes';
-import { formatDocumentInput } from '@/lib/formatters';
+import { formatCnpjInput } from '@/lib/formatters';
 import { institutionSchema, type InstitutionFormData } from '@/lib/validation/institution';
 
 export default function InstitutionRegistrationPage() {
@@ -101,7 +101,7 @@ export default function InstitutionRegistrationPage() {
           <input
             {...register('cnpj', {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                const formatted = formatDocumentInput(e.target.value, 'ONG');
+                const formatted = formatCnpjInput(e.target.value);
                 setValue('cnpj', formatted, { shouldValidate: true });
               },
             })}

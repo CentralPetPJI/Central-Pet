@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const institutionSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
-  description: z.string().optional(),
+  description: z.string().min(1, 'Descrição é obrigatória.'),
   cnpj: z
     .string()
     .optional()

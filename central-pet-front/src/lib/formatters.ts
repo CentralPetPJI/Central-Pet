@@ -137,6 +137,12 @@ export function formatDocumentInput(raw: string | undefined, role: string): stri
   return role === 'ONG' ? formatCnpj(limited) : formatCpf(limited);
 }
 
+export function formatCnpjInput(raw: string | undefined): string {
+  const digits = raw ? raw.replace(/[^\dA-Za-z]/g, '') : '';
+  const limited = digits.slice(0, 14);
+  return formatCnpj(limited);
+}
+
 /**
  * Retorna apenas os caracteres válidos do documento para envio ao backend.
  * - Para CPF: mantém apenas dígitos (11 dígitos)
