@@ -1,13 +1,13 @@
 {
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.1.0",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "only-allow": "^1.2.2",
-    "prettier": "3.8.1"
+    "prettier": "3.8.3"
   },
   "lint-staged": {
     "central-pet-front/**/*.{js,jsx,ts,tsx}": [

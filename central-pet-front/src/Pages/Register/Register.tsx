@@ -1,22 +1,18 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegisterData } from '@/Models';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
-
-type RegisterRole = RegisterData['role'];
+import { formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
+import { registerSchema, type RegisterFormValues } from '@/lib/validation/auth';
 
 /**
  * Extrai mensagem de erro amigável de diferentes tipos de erro.
  * Fornece feedback específico para erros de cadastro.
  */
 function getErrorMessage(error: unknown): string {
-  // Erro padrão do JavaScript
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  // Erro de requisição Axios
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const axiosError = error as {
       response?: {
@@ -71,47 +67,31 @@ function getErrorMessage(error: unknown): string {
   return 'Não foi possível criar sua conta. Tente novamente.';
 }
 
-/**
- * Formata CPF: 000.000.000-00 (aceita alfanumérico)
- */
-function formatCpf(value: string): string {
-  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
-
-  if (chars.length <= 3) return chars;
-  if (chars.length <= 6) return `${chars.slice(0, 3)}.${chars.slice(3)}`;
-  if (chars.length <= 9) return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6)}`;
-
-  return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6, 9)}-${chars.slice(9)}`;
-}
-
-/**
- * Formata CNPJ: 00.000.000/0000-00 (aceita alfanumérico)
- */
-function formatCnpj(value: string): string {
-  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 14);
-
-  if (chars.length <= 2) return chars;
-  if (chars.length <= 5) return `${chars.slice(0, 2)}.${chars.slice(2)}`;
-  if (chars.length <= 8) return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5)}`;
-  if (chars.length <= 12)
-    return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8)}`;
-
-  return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8, 12)}-${chars.slice(12)}`;
-}
-
 export default function Register() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, register } = useAuth();
-  const [role, setRole] = useState<RegisterRole>('PESSOA_FISICA');
-  const [formData, setFormData] = useState({
-    fullName: '',
-    documentValue: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const { isAuthenticated, isLoading, register: authRegister } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'PESSOA_FISICA',
+      documentValue: '',
+    },
+  });
+
+  const role = watch('role');
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -119,56 +99,44 @@ export default function Register() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
-  };
-
+  // Format document input (CPF/CNPJ) using helper to centralize logic
   const handleDocumentChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    const formatted = role === 'ONG' ? formatCnpj(rawValue) : formatCpf(rawValue);
-    setFormData((current) => ({ ...current, documentValue: formatted }));
+    const formatted = formatDocumentInput(rawValue, role);
+    setValue('documentValue', formatted, { shouldValidate: true });
   };
 
-  const handleRoleChange = (newRole: RegisterRole) => {
-    setRole(newRole);
-    // Limpa o documento ao trocar o tipo de conta
-    setFormData((current) => ({ ...current, documentValue: '' }));
+  const handleRoleChange = (newRole: RegisterFormValues['role']) => {
+    setValue('role', newRole, { shouldValidate: true });
+    setValue('documentValue', '', { shouldValidate: true });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (data: RegisterFormValues) => {
     setFeedback(null);
 
-    if (formData.password !== formData.confirmPassword) {
-      setFeedback('As senhas não coincidem.');
-      return;
-    }
-
-    const sanitizedDocument = formData.documentValue.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const sanitizedDocument = sanitizeDocument(data.documentValue, data.role);
     const payload: RegisterData =
-      role === 'ONG'
+      data.role === 'ONG'
         ? {
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role,
-            organizationName: formData.fullName,
+            fullName: data.fullName,
+            email: data.email,
+            password: data.password,
+            role: data.role,
+            organizationName: data.fullName,
             cnpj: sanitizedDocument,
           }
         : {
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role,
+            fullName: data.fullName,
+            email: data.email,
+            password: data.password,
+            role: data.role,
             cpf: sanitizedDocument,
           };
 
     setIsSubmitting(true);
 
     try {
-      await register(payload);
-      navigate(routes.home.path, { replace: true });
+      await authRegister(payload);
     } catch (error: unknown) {
       setFeedback(getErrorMessage(error));
     } finally {
@@ -205,22 +173,22 @@ export default function Register() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="space-y-2">
               <label htmlFor="register-full-name" className="text-sm font-semibold text-slate-700">
                 {role === 'ONG' ? 'Nome da organização' : 'Nome completo'}
               </label>
               <input
                 id="register-full-name"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
+                {...register('fullName')}
                 type="text"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                 placeholder={role === 'ONG' ? 'Nome da ONG' : 'Seu nome completo'}
                 autoComplete="name"
-                required
               />
+              {errors.fullName ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.fullName.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -229,15 +197,17 @@ export default function Register() {
               </label>
               <input
                 id="register-document"
-                name="documentValue"
-                value={formData.documentValue}
-                onChange={handleDocumentChange}
+                {...register('documentValue', {
+                  onChange: handleDocumentChange,
+                })}
                 type="text"
                 inputMode="text"
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                 placeholder={role === 'ONG' ? '00.000.000/0000-00' : '000.000.000-00'}
-                required
               />
+              {errors.documentValue ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.documentValue.message}</p>
+              ) : null}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -275,15 +245,15 @@ export default function Register() {
                 </label>
                 <input
                   id="register-email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  {...register('email')}
                   type="email"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                   placeholder="seu@email.com"
                   autoComplete="email"
-                  required
                 />
+                {errors.email ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.email.message}</p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -292,15 +262,15 @@ export default function Register() {
                 </label>
                 <input
                   id="register-password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  {...register('password')}
                   type="password"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  required
                 />
+                {errors.password ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.password.message}</p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -312,15 +282,15 @@ export default function Register() {
                 </label>
                 <input
                   id="register-confirm-password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  {...register('confirmPassword')}
                   type="password"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  required
                 />
+                {errors.confirmPassword ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.confirmPassword.message}</p>
+                ) : null}
               </div>
             </div>
 

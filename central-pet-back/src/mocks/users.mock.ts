@@ -16,6 +16,7 @@ export type MockUser = {
   cnpj?: string;
   createdAt: Date;
   updatedAt: Date;
+  deleted: boolean;
 };
 
 export const mockUserIds = {
@@ -36,6 +37,7 @@ export const mockUsers: MockUser[] = [
     cnpj: '12.345.678/0001-90',
     createdAt: new Date('2026-03-01T10:00:00.000Z'),
     updatedAt: new Date('2026-03-01T10:00:00.000Z'),
+    deleted: false,
   },
   {
     id: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
@@ -46,6 +48,7 @@ export const mockUsers: MockUser[] = [
     cnpj: '98.765.432/0001-10',
     createdAt: new Date('2026-03-02T14:00:00.000Z'),
     updatedAt: new Date('2026-03-02T14:00:00.000Z'),
+    deleted: false,
   },
   {
     id: mockUserIds.JULIANA_MARTINS,
@@ -56,6 +59,7 @@ export const mockUsers: MockUser[] = [
     cpf: '456.789.123-00',
     createdAt: new Date('2026-03-04T08:15:00.000Z'),
     updatedAt: new Date('2026-03-04T08:15:00.000Z'),
+    deleted: false,
   },
   {
     id: mockUserIds.RAFAEL_LIMA,
@@ -68,6 +72,7 @@ export const mockUsers: MockUser[] = [
     cpf: '123.456.789-00',
     createdAt: new Date('2026-03-05T09:30:00.000Z'),
     updatedAt: new Date('2026-03-05T09:30:00.000Z'),
+    deleted: false,
   },
   {
     id: mockUserIds.ANA_SOUZA,
@@ -80,6 +85,7 @@ export const mockUsers: MockUser[] = [
     cpf: '987.654.321-00',
     createdAt: new Date('2026-03-06T16:20:00.000Z'),
     updatedAt: new Date('2026-03-06T16:20:00.000Z'),
+    deleted: false,
   },
 ];
 
