@@ -62,7 +62,7 @@ describe('App (e2e)', () => {
       email: 'maria@example.com',
       password: 'Senha123!',
       role: 'PESSOA_FISICA',
-      birthDate: '1995-05-10',
+      birthDate: new Date('1995-05-10'),
       cpf: '12345678901',
     });
 
