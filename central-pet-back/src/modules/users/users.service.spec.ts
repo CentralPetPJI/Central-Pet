@@ -1,7 +1,4 @@
-// TODO: refatorar para habilitar o eslint e ts
-/* eslint-disable */
-// @ts-nocheck
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
@@ -31,8 +28,7 @@ describe('UsersService', () => {
 
     // TODO: Verificar se é possível tipar melhor o args
     // TS2345: Argument of type is not assignable to parameter of type
-     
-    // @ts-expect-error
+    // @ts-expect-error - para simplificar o mock, já que a função é testada indiretamente
     prismaMock.user.create.mockImplementation((args) => ({
       id: 'user-1',
       fullName: args.data.fullName,
@@ -40,8 +36,6 @@ describe('UsersService', () => {
       role: args.data.role as 'PESSOA_FISICA' | 'ONG',
       birthDate: (args.data.birthDate as Date | null) ?? null,
       cpf: (args.data.cpf as string | null) ?? null,
-      organizationName: (args.data.organizationName as string | null) ?? null,
-      cnpj: (args.data.cnpj as string | null) ?? null,
       passwordHash: args.data.passwordHash,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
