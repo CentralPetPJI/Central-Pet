@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
+import { loginSchema, type LoginFormData } from '@/lib/validation/auth';
 
 type LoginLocationState = {
   registered?: boolean;
@@ -26,6 +29,10 @@ function getErrorMessage(error: unknown): string {
 
     // Mensagens específicas por status HTTP
     if (status === 401) {
+      const apiMessage = data?.message;
+      if (typeof apiMessage === 'string' && apiMessage.includes('desativada')) {
+        return apiMessage;
+      }
       return 'E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.';
     }
 
@@ -61,8 +68,6 @@ export default function Login() {
   const location = useLocation();
   const locationState = location.state as LoginLocationState | null;
   const { currentUser, isAuthenticated, isLoading, login } = useAuth();
-  const [email, setEmail] = useState(locationState?.email ?? '');
-  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(
     locationState?.registered
@@ -70,19 +75,29 @@ export default function Login() {
       : null,
   );
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: locationState?.email ?? '',
+      password: '',
+    },
+  });
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       navigate(routes.home.path, { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     setFeedback(null);
-
     try {
-      await login({ email, password });
+      await login(data);
       navigate(routes.home.path, { replace: true });
     } catch (error: unknown) {
       setFeedback(getErrorMessage(error));
@@ -145,21 +160,22 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="space-y-2">
               <label htmlFor="login-email" className="text-sm font-semibold text-slate-700">
                 E-mail
               </label>
               <input
                 id="login-email"
+                {...register('email')}
                 type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                 placeholder="seu@email.com"
                 autoComplete="email"
-                required
               />
+              {errors.email ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.email.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -168,14 +184,15 @@ export default function Login() {
               </label>
               <input
                 id="login-password"
+                {...register('password')}
                 type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
                 placeholder="••••••••"
                 autoComplete="current-password"
-                required
               />
+              {errors.password ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.password.message}</p>
+              ) : null}
             </div>
 
             {feedback ? (
