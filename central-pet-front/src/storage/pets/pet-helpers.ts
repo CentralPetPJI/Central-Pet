@@ -40,6 +40,8 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
     name: apiPet.name,
     species: apiPet.species,
     photo: apiPet.profilePhoto,
+    city: apiPet.city || undefined,
+    state: apiPet.state || undefined,
     physicalCharacteristics: physicalText,
     behavioralCharacteristics: personalityText,
     notes: notesText,

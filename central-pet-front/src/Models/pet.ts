@@ -8,6 +8,8 @@ export interface Pet {
   behavioralCharacteristics: string;
   notes: string;
   photo: string;
+  city?: string;
+  state?: string;
   responsibleUserId: string;
   sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;

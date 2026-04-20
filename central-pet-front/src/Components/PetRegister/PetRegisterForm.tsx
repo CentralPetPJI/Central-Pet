@@ -11,7 +11,6 @@ import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBeha
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
 import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealthSection';
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
-import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
 import {
   buildPetSubmitPayload,
@@ -244,16 +243,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             onRemoveGalleryPhoto={removeGalleryPhoto}
           />
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
             <PetRegisterInfoSection />
-            <PetRegisterLocationSection
-              city={responsibleLocation.city}
-              state={responsibleLocation.state}
-              isLocationMissing={isResponsibleLocationMissing}
-            />
+            <PetRegisterHealthSection />
           </div>
-
-          <PetRegisterHealthSection />
           <PetRegisterBehaviorSection
             selectedPersonalities={selectedPersonalities}
             onTogglePersonality={togglePersonality}
