@@ -55,7 +55,6 @@ export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionR
 
 export function mapAdopterForResponse(
   adopterId: string,
-  mockUsersById: Map<string, MockUser>,
   persistedUsersById: Map<string, { id: string; fullName: string }>,
 ): ReceivedAdoptionRequestAdopter {
   // Treat persisted users and mock users as the same kind of entity.
@@ -67,16 +66,6 @@ export function mapAdopterForResponse(
       name: persistedUser.fullName,
       city: '',
       state: '',
-    };
-  }
-
-  const mockUser = mockUsersById.get(adopterId);
-  if (mockUser) {
-    return {
-      id: mockUser.id,
-      name: mockUser.fullName,
-      city: mockUser.city ?? '',
-      state: mockUser.state ?? '',
     };
   }
 
