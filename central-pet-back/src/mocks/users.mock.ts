@@ -14,6 +14,12 @@ export type MockUser = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  phone?: string;
+  mobile?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
+  foundedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   deleted: boolean;
