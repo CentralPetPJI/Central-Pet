@@ -55,17 +55,20 @@ export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionR
 
 export function mapAdopterForResponse(
   adopterId: string,
-  persistedUsersById: Map<string, { id: string; fullName: string }>,
+  persistedUsersById: Map<
+    string,
+    { id: string; fullName: string; city: string | null; state: string | null }
+  >,
 ): ReceivedAdoptionRequestAdopter {
-  // Treat persisted users and mock users as the same kind of entity.
-  // Prefer persisted user when available, otherwise fall back to mock seed data.
+  // Treat persisted users as the primary source of truth.
+  // Since we ensure persistence before mapping, they should be here.
   const persistedUser = persistedUsersById.get(adopterId);
   if (persistedUser) {
     return {
       id: persistedUser.id,
       name: persistedUser.fullName,
-      city: '',
-      state: '',
+      city: persistedUser.city ?? '',
+      state: persistedUser.state ?? '',
     };
   }
 

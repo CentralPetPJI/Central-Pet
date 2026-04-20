@@ -13,6 +13,7 @@ import { MockAuthModule } from '@/modules/mock-auth';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PersonalityTraitsModule } from './modules/personality-traits/personality-traits.module';
+import { InstitutionsModule } from './modules/institutions/institutions.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PersonalityTraitsModule } from './modules/personality-traits/personalit
     MockAuthModule,
     UsersModule,
     AuthModule,
+    InstitutionsModule,
     PersonalityTraitsModule,
   ],
   controllers: [AppController],

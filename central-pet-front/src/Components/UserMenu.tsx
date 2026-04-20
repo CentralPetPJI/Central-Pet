@@ -92,7 +92,7 @@ export function UserMenu() {
         aria-label="Menu do usuário"
       >
         {/* Avatar com iniciais */}
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-xs font-bold text-white">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-linear-to-r from-emerald-50 via-white to-cyan-50 border border-cyan-100 text-xs font-bold text-cyan-700">
           {initials}
         </div>
 

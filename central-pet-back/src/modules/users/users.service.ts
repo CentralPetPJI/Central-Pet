@@ -27,6 +27,7 @@ export class UsersService {
 
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
+    const normalizedCnpj = createUserDto.cnpj?.trim().toUpperCase();
     const passwordHash = await hashPassword(createUserDto.password);
 
     const existingUser = await this.prisma.user.findFirst({
@@ -50,6 +51,18 @@ export class UsersService {
           passwordHash,
         },
       });
+
+      if (createUserDto.role === 'ONG') {
+        await tx.institution.create({
+          data: {
+            userId: newUser.id,
+            name: createUserDto.organizationName?.trim() || newUser.fullName,
+            cnpj: normalizedCnpj,
+            // TODO: Acho que podemos verificar automaticamente por enquanto, ja que temos CNPJ (podemos validar em breve)
+            verified: true,
+          },
+        });
+      }
 
       return newUser;
     });
@@ -81,6 +94,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
+        institution: true,
         _count: {
           select: {
             responsiblePets: true,
@@ -102,6 +116,8 @@ export class UsersService {
         role: user.role,
         birthDate: user.birthDate,
         cpf: user.cpf,
+        createdAt: user.createdAt.toISOString(),
+        petsCount: user._count.responsiblePets,
       },
     };
   }
@@ -127,22 +143,8 @@ export class UsersService {
         }),
         ...(updateUserDto.city !== undefined && { city: updateUserDto.city ?? null }),
         ...(updateUserDto.state !== undefined && { state: updateUserDto.state ?? null }),
-        ...(updateUserDto.organizationName !== undefined && {
-          organizationName:
-            typeof updateUserDto.organizationName === 'string'
-              ? updateUserDto.organizationName.trim()
-              : (updateUserDto.organizationName ?? null),
-        }),
         ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
         ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),
-        ...(updateUserDto.instagram !== undefined && {
-          instagram: updateUserDto.instagram ?? null,
-        }),
-        ...(updateUserDto.facebook !== undefined && { facebook: updateUserDto.facebook ?? null }),
-        ...(updateUserDto.website !== undefined && { website: updateUserDto.website ?? null }),
-        ...(updateUserDto.foundedAt !== undefined && {
-          foundedAt: updateUserDto.foundedAt ?? null,
-        }),
       },
     });
 

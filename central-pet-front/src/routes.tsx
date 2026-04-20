@@ -8,6 +8,10 @@ import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx
 import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
+import InstitutionsPage from '@/Pages/Institutions/InstitutionsPage';
+import InstitutionDetailPage from '@/Pages/Institutions/InstitutionDetailPage';
+import MyInstitutionPage from '@/Pages/Institutions/MyInstitutionPage';
+import InstitutionRegistrationPage from '@/Pages/Institutions/InstitutionRegistrationPage';
 
 type AppRoute = RouteObject & {
   element?: ReactNode;
@@ -38,6 +42,25 @@ export const routes = {
     received: {
       path: '/adoption-requests/received',
       element: <AdoptionRequestsReceivedPage />,
+    } satisfies AppRoute,
+  },
+  institutions: {
+    list: {
+      path: '/institutions',
+      element: <InstitutionsPage />,
+    } satisfies AppRoute,
+    detail: {
+      path: '/institutions/:id',
+      element: <InstitutionDetailPage />,
+      build: (id: number | string) => `/institutions/${id}`,
+    } satisfies DynamicAppRoute,
+    mine: {
+      path: '/institutions/mine',
+      element: <MyInstitutionPage />,
+    } satisfies AppRoute,
+    register: {
+      path: '/institutions/register',
+      element: <InstitutionRegistrationPage />,
     } satisfies AppRoute,
   },
   pets: {

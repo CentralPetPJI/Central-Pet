@@ -64,16 +64,10 @@ model User {
   role                 UserRole
   birthDate            DateTime?          @db.Date
   cpf                  String?            @unique
-  organizationName     String?
-  cnpj                 String?            @unique
   city                 String?
   state                String?
   phone                String?
   mobile               String?
-  instagram            String?
-  facebook             String?
-  website              String?
-  foundedAt            DateTime?          @db.Date
   passwordHash         String
   deleted              Boolean            @default(false)
   createdAt            DateTime           @default(now())
@@ -84,6 +78,26 @@ model User {
   responsibleAdoptionRequests AdoptionRequest[] @relation("ResponsibleUserAdoptionRequests")
   adopterAdoptionRequests     AdoptionRequest[] @relation("AdopterAdoptionRequests")
   performedPetHistory  PetHistory[]       @relation("PerformedPetHistory")
+  institution          Institution?
+}
+
+model Institution {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  name              String
+  description       String?
+  cnpj              String?   @unique
+  instagram         String?
+  facebook          String?
+  website           String?
+  foundedAt         DateTime? @db.Date
+  verified          Boolean   @default(false)
+  verificationLinks String?
+  deleted           Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Restrict)
 }
 
 model Session {

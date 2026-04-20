@@ -21,6 +21,7 @@ const PetRegisterPhotosSection = ({
   } = useFormContext<PetRegisterFormData>();
 
   const formData = watch();
+
   return (
     <FormSection className="mt-6" accentClassName="text-sky-700" eyebrow="Fotos">
       <div className="grid gap-4 lg:grid-cols-[220px_1fr]">

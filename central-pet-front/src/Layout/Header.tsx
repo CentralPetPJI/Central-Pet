@@ -6,6 +6,7 @@ import DropdownMenu from '../Components/DropdownMenu';
 import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
+import { useMyInstitution } from '@/lib/institutions/use-institutions';
 import { routes } from '@/routes';
 import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
@@ -17,6 +18,7 @@ const roleLabelMap = {
 
 const Header = () => {
   const { currentUser, users, selectUser, logout } = useAuth();
+  const { institution } = useMyInstitution();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -54,16 +56,26 @@ const Header = () => {
   const institutionsMenuItems: MenuItem[] = [
     {
       label: 'Consultar',
-      disabled: true,
-      tooltip: 'Em breve',
-      icon: <Compass className="h-4 w-4 text-amber-600" />,
+      path: routes.institutions.list.path,
+      icon: <Compass className="h-4 w-4 text-cyan-700" />,
     },
-    {
-      label: 'Cadastrar Nova',
-      disabled: true,
-      tooltip: 'Em breve',
-      icon: <Building2 className="h-4 w-4 text-amber-600" />,
-    },
+    ...(institution
+      ? [
+          {
+            label: 'Minha Instituição',
+            path: routes.institutions.mine.path,
+            icon: <Building2 className="h-4 w-4 text-amber-600" />,
+            requiresAuth: true,
+          },
+        ]
+      : [
+          {
+            label: 'Ativar Perfil',
+            path: routes.institutions.register.path,
+            icon: <Building2 className="h-4 w-4 text-amber-600" />,
+            requiresAuth: true,
+          },
+        ]),
   ];
 
   return (
@@ -202,16 +214,12 @@ const Header = () => {
                   </span>
                 </NavLink>
               )}
-              <button
-                className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 opacity-50 cursor-not-allowed"
-                disabled
-                title="Em breve"
-              >
+              <NavLink to={routes.institutions.list.path}>
                 <span className="inline-flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-amber-600" />
                   <span>Instituições</span>
                 </span>
-              </button>
+              </NavLink>
             </div>
 
             {/* Divisor */}

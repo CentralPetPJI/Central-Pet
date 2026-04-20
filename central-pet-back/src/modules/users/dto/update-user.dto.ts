@@ -25,11 +25,6 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  organizationName?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(20)
   phone?: string;
 
@@ -37,27 +32,4 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(20)
   mobile?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  instagram?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  facebook?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  website?: string;
-
-  @IsOptional()
-  @Transform(({ value }: { value: unknown }) => {
-    if (value === '') return null;
-    return value as Date | null;
-  })
-  @IsDate()
-  foundedAt?: Date | null;
 }

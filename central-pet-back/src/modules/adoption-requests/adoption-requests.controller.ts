@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '@/decorators/current-user.decorator';
-import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import type { MockUser } from '@/mocks';
 import type { PublicUser } from '@/modules/users/users.service';
 import { AdoptionRequestsService } from './adoption-requests.service';
 import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
 import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
 import type { AdoptionRequestActionResult } from './models';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
 
 export type { AdoptionRequestActionResult };
 
