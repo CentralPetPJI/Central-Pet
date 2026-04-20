@@ -1,7 +1,13 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hashPassword } from '../auth/password.util';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
+import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 type UserRecord = Awaited<ReturnType<PrismaService['user']['findUnique']>>;
 type PersistedUser = NonNullable<UserRecord>;
@@ -10,40 +16,41 @@ export type PublicUser = Omit<PersistedUser, 'passwordHash'>;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userPersistence: UserPersistenceService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
 
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
-    const normalizedCnpj = createUserDto.cnpj?.trim().toUpperCase();
     const passwordHash = await hashPassword(createUserDto.password);
+
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: normalizedEmail },
-          ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
-          ...(normalizedCnpj ? [{ cnpj: normalizedCnpj }] : []),
-        ],
+        OR: [{ email: normalizedEmail }, ...(normalizedCpf ? [{ cpf: normalizedCpf }] : [])],
       },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('Usuário com esse email ou CPF já existe');
     }
 
-    const user = await this.prisma.user.create({
-      data: {
-        fullName: createUserDto.fullName.trim(),
-        email: normalizedEmail,
-        role: createUserDto.role,
-        birthDate: createUserDto.birthDate,
-        cpf: normalizedCpf,
-        organizationName: createUserDto.organizationName?.trim(),
-        cnpj: normalizedCnpj,
-        passwordHash,
-      },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          fullName: createUserDto.fullName.trim(),
+          email: normalizedEmail,
+          role: createUserDto.role,
+          birthDate: createUserDto.birthDate,
+          cpf: normalizedCpf,
+          passwordHash,
+        },
+      });
+
+      return newUser;
     });
 
     return {
@@ -58,7 +65,82 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return this.prisma.user.findUnique({ where: { id } });
+    await this.userPersistence.validateUser(id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.toPublicUser(user);
+  }
+
+  async findProfileById(id: string) {
+    await this.userPersistence.validateUser(id);
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            responsiblePets: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      message: 'Usuario encontrado com sucesso',
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        birthDate: user.birthDate,
+        cpf: user.cpf,
+      },
+    };
+  }
+
+  async deactivate(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    /*
+      Soft-deactivate user data:
+      - Mark all pets as deleted + UNAVAILABLE
+      - Cancel adoption requests involving the user
+      - Remove sessions
+
+      NOTE: We intentionally keep the user's email unchanged to allow the login flow to display a "conta desativada" message. Only the `deleted` flag is set on the user row to avoid breaking relations (schema uses Restrict on some FKs).
+    */
+    await this.prisma.$transaction([
+      this.prisma.pet.updateMany({
+        where: { responsibleUserId: id },
+        data: { deleted: true, status: 'UNAVAILABLE' },
+      }),
+      this.prisma.adoptionRequest.updateMany({
+        where: {
+          OR: [{ responsibleUserId: id }, { adopterId: id }],
+        },
+        data: { status: 'CANCELLED' },
+      }),
+      this.prisma.session.deleteMany({ where: { userId: id } }),
+      this.prisma.user.update({
+        where: { id },
+        data: {
+          deleted: true,
+        },
+      }),
+    ]);
+
+    return { message: 'User deactivated successfully' };
   }
 
   toPublicUser(user: PersistedUser): PublicUser {
