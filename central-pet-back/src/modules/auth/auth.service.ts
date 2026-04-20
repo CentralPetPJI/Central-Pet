@@ -15,13 +15,19 @@ export class AuthService {
     const user = await this.usersService.findByEmail(loginDto.email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Email ou senha inválidos');
+    }
+
+    if (user.deleted) {
+      throw new UnauthorizedException(
+        'Esta conta foi desativada. Entre em contato com o suporte para mais informações.',
+      );
     }
 
     const isPasswordValid = await verifyPassword(loginDto.password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Email ou senha inválidos');
     }
 
     const session = await this.prisma.session.create({
