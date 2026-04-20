@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
 import type { Pet } from '@/Models/pet';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
+import { formatPetSpecies } from '@/lib/formatters';
 
 interface PetModalProps {
   petData: Pet;
@@ -11,7 +12,6 @@ interface PetModalProps {
 
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
   const routeId = getPetRouteId(petData);
-
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
@@ -34,7 +34,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         />
         <h2 className="text-2xl font-bold mb-2">{petData.name}</h2>
         <p className="text-gray-700 mb-1">
-          <strong>Especie:</strong> {petData.species}
+          <strong>Especie:</strong> {formatPetSpecies(petData.species)}
         </p>
         <p className="text-gray-700 mb-1">
           <strong>Características Físicas:</strong> {petData.physicalCharacteristics}

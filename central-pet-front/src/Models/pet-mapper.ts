@@ -1,5 +1,5 @@
 import type { PetApiResponse, PetListItem, Pet } from './pet';
-import type { PetRegisterFormData } from '@/storage/pets';
+import { PetRegisterFormData } from '@/storage/pets';
 
 export const mapPetApiResponseToPetListItem = (pet: PetApiResponse): PetListItem => ({
   id: pet.id,

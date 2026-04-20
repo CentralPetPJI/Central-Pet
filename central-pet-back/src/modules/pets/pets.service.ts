@@ -68,23 +68,25 @@ export class PetsService {
   ) {}
 
   private normalizeSpeciesForPersistence(species: string): 'DOG' | 'CAT' {
-    return species.toLowerCase().includes('cat') || species.toLowerCase().includes('gato')
-      ? 'CAT'
-      : 'DOG';
+    const normalized = species.toLowerCase();
+    if (normalized === 'cat') return 'CAT';
+    return 'DOG';
   }
 
   private normalizeSexForPersistence(sex: string): 'FEMALE' | 'MALE' {
-    return sex.toLowerCase().includes('f') ? 'FEMALE' : 'MALE';
+    const normalized = sex.toLowerCase();
+    if (normalized === 'female') return 'FEMALE';
+    return 'MALE';
   }
 
   private normalizeSizeForPersistence(size: string): 'SMALL' | 'MEDIUM' | 'LARGE' {
     const normalized = size.toLowerCase();
 
-    if (normalized.includes('small')) {
+    if (normalized === 'small') {
       return 'SMALL';
     }
 
-    if (normalized.includes('lar')) {
+    if (normalized === 'large') {
       return 'LARGE';
     }
 

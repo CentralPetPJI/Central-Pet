@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
   const profileToEditForm = (p: UserProfile) => ({
     fullName: p.fullName,
-    birthDate: p.birthDate ?? '',
+    birthDate: p.birthDate ? new Date(p.birthDate).toISOString().split('T')[0] : '',
     city: p.city ?? '',
     state: p.state ?? '',
     organizationName: p.organizationName ?? '',
@@ -84,7 +84,6 @@ export default function ProfilePage() {
         if (!isMounted) {
           return;
         }
-
         setProfile(response.data.data);
         setEditForm(profileToEditForm(response.data.data));
       } catch (_error) {
@@ -151,7 +150,11 @@ export default function ProfilePage() {
     setSuccessMessage(null);
 
     try {
-      const response = await api.patch<{ data: UserProfile }>(`/users/me`, editForm);
+      const payload = {
+        ...editForm,
+        birthDate: editForm.birthDate ? new Date(editForm.birthDate).toISOString() : undefined,
+      };
+      const response = await api.patch<{ data: UserProfile }>(`/users/me`, payload);
 
       setProfile(response.data.data);
       setSuccessMessage('Perfil atualizado com sucesso!');
@@ -385,7 +388,7 @@ export default function ProfilePage() {
                   aria-invalid={!!validationErrors.birthDate}
                   aria-describedby={validationErrors.birthDate ? 'birthDate-error' : undefined}
                   max={new Date().toISOString().split('T')[0]}
-                  value={editForm.birthDate ?? ''}
+                  value={editForm.birthDate}
                   onChange={(e) => handleInputChange('birthDate', e.target.value)}
                   className={`w-full rounded-2xl border ${
                     validationErrors.birthDate
