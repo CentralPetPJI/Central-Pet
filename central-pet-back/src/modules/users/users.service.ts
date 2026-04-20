@@ -102,6 +102,18 @@ export class UsersService {
         role: user.role,
         birthDate: user.birthDate,
         cpf: user.cpf,
+        organizationName: user.organizationName,
+        cnpj: user.cnpj,
+        city: user.city,
+        state: user.state,
+        phone: user.phone,
+        mobile: user.mobile,
+        instagram: user.instagram,
+        facebook: user.facebook,
+        website: user.website,
+        foundedAt: user.foundedAt,
+        createdAt: user.createdAt,
+        petsCount: user._count?.responsiblePets ?? 0,
       },
     };
   }
@@ -128,10 +140,7 @@ export class UsersService {
         ...(updateUserDto.city !== undefined && { city: updateUserDto.city ?? null }),
         ...(updateUserDto.state !== undefined && { state: updateUserDto.state ?? null }),
         ...(updateUserDto.organizationName !== undefined && {
-          organizationName:
-            typeof updateUserDto.organizationName === 'string'
-              ? updateUserDto.organizationName.trim()
-              : (updateUserDto.organizationName ?? null),
+          organizationName: updateUserDto.organizationName.trim() ?? null,
         }),
         ...(updateUserDto.phone !== undefined && { phone: updateUserDto.phone ?? null }),
         ...(updateUserDto.mobile !== undefined && { mobile: updateUserDto.mobile ?? null }),

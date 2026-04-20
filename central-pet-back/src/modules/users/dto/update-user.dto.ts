@@ -12,9 +12,10 @@ export class UpdateUserDto {
     if (value === '') return null;
     if (typeof value === 'string') {
       const date = new Date(value);
-      return date as Date | null;
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
     }
-
     return value as Date | null;
   })
   @IsDate()
