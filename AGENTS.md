@@ -30,7 +30,7 @@ Common pnpm commands
 Code Conventions
 
 - Follow .planning/codebase/CONVENTIONS.md for creating new files, naming, exports, imports, TypeScript usage, error handling, lint rules, comment style, function design, and domain conventions.
-- Comments and tests description must be in portuguese, code should be in English
+- Comments and tests description must be in Brazilian Portuguese, code should be in English
 
 Testing and changes
 
