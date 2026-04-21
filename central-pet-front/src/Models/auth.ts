@@ -42,6 +42,8 @@ export type RegisterData = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
 };
 
 export interface AuthStrategy {

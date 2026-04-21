@@ -8,6 +8,8 @@ export type UsuarioE2E = {
   email: string;
   password: string;
   cpf: string;
+  city?: string;
+  state?: string;
 };
 
 export type UsuarioCriadoE2E = {
@@ -16,6 +18,8 @@ export type UsuarioCriadoE2E = {
   email: string;
   role: "PESSOA_FISICA" | "ONG";
   birthDate: string | null;
+  city: string | null;
+  state: string | null;
   cpf: string | null;
   organizationName: string | null;
   cnpj: string | null;
@@ -23,23 +27,30 @@ export type UsuarioCriadoE2E = {
   updatedAt: string;
 };
 
+export type PerfilLocalizacaoE2E = {
+  city: string;
+  state: string;
+};
+
 /**
- * Gera dados únicos de usuário para testes E2E
+ * Gera dados unicos de usuario para testes E2E.
  */
 export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
   const sufixo = `${Date.now()}${Math.floor(Math.random() * 1_000_000)}`;
   const cpf = sufixo.replace(/\D/g, "").padStart(11, "0").slice(-11);
 
   return {
-    fullName: `Usuário ${prefixo} ${sufixo.slice(-6)}`,
+    fullName: `Usuario ${prefixo} ${sufixo.slice(-6)}`,
     email: `${prefixo}.${sufixo}@example.com.br`,
     password: SENHA_PADRAO,
     cpf,
+    city: "Sao Paulo",
+    state: "SP",
   };
 }
 
 /**
- * Cria usuário via API do backend
+ * Cria usuario via API do backend.
  */
 export async function criarUsuarioViaApi(
   request: APIRequestContext,
@@ -58,6 +69,8 @@ export async function criarUsuarioViaApi(
           password: usuario.password,
           role: "PESSOA_FISICA",
           cpf: usuario.cpf,
+          city: usuario.city,
+          state: usuario.state,
         },
       });
 
@@ -68,7 +81,7 @@ export async function criarUsuarioViaApi(
       lastError = err;
       const message =
         err && typeof err === "object" && "message" in err
-          ? (err as any).message
+          ? (err as { message?: string }).message
           : "";
       // Retry on transient connection errors
       if (
@@ -94,7 +107,7 @@ export async function criarUsuarioViaApi(
 }
 
 /**
- * Faz login no frontend via UI
+ * Faz login no frontend via UI.
  */
 export async function fazerLogin(
   page: Page,
@@ -105,6 +118,23 @@ export async function fazerLogin(
   await page.getByLabel("Senha").fill(usuario.password);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  // Aguardar redirecionamento para home após login
+  await expect(page).toHaveURL("/");
+}
+
+/**
+ * Atualiza a localizacao do usuario autenticado quando o teste precisa
+ * alterar o perfil apos o cadastro inicial.
+ */
+export async function atualizarLocalizacaoPerfil(
+  page: Page,
+  localizacao: PerfilLocalizacaoE2E = { city: "Sao Paulo", state: "SP" },
+): Promise<void> {
+  const resposta = await page.request.patch(`${API_BASE_URL}/users/me`, {
+    data: localizacao,
+  });
+
+  expect(resposta.ok()).toBeTruthy();
+
+  await page.goto("/");
   await expect(page).toHaveURL("/");
 }

@@ -62,20 +62,6 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.getByLabel("Sexo").selectOption("male");
     await page.getByLabel("Porte").selectOption("medium");
 
-    await page
-      .getByRole("textbox", { name: "Tutor", exact: true })
-      .fill("Assistente AI");
-    await page
-      .getByRole("textbox", { name: "Abrigo", exact: true })
-      .fill("Anthropic HQ");
-    await page
-      .getByRole("textbox", { name: "Cidade", exact: true })
-      .fill("Sao Paulo");
-    await page.getByLabel("Estado").selectOption("SP");
-    await page
-      .getByRole("textbox", { name: "Contato", exact: true })
-      .fill("(11) 99999-0000");
-
     // Passo 3: Selecionar comportamentos (Curioso e Sociável)
     await page.getByRole("button", { name: /Curioso/ }).click();
     await page.getByRole("button", { name: /Sociavel/ }).click();
@@ -144,20 +130,6 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.getByLabel("Especie").selectOption("dog");
     await page.getByLabel("Sexo").selectOption("male");
     await page.getByLabel("Porte").selectOption("medium");
-
-    await page
-      .getByRole("textbox", { name: "Tutor", exact: true })
-      .fill("Test Tutor");
-    await page
-      .getByRole("textbox", { name: "Abrigo", exact: true })
-      .fill("Test Shelter");
-    await page
-      .getByRole("textbox", { name: "Cidade", exact: true })
-      .fill("Test City");
-    await page.getByLabel("Estado").selectOption("SP");
-    await page
-      .getByRole("textbox", { name: "Contato", exact: true })
-      .fill("11999999999");
 
     await page.getByRole("button", { name: "Salvar pet" }).click();
 

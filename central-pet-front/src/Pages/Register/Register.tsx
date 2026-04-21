@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegisterData } from '@/Models';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
-import { formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
+import { brazilianStates, formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
 import { registerSchema, type RegisterFormValues } from '@/lib/validation/auth';
 
 /**
@@ -88,6 +88,8 @@ export default function Register() {
       confirmPassword: '',
       role: 'PESSOA_FISICA',
       documentValue: '',
+      city: '',
+      state: '',
     },
   });
 
@@ -115,6 +117,8 @@ export default function Register() {
     setFeedback(null);
 
     const sanitizedDocument = sanitizeDocument(data.documentValue, data.role);
+    const normalizedCity = data.city?.trim() || undefined;
+    const normalizedState = data.state?.trim() || undefined;
     const payload: RegisterData =
       data.role === 'ONG'
         ? {
@@ -124,6 +128,8 @@ export default function Register() {
             role: data.role,
             organizationName: data.fullName,
             cnpj: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
           }
         : {
             fullName: data.fullName,
@@ -131,6 +137,8 @@ export default function Register() {
             password: data.password,
             role: data.role,
             cpf: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
           };
 
     setIsSubmitting(true);
@@ -254,6 +262,41 @@ export default function Register() {
                 {errors.email ? (
                   <p className="mt-1 text-sm text-rose-700">{errors.email.message}</p>
                 ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="register-city" className="text-sm font-semibold text-slate-700">
+                  Cidade
+                </label>
+                <input
+                  id="register-city"
+                  {...register('city')}
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  placeholder="Sua cidade"
+                  autoComplete="address-level2"
+                />
+                <p className="text-xs text-slate-500">Opcional por enquanto.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="register-state" className="text-sm font-semibold text-slate-700">
+                  Estado
+                </label>
+                <select
+                  id="register-state"
+                  {...register('state')}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  autoComplete="address-level1"
+                >
+                  <option value="">Selecione</option>
+                  {brazilianStates.map((stateOption) => (
+                    <option key={stateOption.value} value={stateOption.value}>
+                      {stateOption.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500">Opcional por enquanto.</p>
               </div>
 
               <div className="space-y-2">
