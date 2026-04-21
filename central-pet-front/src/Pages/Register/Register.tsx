@@ -166,7 +166,7 @@ export default function Register() {
               Criar conta
             </p>
             <h2 className="mt-3 text-3xl font-extrabold text-slate-900">
-              Abra sua conta no Central-Pet
+              Abra sua conta no Centrau Pet
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               Preencha os dados básicos e crie sua conta gratuita.

@@ -125,7 +125,7 @@ export default function Login() {
         <div className="flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
-              Central-Pet
+              Centrau Pet
             </p>
             <h1 className="mt-4 max-w-md text-4xl font-black leading-tight">
               Entre para continuar ajudando animais.
