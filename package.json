@@ -41,6 +41,7 @@
     "build:back": "pnpm --filter central-pet-back build",
     "test:front": "pnpm --filter central-pet-front test:run",
     "test:e2e": "pnpm --filter central-pet-e2e-tests test",
+    "test:e2e:ui": "pnpm --filter central-pet-e2e-tests test:ui",
     "test:e2e:install": "pnpm --filter central-pet-e2e-tests install-browsers",
     "test:back": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e",
     "test:all": "pnpm --filter central-pet-back test:setup && pnpm --filter central-pet-back test && pnpm --filter central-pet-back test:e2e && pnpm --filter central-pet-front test:run && pnpm --filter central-pet-e2e-tests test"
