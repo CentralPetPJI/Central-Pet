@@ -27,6 +27,11 @@ Common pnpm commands
 - Run E2E tests: pnpm --filter central-pet-e2e-tests test OR pnpm --filter central-pet-e2e-tests test:e2e
 - Generate Prisma client: (inside backend) pnpm run prisma:generate
 
+Code Conventions
+
+- Follow .planning/codebase/CONVENTIONS.md for creating new files, naming, exports, imports, TypeScript usage, error handling, lint rules, comment style, function design, and domain conventions.
+- Comments and tests description must be in portuguese, code should be in English
+
 Testing and changes
 
 - Always run the relevant unit/e2e tests after making changes that affect behavior.
