@@ -78,7 +78,7 @@ const Header = () => {
           >
             <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
             <p className="m-0 text-base font-medium">
-              {import.meta.env.VITE_SITE ?? 'Centrau Pet'}
+              {import.meta.env.VITE_SITE_NAME ?? 'Centrau Pet'}
             </p>
           </Link>
 

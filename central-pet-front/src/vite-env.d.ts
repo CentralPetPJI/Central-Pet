@@ -4,7 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_AUTH_STRATEGY: 'mock' | 'session';
   readonly VITE_DISPLAY_MOCK_CHOICE_GATE?: 'true' | 'false';
-  readonly VITE_SITE?: string;
+  readonly VITE_SITE_NAME?: string;
 }
 
 interface ImportMeta {
