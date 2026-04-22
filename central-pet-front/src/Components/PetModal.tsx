@@ -48,7 +48,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
 
         <Link
           to={routes.pets.detail.build(routeId)}
-          className="mt-6 block w-full rounded-xl bg-[#1ed6ea] py-3 text-center font-semibold text-white transition hover:bg-[#6de9f7]"
+          className="mt-6 block w-full rounded-xl bg-primary-400 py-3 text-center font-semibold text-white transition hover:bg-brand-900"
         >
           Quero adotar
         </Link>

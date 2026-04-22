@@ -9,7 +9,9 @@ const MainPage: React.FC = () => {
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao Centrau Pet!</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        Bem-vindo ao {import.meta.env.VITE_SITE ?? 'Centrau Pet'}!
+      </h1>
 
       <p className="text-gray-600 mb-8">Confira os pets cadastrados recentemente:</p>
 

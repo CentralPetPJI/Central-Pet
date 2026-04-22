@@ -77,7 +77,9 @@ const Header = () => {
             className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
           >
             <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
-            <p className="m-0 text-base font-medium">Centrau Pet</p>
+            <p className="m-0 text-base font-medium">
+              {import.meta.env.VITE_SITE ?? 'Centrau Pet'}
+            </p>
           </Link>
 
           {/* Navegação Desktop */}

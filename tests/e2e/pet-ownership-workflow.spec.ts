@@ -24,7 +24,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Bem-vindo ao Pet Central!",
+        name: "Bem-vindo ao Centrau Pet!",
       }),
     ).toBeVisible();
 
@@ -169,7 +169,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: "Bem-vindo ao Pet Central!" }),
+      page.getByRole("heading", { name: "Bem-vindo ao Centrau Pet!" }),
     ).toBeVisible();
 
     await page.waitForFunction(

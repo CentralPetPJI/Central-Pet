@@ -1,1 +1,61 @@
 @import 'tailwindcss';
+
+@theme {
+  /* Primary Brand Identity (Cyan/Aqua) */
+  --color-primary-50: #ebfdff;
+  --color-primary-100: #d8f9fd;
+  --color-primary-200: #c9f4fa;
+  --color-primary-300: #6fe2f1;
+  --color-primary-400: #4fb8c5;
+  --color-primary-500: #1ed6ea;
+  --color-primary-600: #5ed8e6;
+  --color-primary-700: #19b0c0;
+  --color-primary-800: #148c99;
+  --color-primary-900: #0e626b;
+  --color-primary: var(--color-primary-300);
+
+  /* Brand Alias */
+  --color-brand-50: var(--color-primary-50);
+  --color-brand-100: var(--color-primary-100);
+  --color-brand-200: var(--color-primary-200);
+  --color-brand-300: var(--color-primary-300);
+  --color-brand-400: var(--color-primary-400);
+  --color-brand-500: var(--color-primary-500);
+  --color-brand-600: var(--color-primary-600);
+  --color-brand-700: var(--color-primary-700);
+  --color-brand-800: var(--color-primary-800);
+  --color-brand-900: var(--color-primary-900);
+
+  /* Neutrals (Slate) */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-500: #64748b;
+  --color-neutral-700: #334155;
+  --color-neutral-900: #0f172a;
+
+  /* Semantics */
+  --color-success: #059669;
+  --color-success-50: #ecfdf5;
+  --color-danger: #e11d48;
+  --color-danger-50: #fff1f2;
+  --color-warning: #f59e0b;
+  --color-warning-50: #fffbeb;
+
+  /* Custom Utilities */
+  --tracking-widest-brand: 0.24em;
+  --tracking-wider-brand: 0.18em;
+
+  --shadow-brand:
+    0 20px 25px -5px rgba(111, 226, 241, 0.1), 0 10px 10px -5px rgba(111, 226, 241, 0.04);
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+/* Custom Base Styles if needed */
+@layer base {
+  body {
+    @apply bg-neutral-50 text-neutral-900;
+  }
+}
