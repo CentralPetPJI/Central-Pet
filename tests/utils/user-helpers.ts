@@ -58,6 +58,7 @@ export async function criarUsuarioViaApi(
           password: usuario.password,
           role: "PESSOA_FISICA",
           cpf: usuario.cpf,
+          acceptTerms: true,
         },
       });
 

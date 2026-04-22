@@ -96,6 +96,7 @@ export class SessionAuthStrategy implements AuthStrategy {
       cpf: data.cpf,
       organizationName: data.organizationName,
       cnpj: data.cnpj,
+      acceptTerms: data.acceptTerms,
     });
 
     // Faz auto-login após criar a conta
@@ -103,5 +104,12 @@ export class SessionAuthStrategy implements AuthStrategy {
       email: data.email,
       password: data.password,
     });
+  }
+
+  /**
+   * Aceita os termos de responsabilidade.
+   */
+  async acceptTerms(): Promise<void> {
+    await api.post('/auth/accept-terms');
   }
 }

@@ -25,6 +25,10 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
 
+    if (!createUserDto.acceptTerms) {
+      throw new BadRequestException('Você deve aceitar os termos de responsabilidade');
+    }
+
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
     const passwordHash = await hashPassword(createUserDto.password);
@@ -48,6 +52,7 @@ export class UsersService {
           birthDate: createUserDto.birthDate,
           cpf: normalizedCpf,
           passwordHash,
+          acceptedTermsAt: new Date(),
         },
       });
 
