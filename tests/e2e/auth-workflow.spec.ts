@@ -52,6 +52,7 @@ test.describe("Fluxo de autenticação", () => {
     await page
       .getByLabel("Confirmar senha", { exact: true })
       .fill(usuario.password);
+    await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Criar conta" }).click();
 
     await expect(page).toHaveURL("/");
@@ -74,9 +75,33 @@ test.describe("Fluxo de autenticação", () => {
     await page
       .getByLabel("Confirmar senha", { exact: true })
       .fill("SenhaDiferente123!");
+    await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Criar conta" }).click();
 
     await expect(page).toHaveURL(/\/register$/);
     await expect(page.getByText("As senhas não coincidem.")).toBeVisible();
+  });
+
+  test("deve impedir registro quando os termos não são aceitos", async ({
+    page,
+  }) => {
+    const usuario = gerarUsuarioUnico("registro-falha-termos");
+
+    await page.goto("/register");
+
+    await page.getByLabel("Nome completo").fill(usuario.fullName);
+    await page.getByLabel("CPF").fill(usuario.cpf);
+    await page.getByLabel("E-mail").fill(usuario.email);
+    await page.getByLabel("Senha", { exact: true }).fill(usuario.password);
+    await page
+      .getByLabel("Confirmar senha", { exact: true })
+      .fill(usuario.password);
+    // Não marcamos o checkbox
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page).toHaveURL(/\/register$/);
+    await expect(
+      page.getByText("Você deve aceitar os termos de responsabilidade"),
+    ).toBeVisible();
   });
 });

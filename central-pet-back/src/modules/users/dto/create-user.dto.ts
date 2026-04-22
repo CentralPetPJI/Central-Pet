@@ -56,4 +56,8 @@ export class CreateUserDto {
     message: 'cnpj must contain exactly 14 alphanumeric characters',
   })
   cnpj?: string;
+
+  @IsNotEmpty({ message: 'Você deve aceitar os termos de responsabilidade' })
+  @IsIn([true], { message: 'Você deve aceitar os termos de responsabilidade' })
+  acceptTerms: boolean;
 }
