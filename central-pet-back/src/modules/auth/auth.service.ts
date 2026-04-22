@@ -100,4 +100,17 @@ export class AuthService {
       message: 'Logout bem-sucedido',
     };
   }
+
+  async acceptTerms(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        acceptedTermsAt: new Date(),
+      },
+    });
+
+    return {
+      message: 'Termos aceitos com sucesso',
+    };
+  }
 }

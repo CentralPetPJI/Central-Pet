@@ -76,6 +76,18 @@ export class AuthController {
     return this.authService.getAuthenticatedUser(parsedSession.value);
   }
 
+  @Post('accept-terms')
+  async acceptTerms(@Cookies(SESSION_COOKIE_NAME) sessionCookie?: string) {
+    const parsedSession = parseSessionCookieValue(sessionCookie);
+
+    if (!parsedSession || parsedSession.mode !== 'session') {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    const { data } = await this.authService.getAuthenticatedUser(parsedSession.value);
+    return this.authService.acceptTerms(data.user.id);
+  }
+
   @Post('logout')
   @UseInterceptors(CookieInterceptor)
   async logout(@Cookies(SESSION_COOKIE_NAME) sessionCookie?: string) {
