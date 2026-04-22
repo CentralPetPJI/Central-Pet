@@ -54,6 +54,7 @@ describe('UsersService', () => {
     password: 'Senha123!',
     role: 'PESSOA_FISICA',
     cpf: '12345678901',
+    acceptTerms: true,
   });
 
   it('deve criar um usuário adotante', async () => {
@@ -82,6 +83,7 @@ describe('UsersService', () => {
       email: 'maria@example.com',
       password: 'Senha123!',
       role: 'PESSOA_FISICA',
+      acceptTerms: true,
     };
 
     await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
@@ -93,6 +95,7 @@ describe('UsersService', () => {
       email: 'ong@example.com',
       password: 'Senha123!',
       role: 'ONG',
+      acceptTerms: true,
     };
 
     await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
