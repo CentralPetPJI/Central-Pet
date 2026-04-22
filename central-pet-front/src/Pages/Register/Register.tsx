@@ -88,6 +88,7 @@ export default function Register() {
       confirmPassword: '',
       role: 'PESSOA_FISICA',
       documentValue: '',
+      acceptTerms: false,
     },
   });
 
@@ -124,6 +125,7 @@ export default function Register() {
             role: data.role,
             organizationName: data.fullName,
             cnpj: sanitizedDocument,
+            acceptTerms: data.acceptTerms,
           }
         : {
             fullName: data.fullName,
@@ -131,6 +133,7 @@ export default function Register() {
             password: data.password,
             role: data.role,
             cpf: sanitizedDocument,
+            acceptTerms: data.acceptTerms,
           };
 
     setIsSubmitting(true);
@@ -294,6 +297,31 @@ export default function Register() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  {...register('acceptTerms')}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#4fb8c5] focus:ring-[#4fb8c5]"
+                />
+                <span className="text-sm text-slate-600 leading-tight">
+                  Eu li e aceito o{' '}
+                  <Link
+                    to={routes.termsOfResponsibility.path}
+                    className="font-bold text-[#4fb8c5] hover:underline"
+                    target="_blank"
+                  >
+                    Termo de Responsabilidade e Privacidade
+                  </Link>
+                  . Entendo que meus dados são protegidos e o compartilhamento só ocorre com meu
+                  consentimento.
+                </span>
+              </label>
+              {errors.acceptTerms ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.acceptTerms.message}</p>
+              ) : null}
+            </div>
+
             {feedback ? (
               <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{feedback}</p>
             ) : null}
@@ -324,8 +352,7 @@ export default function Register() {
               Faça parte da mudança na vida dos animais.
             </h1>
             <p className="mt-4 max-w-lg text-base text-slate-700">
-              Crie sua conta gratuita e comece a ajudar pets abandonados a encontrarem um lar cheio
-              de amor.
+              Crie sua conta gratuita e comece a ajudar pets a encontrarem um lar cheio de amor.
             </p>
           </div>
 

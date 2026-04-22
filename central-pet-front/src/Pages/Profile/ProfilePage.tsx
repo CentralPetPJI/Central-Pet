@@ -6,7 +6,7 @@ import { formatDocument, brazilianStates } from '@/lib/formatters';
 import FormSelect from '@/Components/Form/FormSelect';
 import { routes } from '@/routes';
 import type { UserProfile } from '@/Models/user';
-import { UserX } from 'lucide-react';
+import { UserX, ShieldCheck } from 'lucide-react';
 import { userProfileSchema } from '@/lib/validation/profile';
 
 export default function ProfilePage() {
@@ -272,12 +272,13 @@ export default function ProfilePage() {
               Meus pets ({profile.petsCount})
             </Link>
 
-            <button
-              onClick={() => logout().then(() => (window.location.href = '/login'))}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300"
+            <Link
+              to={routes.termsOfResponsibility.path}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300"
             >
-              Sair
-            </button>
+              <ShieldCheck size={18} className="text-[#4fb8c5]" />
+              Termos de Uso
+            </Link>
 
             <button
               onClick={() => setDeleteConfirm(true)}

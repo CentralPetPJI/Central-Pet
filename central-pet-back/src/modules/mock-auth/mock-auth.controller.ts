@@ -21,7 +21,9 @@ import type { PublicUser } from '@/modules/users/users.service';
 import { MockAuthService } from './mock-auth.service';
 import { SelectMockUserDto } from './dto/select-mock-user.dto';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
+import { NotProductionGuard } from '@/modules/mock-auth/guards/not-production.guard';
 
+@UseGuards(NotProductionGuard)
 @Controller('mock-auth')
 export class MockAuthController {
   constructor(private readonly mockAuthService: MockAuthService) {}
@@ -70,5 +72,11 @@ export class MockAuthController {
         sessionId: buildSessionCookieValue('mock', dto.userId),
       },
     };
+  }
+
+  @UseGuards(SessionGuard)
+  @Post('accept-terms')
+  acceptTerms(@CurrentUser() user: MockUser) {
+    return this.mockAuthService.acceptTerms(user.id);
   }
 }

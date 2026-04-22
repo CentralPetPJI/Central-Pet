@@ -124,4 +124,11 @@ export class MockAuthStrategy implements AuthStrategy {
     await api.post('/auth/mode', { mode: 'mock' });
     await api.post<SelectUserResponse>('/mock-auth/select-user', { userId });
   }
+
+  /**
+   * Aceita os termos de responsabilidade (mock).
+   */
+  async acceptTerms(): Promise<void> {
+    await api.post('/mock-auth/accept-terms');
+  }
 }

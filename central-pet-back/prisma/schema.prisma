@@ -75,6 +75,7 @@ model User {
   website              String?
   foundedAt            DateTime?          @db.Date
   passwordHash         String
+  acceptedTermsAt      DateTime?
   deleted              Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
