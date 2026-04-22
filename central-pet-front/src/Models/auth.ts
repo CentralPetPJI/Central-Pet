@@ -24,6 +24,7 @@ export type AuthUser = {
   facebook?: string;
   website?: string;
   foundedAt?: string;
+  acceptedTermsAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -42,6 +43,7 @@ export type RegisterData = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  acceptTerms: boolean;
 };
 
 export interface AuthStrategy {
@@ -94,6 +96,13 @@ export interface AuthStrategy {
    */
   register(data: RegisterData): Promise<AuthUser>;
 
+  /**
+   * Marca os termos de uso como aceitos para o usuário atual.
+   * Mock: atualiza o usuário mock selecionado.
+   * Session: POST /auth/accept-terms e atualiza o usuário atual.
+   */
+  acceptTerms(): Promise<void>;
+
   // -------------------------------------------------------------------------
   // Métodos específicos do modo mock (opcionais)
   // -------------------------------------------------------------------------
@@ -126,6 +135,7 @@ export type AuthContextValue = {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: (redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  acceptTerms: () => Promise<void>;
   users: AuthUser[];
   selectUser: (userId: string) => Promise<void>;
 };
