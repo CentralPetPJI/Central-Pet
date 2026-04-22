@@ -169,7 +169,7 @@ export default function Login() {
                 id="login-email"
                 {...register('email')}
                 type="email"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder="seu@email.com"
                 autoComplete="email"
               />
@@ -186,7 +186,7 @@ export default function Login() {
                 id="login-password"
                 {...register('password')}
                 type="password"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
@@ -207,11 +207,7 @@ export default function Login() {
               </p>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-2xl bg-[#6fe2f1] px-4 py-3.5 text-sm font-bold text-slate-900 transition hover:bg-[#5ed8e6] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
               {isSubmitting ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
