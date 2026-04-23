@@ -6,7 +6,7 @@ interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> 
 }
 
 const accentClassMap = {
-  cyan: 'focus:border-cyan-500',
+  cyan: 'focus:border-primary-300',
   emerald: 'focus:border-emerald-500',
 } as const;
 

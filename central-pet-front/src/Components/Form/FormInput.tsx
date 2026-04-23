@@ -5,7 +5,7 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const accentClassMap = {
-  cyan: 'focus:border-cyan-500',
+  cyan: 'focus:border-primary-300',
   emerald: 'focus:border-emerald-500',
   rose: 'focus:border-rose-500',
 } as const;

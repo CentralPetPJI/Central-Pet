@@ -6,7 +6,7 @@ interface FormCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const accentClassMap = {
-  cyan: 'text-cyan-600',
+  cyan: 'text-primary-400',
   rose: 'text-rose-600',
 } as const;
 

@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const showSidePanel = location.pathname === routes.home.path;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-neutral-50">
       <Header />
 
       {shouldDisplayMockChoiceGates() ? <MockUserChoiceGate /> : null}
