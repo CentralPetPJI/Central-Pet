@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Building2, UserRound } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { isDevelopment } from '@/lib/dev-mode';
+import { SITE_NAME } from '@/lib/site-config';
 
 const roleCardCopy = {
   PESSOA_FISICA: {
@@ -47,7 +48,7 @@ export function MockUserChoiceGate() {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
       <div className="w-full max-w-2xl rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-slate-200">
         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-          Bem-vindo ao {import.meta.env.VITE_SITE_NAME ?? 'Centrau Pet'}
+          Bem-vindo ao {SITE_NAME}
         </p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">Você é?</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">

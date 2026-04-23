@@ -7,6 +7,7 @@ import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
 import { formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
 import { registerSchema, type RegisterFormValues } from '@/lib/validation/auth';
+import { SITE_NAME } from '@/lib/site-config';
 
 /**
  * Extrai mensagem de erro amigável de diferentes tipos de erro.
@@ -166,7 +167,7 @@ export default function Register() {
               Criar conta
             </p>
             <h2 className="mt-3 text-3xl font-extrabold text-slate-900">
-              Abra sua conta no {import.meta.env.VITE_SITE_NAME ?? 'Central Pet'}
+              Abra sua conta no {SITE_NAME}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               Preencha os dados básicos e crie sua conta gratuita.
