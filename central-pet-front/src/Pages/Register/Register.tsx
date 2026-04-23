@@ -169,7 +169,7 @@ export default function Register() {
               Criar conta
             </p>
             <h2 className="mt-3 text-3xl font-extrabold text-slate-900">
-              Abra sua conta no Central-Pet
+              Abra sua conta no {import.meta.env.VITE_SITE_NAME ?? 'Central Pet'}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               Preencha os dados básicos e crie sua conta gratuita.
@@ -185,10 +185,11 @@ export default function Register() {
                 id="register-full-name"
                 {...register('fullName')}
                 type="text"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder={role === 'ONG' ? 'Nome da ONG' : 'Seu nome completo'}
                 autoComplete="name"
               />
+
               {errors.fullName ? (
                 <p className="mt-1 text-sm text-rose-700">{errors.fullName.message}</p>
               ) : null}
@@ -205,9 +206,10 @@ export default function Register() {
                 })}
                 type="text"
                 inputMode="text"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder={role === 'ONG' ? '00.000.000/0000-00' : '000.000.000-00'}
               />
+
               {errors.documentValue ? (
                 <p className="mt-1 text-sm text-rose-700">{errors.documentValue.message}</p>
               ) : null}
@@ -250,10 +252,11 @@ export default function Register() {
                   id="register-email"
                   {...register('email')}
                   type="email"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="seu@email.com"
                   autoComplete="email"
                 />
+
                 {errors.email ? (
                   <p className="mt-1 text-sm text-rose-700">{errors.email.message}</p>
                 ) : null}
@@ -267,10 +270,11 @@ export default function Register() {
                   id="register-password"
                   {...register('password')}
                   type="password"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="••••••••"
                   autoComplete="new-password"
                 />
+
                 {errors.password ? (
                   <p className="mt-1 text-sm text-rose-700">{errors.password.message}</p>
                 ) : null}
@@ -287,10 +291,11 @@ export default function Register() {
                   id="register-confirm-password"
                   {...register('confirmPassword')}
                   type="password"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="••••••••"
                   autoComplete="new-password"
                 />
+
                 {errors.confirmPassword ? (
                   <p className="mt-1 text-sm text-rose-700">{errors.confirmPassword.message}</p>
                 ) : null}
@@ -326,11 +331,7 @@ export default function Register() {
               <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{feedback}</p>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-2xl bg-[#6fe2f1] px-4 py-3.5 text-sm font-bold text-slate-900 transition hover:bg-[#5ed8e6] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
               {isSubmitting ? 'Criando conta...' : 'Criar conta'}
             </button>
           </form>

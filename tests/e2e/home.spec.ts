@@ -27,7 +27,7 @@ test.describe("home", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: "Bem-vindo ao Pet Central!" }),
+      page.getByRole("heading", { name: "Bem-vindo ao Centrau Pet!" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Ultimos Pets" }),
