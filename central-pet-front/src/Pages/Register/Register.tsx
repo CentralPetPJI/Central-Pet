@@ -167,7 +167,7 @@ export default function Register() {
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
         <div className="order-2 p-8 sm:p-10 lg:order-1">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
@@ -276,7 +276,6 @@ export default function Register() {
                   placeholder="Sua cidade"
                   autoComplete="address-level2"
                 />
-                <p className="text-xs text-slate-500">Opcional por enquanto.</p>
               </div>
 
               <div className="space-y-2">
@@ -296,7 +295,6 @@ export default function Register() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500">Opcional por enquanto.</p>
               </div>
 
               <div className="space-y-2">
@@ -358,7 +356,7 @@ export default function Register() {
           </div>
         </div>
 
-        <div className="order-1 flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
+        <div className="order-1 flex flex-col justify-between bg-linear-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
               Junte-se a nós

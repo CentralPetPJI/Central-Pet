@@ -13,9 +13,6 @@ export const petRegisterFormSchema = z.object({
   sex: z.enum(['male', 'female'], { error: 'Selecione um sexo valido.' }),
   size: z.enum(['small', 'medium', 'large'], { error: 'Selecione um porte valido.' }),
   microchipped: z.boolean(),
-  tutor: z.string().trim().min(1, 'Informe o tutor responsavel.'),
-  shelter: z.string().trim().min(1, 'Informe o abrigo ou origem do pet.'),
-  contact: z.string().trim().min(1, 'Informe um contato para adocao.'),
   vaccinated: z.boolean(),
   neutered: z.boolean(),
   dewormed: z.boolean(),
@@ -25,7 +22,9 @@ export const petRegisterFormSchema = z.object({
   hearingLimitation: z.boolean(),
 });
 
-export type PetRegisterFormData = z.infer<typeof petRegisterFormSchema>;
+type PetRegisterFormSchemaData = z.infer<typeof petRegisterFormSchema>;
+
+export type PetRegisterFormData = PetRegisterFormSchemaData;
 
 export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetRegisterFormData> =>
   typeof data === 'object' && data !== null && !Array.isArray(data);

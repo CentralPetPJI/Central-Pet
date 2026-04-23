@@ -20,8 +20,6 @@ export type MockPet = {
   neutered: boolean;
   dewormed: boolean;
   adoptionStatus: string;
-  city?: string;
-  state: string;
   responsibleUserId: string;
   sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;
@@ -32,7 +30,7 @@ export type MockPet = {
 /**
  * Pets seed vinculados aos mock users:
  * - ONG Patas do Centro: Buddy, Luna
- * - Lar Temporário Quatro Patas: Max
+ * - Lar Temporario Quatro Patas: Max
  * - Juliana Martins: Mel, Thor
  */
 export const mockPets: MockPet[] = [
@@ -45,13 +43,11 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Dourado',
-    description: 'Golden retriever amigável, ativo e adora brincar de buscar',
+    description: 'Golden retriever amigavel, ativo e adora brincar de buscar',
     vaccinated: true,
     neutered: true,
     dewormed: true,
     adoptionStatus: 'AVAILABLE',
-    city: 'São Paulo',
-    state: 'SP',
     responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
     sourceType: 'ONG',
     sourceName: 'ONG Patas do Centro',
@@ -72,8 +68,6 @@ export const mockPets: MockPet[] = [
     neutered: true,
     dewormed: true,
     adoptionStatus: 'AVAILABLE',
-    city: 'São Paulo',
-    state: 'SP',
     responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
     sourceType: 'ONG',
     sourceName: 'ONG Patas do Centro',
@@ -89,13 +83,11 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Preto',
-    description: 'Labrador tranquilo, ótimo com crianças',
+    description: 'Labrador tranquilo, otimo com criancas',
     vaccinated: true,
     neutered: false,
     dewormed: true,
     adoptionStatus: 'AVAILABLE',
-    city: 'Campinas',
-    state: 'SP',
     responsibleUserId: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
     sourceType: 'ONG',
     sourceName: 'Lar Temporario Quatro Patas',
@@ -116,8 +108,6 @@ export const mockPets: MockPet[] = [
     neutered: true,
     dewormed: true,
     adoptionStatus: 'AVAILABLE',
-    city: 'Sorocaba',
-    state: 'SP',
     responsibleUserId: mockUserIds.JULIANA_MARTINS,
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Juliana Martins',
@@ -133,13 +123,11 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Branco e marrom',
-    description: 'Cão forte e protetor, precisa de tutor experiente',
+    description: 'Cao forte e protetor, precisa de adotante experiente',
     vaccinated: true,
     neutered: true,
     dewormed: true,
     adoptionStatus: 'AVAILABLE',
-    city: 'Sorocaba',
-    state: 'SP',
     responsibleUserId: mockUserIds.JULIANA_MARTINS,
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Juliana Martins',

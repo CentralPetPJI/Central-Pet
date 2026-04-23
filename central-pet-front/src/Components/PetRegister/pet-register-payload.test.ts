@@ -17,11 +17,6 @@ describe('pet-register-payload', () => {
         sex: 'female',
         size: 'medium',
         microchipped: true,
-        tutor: '  Maria  ',
-        shelter: '  Abrigo Central  ',
-        city: 'Sao Paulo',
-        state: 'SP',
-        contact: '  (11) 99999-0000  ',
         vaccinated: true,
         neutered: true,
         dewormed: true,
@@ -40,6 +35,9 @@ describe('pet-register-payload', () => {
 
     expect(payload).not.toHaveProperty('city');
     expect(payload).not.toHaveProperty('state');
+    expect(payload).not.toHaveProperty('tutor');
+    expect(payload).not.toHaveProperty('shelter');
+    expect(payload).not.toHaveProperty('contact');
     expect(payload.breed).toBe('SRD');
     expect(payload.sourceName).toBe('Maria Silva');
   });

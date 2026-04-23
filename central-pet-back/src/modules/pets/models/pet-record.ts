@@ -15,11 +15,6 @@ export type PetRecord = {
   sex: string;
   size: string;
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  state?: string;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
@@ -35,6 +30,13 @@ export type PetRecord = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type PetLocation = {
+  city: string;
+  state: string;
+};
+
+export type PetResponseRecord = PetRecord & PetLocation;
 
 const normalizeSpecies = (species: string): string => {
   const speciesMap: Record<string, string> = {
@@ -78,11 +80,6 @@ export const mapMockPetToPetRecord = (pet: MockPet): PetRecord => ({
   sex: normalizeSex(pet.sex ?? ''),
   size: normalizeSize(pet.size ?? ''),
   microchipped: false,
-  tutor: pet.sourceName ?? '',
-  shelter: pet.sourceName ?? '',
-  city: pet.city ?? '',
-  state: pet.state,
-  contact: '',
   vaccinated: pet.vaccinated,
   neutered: pet.neutered,
   dewormed: pet.dewormed,

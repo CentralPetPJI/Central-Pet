@@ -53,28 +53,6 @@ export class CreatePetDto {
   @IsBoolean()
   microchipped: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  tutor: string;
-
-  @IsString()
-  @IsNotEmpty()
-  shelter: string;
-
-  // Compatibilidade temporária: o backend ignora esses campos e usa a localização do responsável.
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  // Compatibilidade temporária: o backend ignora esses campos e usa a localização do responsável.
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  contact: string;
-
   @IsBoolean()
   vaccinated: boolean;
 

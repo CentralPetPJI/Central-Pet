@@ -50,15 +50,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const isResponsibleLocationMissing = !isProfileLocationComplete(responsibleLocation);
 
   useEffect(() => {
-    const syncLocationIntoForm = () => {
-      setValue('city', responsibleLocation.city, { shouldDirty: false, shouldValidate: false });
-      setValue('state', responsibleLocation.state, { shouldDirty: false, shouldValidate: false });
-    };
-
-    syncLocationIntoForm();
-  }, [responsibleLocation.city, responsibleLocation.state, setValue]);
-
-  useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
     window.localStorage.removeItem(petPersonalityStorageKey);
 
@@ -217,15 +208,15 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     );
   };
 
-  /*  const onErrors = (errors: any) => {
+  const onErrors = (_errors: unknown) => {
     // caso de erro no formulario, podemos colocar isso no onSubimit
     //  onSubmit={handleSubmit(handleSavePet, onErrors)}
-    console.error(errors);
-  }*/
+  };
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleSavePet)}
+        //onSubmit={handleSubmit(handleSavePet)}
+        onSubmit={handleSubmit(handleSavePet, onErrors)}
         className="mx-auto w-full max-w-345 px-1 pb-16 pt-4"
       >
         <div className="rounded-[1.75rem] bg-linear-to-br from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 shadow-[0_20px_60px_rgba(14,116,144,0.10)]">

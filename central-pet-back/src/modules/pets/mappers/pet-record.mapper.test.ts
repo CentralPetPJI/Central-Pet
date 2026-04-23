@@ -12,7 +12,6 @@ describe('pet record mapper', () => {
       sex: 'FEMALE',
       size: 'MEDIUM',
       adoptionStatus: 'AVAILABLE',
-      state: 'SP',
       sourceType: 'ONG',
       sourceName: 'ONG Patas do Centro',
     });

@@ -7,8 +7,8 @@ import {
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
 
 /**
- * Sincroniza múltiplos pets do backend em batch
- * Garante que todos recebam IDs públicos sem colisões, mesmo entre múltiplas abas
+ * Sincroniza multiplos pets do backend em batch
+ * Garante que todos recebam IDs publicos sem colisoes, mesmo entre multiplas abas
  */
 export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
   const backendIds = apiPets.map((pet) => pet.id);
@@ -17,26 +17,25 @@ export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
 
 /**
  * Converte PetApiResponse do backend para formato Pet do frontend
- * Usa IDs públicos sequenciais para URLs amigáveis
+ * Usa IDs publicos sequenciais para URLs amigaveis
  */
 export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
-  // Garante que o pet do backend tenha um publicId
   const publicId = ensurePublicId(apiPet.id, apiPet.name);
 
   const personalityText =
     apiPet.selectedPersonalities.length > 0
       ? apiPet.selectedPersonalities.join(', ')
-      : 'Perfil comportamental não informado';
+      : 'Perfil comportamental nao informado';
 
-  const sex = formatPetSex(apiPet.sex) || 'Não informado';
-  const size = formatPetSize(apiPet.size) || 'Não informado';
-
+  const sex = formatPetSex(apiPet.sex) || 'Nao informado';
+  const size = formatPetSize(apiPet.size) || 'Nao informado';
   const physicalText = [apiPet.breed, apiPet.age, sex, `porte ${size}`].filter(Boolean).join(', ');
-
-  const notesText = `Tutor: ${apiPet.tutor || apiPet.shelter || 'Não informado'}. Cidade: ${apiPet.city}${apiPet.state ? `/${apiPet.state}` : ''}. Contato: ${apiPet.contact}.`;
+  const locationText = apiPet.city
+    ? `${apiPet.city}${apiPet.state ? `/${apiPet.state}` : ''}`
+    : 'Localizacao nao informada';
 
   return {
-    id: publicId, // ID público sequencial (1, 2, 3...)
+    id: publicId,
     name: apiPet.name,
     species: apiPet.species,
     photo: apiPet.profilePhoto,
@@ -44,7 +43,7 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
     state: apiPet.state || undefined,
     physicalCharacteristics: physicalText,
     behavioralCharacteristics: personalityText,
-    notes: notesText,
+    notes: `Localizacao: ${locationText}.`,
     responsibleUserId: apiPet.responsibleUserId,
     sourceType: apiPet.sourceType,
     sourceName: apiPet.sourceName,
@@ -52,29 +51,25 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
 };
 
 /**
- * Retorna o ID apropriado para navegação/rotas
- * Sempre retorna o publicId (número sequencial)
+ * Retorna o ID apropriado para navegacao/rotas
+ * Sempre retorna o publicId (numero sequencial)
  */
 export const getPetRouteId = (pet: Pet): number => {
-  // Pet já tem publicId
   return typeof pet.id === 'number' ? pet.id : parseInt(String(pet.id), 10);
 };
 
 /**
- * Converte ID da rota (publicId) para backendId (UUID) se necessário
+ * Converte ID da rota (publicId) para backendId (UUID) se necessario
  */
 export const resolveBackendId = (routeId: string | number): string | number => {
   const publicId = typeof routeId === 'string' ? parseInt(routeId, 10) : routeId;
-
-  // Tenta buscar UUID do backend
   const backendId = getBackendIdFromPublic(publicId);
 
-  // Se encontrou mapeamento, retorna UUID; senão retorna o próprio ID
   return backendId ?? publicId;
 };
 
 /**
- * Verifica se o pet é do backend (tem mapeamento público)
+ * Verifica se o pet e do backend (tem mapeamento publico)
  */
 export const isBackendPet = (pet: Pet): boolean => {
   if (typeof pet.id !== 'number') return false;

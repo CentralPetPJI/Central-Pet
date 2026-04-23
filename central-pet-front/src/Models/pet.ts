@@ -33,11 +33,8 @@ export interface PetApiResponse {
   sex: 'male' | 'female';
   size: 'small' | 'medium' | 'large';
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
   city: string;
   state: string;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;

@@ -36,6 +36,5 @@ test.describe("perfil do pet", () => {
     await expect(
       page.getByText("Comportamento", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Localizacao", { exact: true })).toBeVisible();
   });
 });

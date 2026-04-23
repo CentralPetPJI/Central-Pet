@@ -19,11 +19,6 @@ type PrismaPetRecord = {
   sex: 'FEMALE' | 'MALE';
   size: 'SMALL' | 'MEDIUM' | 'LARGE';
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  state: string | null;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
@@ -80,9 +75,6 @@ describe('PetsService', () => {
     sex: 'female',
     size: 'medium',
     microchipped: true,
-    tutor: 'ONG Patas do Centro',
-    shelter: 'Abrigo Reencontro',
-    contact: '(11) 99999-0000',
     vaccinated: true,
     neutered: true,
     dewormed: true,
@@ -314,19 +306,25 @@ describe('PetsService', () => {
     expect(result.data.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
   });
 
-  it('deve ignorar city e state enviados na criacao e usar a localizacao do responsavel', async () => {
-    const dto = await validateCreateDto({
-      ...makeCreateDto(),
-      city: 'Cidade enviada pelo cliente',
-      state: 'RJ',
-    });
+  it('deve rejeitar city e state enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateCreateDto({
+        ...makeCreateDto(),
+        city: 'Cidade enviada pelo cliente',
+        state: 'RJ',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    const result = await service.create(dto);
-
-    expect(records[0]?.city).toBe('Sao Paulo');
-    expect(records[0]?.state).toBe('SP');
-    expect(result.data.city).toBe('Sao Paulo');
-    expect(result.data.state).toBe('SP');
+  it('deve rejeitar tutor, shelter e contact enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateCreateDto({
+        ...makeCreateDto(),
+        tutor: 'Responsavel antigo',
+        shelter: 'Abrigo antigo',
+        contact: '(11) 90000-0000',
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('deve rejeitar criação com responsibleUserId inexistente', async () => {
@@ -389,20 +387,25 @@ describe('PetsService', () => {
     expect(result.data.species).toBe(created.data.species);
   });
 
-  it('deve ignorar city e state enviados na edicao e continuar refletindo o usuario responsavel', async () => {
-    const created = await service.create(await validateCreateDto(makeCreateDto()));
-    const updateDto = await validateUpdateDto({
-      name: 'Luna Renomeada',
-      city: 'Rio de Janeiro',
-      state: 'RJ',
-    });
+  it('deve rejeitar city e state enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateUpdateDto({
+        name: 'Luna Renomeada',
+        city: 'Rio de Janeiro',
+        state: 'RJ',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    const result = await service.update(created.data.id, updateDto);
-
-    expect(records[0]?.city).toBe('Sao Paulo');
-    expect(records[0]?.state).toBe('SP');
-    expect(result.data.city).toBe('Sao Paulo');
-    expect(result.data.state).toBe('SP');
+  it('deve rejeitar tutor, shelter e contact enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateUpdateDto({
+        name: 'Luna Renomeada',
+        tutor: 'Responsavel antigo',
+        shelter: 'Abrigo antigo',
+        contact: '(11) 90000-0000',
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('deve refletir mudanca de cidade e estado do usuario em pets existentes', async () => {
@@ -431,11 +434,6 @@ describe('PetsService', () => {
       sex: 'MALE',
       size: 'MEDIUM',
       microchipped: false,
-      tutor: 'Tutor',
-      shelter: 'Abrigo',
-      city: 'Sao Paulo',
-      state: 'SP',
-      contact: 'Contato',
       vaccinated: true,
       neutered: true,
       dewormed: true,

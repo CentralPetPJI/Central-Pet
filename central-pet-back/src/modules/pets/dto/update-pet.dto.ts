@@ -64,24 +64,6 @@ export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
-  tutor?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsNotEmpty()
-  shelter?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  city?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  state?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsNotEmpty()
   responsibleUserId?: string;
 
   @ValidateIf((_, value) => value !== undefined)
@@ -97,10 +79,6 @@ export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
-  contact?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsBoolean()
   vaccinated?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
