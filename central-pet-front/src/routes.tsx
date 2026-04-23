@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useRoutes, type RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
 import MyPetsPage from '@/Pages/MyPetsPage';
-import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceived/AdoptionRequestsReceivedPage';
+import AdoptionRequestsPage from '@/Pages/AdoptionRequests/AdoptionRequestsPage';
 import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
 import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
 import Login from '@/Pages/Login/Login';
@@ -35,11 +35,9 @@ export const routes = {
     element: <ProfilePage />,
   } satisfies AppRoute,
   adoptionRequests: {
-    received: {
-      path: '/adoption-requests/received',
-      element: <AdoptionRequestsReceivedPage />,
-    } satisfies AppRoute,
-  },
+    path: '/adoption-requests',
+    element: <AdoptionRequestsPage />,
+  } satisfies AppRoute,
   pets: {
     new: {
       path: '/pets/new',

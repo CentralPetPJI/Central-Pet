@@ -49,7 +49,7 @@ export function UserMenu() {
     },
     {
       label: 'Solicitações',
-      path: routes.adoptionRequests.received.path,
+      path: routes.adoptionRequests.path,
       icon: <ClipboardList className="h-4 w-4 text-cyan-700" />,
       // TODO: Conectar com API para pegar contador real
       // badge: pendingRequestsCount,

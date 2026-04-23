@@ -221,7 +221,7 @@ const Header = () => {
             {currentUser ? (
               <div className="space-y-2">
                 <NavLink to={routes.pets.mine.path}>🐾 Meus Pets</NavLink>
-                <NavLink to={routes.adoptionRequests.received.path}>
+                <NavLink to={routes.adoptionRequests.path}>
                   <span className="inline-flex items-center gap-2">
                     <ClipboardList className="h-4 w-4 text-cyan-700" />
                     <span>Solicitações</span>
