@@ -7,7 +7,7 @@ import {
   canShareContact,
   getAdoptionRequestStatusPresentation,
 } from '@/Models/adoption-request-status';
-import { formatRequestDate, getPetRouteId } from './adoption-requests-helpers';
+import { formatRequestDate, getPetRouteId } from './adoptionRequestsHelpers';
 
 type AdoptionRequestCardProps = {
   request: ReceivedAdoptionRequest;
