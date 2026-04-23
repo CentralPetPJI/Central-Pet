@@ -2,6 +2,7 @@ import { routes } from '@/routes';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useState } from 'react';
+import { SITE_NAME } from '@/lib/site-config.ts';
 
 export default function TermsOfResponsibility() {
   const { currentUser, acceptTerms, isAuthenticated } = useAuth();
@@ -39,7 +40,7 @@ export default function TermsOfResponsibility() {
           <section>
             <h2 className="text-xl font-bold text-slate-900 mb-3">1. Bases Legais e Introdução</h2>
             <p>
-              O {import.meta.env.VITE_SITE_NAME ?? 'Centrau Pet'} é uma plataforma{' '}
+              O {SITE_NAME} é uma plataforma{' '}
               <strong>totalmente gratuita e sem fins lucrativos</strong> que conecta pessoas e
               organizações para adoção e doação responsável. O tratamento de seus dados pessoais
               ocorre com base no seu <strong>consentimento</strong> e na{' '}

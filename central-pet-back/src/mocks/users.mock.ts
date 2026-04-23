@@ -47,7 +47,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-01T10:00:00.000Z'),
     updatedAt: new Date('2026-03-01T10:00:00.000Z'),
     deleted: false,
-    acceptedTermsAt: new Date('2026-03-01T09:00:00.000Z'),
+    acceptedTermsAt: new Date('2026-03-01T11:00:00.000Z'),
   },
   {
     id: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
