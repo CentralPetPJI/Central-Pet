@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
 import { loginSchema, type LoginFormData } from '@/lib/validation/auth';
+import { SITE_NAME } from '@/lib/site-config';
 
 type LoginLocationState = {
   registered?: boolean;
@@ -125,7 +126,7 @@ export default function Login() {
         <div className="flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
-              {import.meta.env.VITE_SITE_NAME ?? 'Centrau Pet'}
+              {SITE_NAME}
             </p>
             <h1 className="mt-4 max-w-md text-4xl font-black leading-tight">
               Entre para continuar ajudando animais.

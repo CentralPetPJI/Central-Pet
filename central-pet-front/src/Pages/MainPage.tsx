@@ -3,15 +3,14 @@ import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
 import { routes } from '@/routes';
 import { usePets } from '@/lib/pets';
+import { SITE_NAME } from '@/lib/site-config';
 
 const MainPage: React.FC = () => {
   const { pets, isLoading, error } = usePets();
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">
-        Bem-vindo ao {import.meta.env.VITE_SITE_NAME ?? 'Centrau Pet'}!
-      </h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao {SITE_NAME}!</h1>
 
       <p className="text-gray-600 mb-8">Confira os pets cadastrados recentemente:</p>
 
