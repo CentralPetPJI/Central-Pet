@@ -6,8 +6,9 @@ Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/20
 
 ## 1. Contexto e Bases Legais
 
-O Central-Pet atua como um facilitador no ecossistema de proteção animal. O tratamento de dados pessoais ocorre com base no **consentimento** do usuário e na **execução do contrato/serviços** oferecidos pela plataforma.
+O Central-Pet atua como um facilitador no ecossistema de proteção animal. Somos uma plataforma **totalmente gratuita e sem fins lucrativos**. O tratamento de dados pessoais ocorre com base no **consentimento** do usuário e na **execução do contrato/serviços** oferecidos pela plataforma.
 
+- **Natureza Não Comercial:** É terminantemente proibida a comercialização de animais, serviços ou qualquer tipo de produto através da nossa plataforma.
 - **Cadastro e Listagem:** O doador fornece dados para vincular seu perfil aos animais cadastrados.
 - **Processo de Adoção:** O tratamento é necessário para viabilizar a comunicação e a formalização da intenção de adoção entre as partes.
 
@@ -26,11 +27,10 @@ Coletamos apenas informações essenciais (nome, e-mail, telefone, localização
 
 ## 4. Direitos do Titular
 
-Garantimos todos os direitos previstos no Art. 18 da LGPD:
+Garantimos os direitos essenciais previstos na LGPD, que podem ser exercidos mediante solicitação:
 
 - **Acesso:** Confirmar a existência de tratamento e acessar seus dados.
 - **Correção:** Solicitar correção de dados incompletos ou inexatos.
-- **Portabilidade:** Requerer a transferência de seus dados a outro fornecedor.
 - **Eliminação/Revogação:** Solicitar a exclusão de dados ou revogar o consentimento anteriormente dado.
 - **Anonimização:** Solicitar o bloqueio ou anonimização de dados desnecessários.
 
