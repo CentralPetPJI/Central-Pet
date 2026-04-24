@@ -105,7 +105,7 @@ jobs:
 
 
       # Debug: mostrar mensagem final (para logs)
-      - name: Debug: mostrar mensagem final
+      - name: mostrar mensagem final
         if: github.event.action == 'opened' || github.event.action == 'reopened'
         run: |
           echo "==== START FINAL MESSAGE ===="
