@@ -56,17 +56,18 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
         run: |
-          # Função para truncar string (limite seguro de ~1500 chars para o corpo)
+          # Função para truncar string (limite seguro de ~1000 chars)
           truncate_text() {
             local text="$1"
-            if [ ${#text} -gt 1500 ]; then
-              echo "${text:0:1497}..."
+            local limit=1000
+            if [ ${#text} -gt $limit ]; then
+              echo "${text:0:$((limit-3))}... (truncado)"
             else
               echo "$text"
             fi
           }
 
-          # Tenta extrair a seção "Como testar" (case-insensitive). Retorna não-zero se não encontrar.
+          # Extrai seção "Como testar" de um texto (case-insensitive)
           extract_test_section() {
             printf '%s\n' "$1" | awk 'BEGIN{found=0}
               tolower($0) ~ /como testar/ {found=1; next}
@@ -75,8 +76,33 @@ jobs:
               END{if(found==0) exit 1}'
           }
 
-          if [ -z "$AI_SUMMARY" ]; then
-            # Primeiro, tentar pegar só a seção "Como testar"
+          # Priorizar extração da seção "Como testar" do AI_SUMMARY
+          if [ -n "$AI_SUMMARY" ]; then
+            TEST_SECTION=$(extract_test_section "$AI_SUMMARY" || true)
+            if [ -n "$TEST_SECTION" ]; then
+              SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "🧪 Como testar (extraído do resumo da IA):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              # Tenta extrair do corpo da PR antes de enviar o resumo completo
+              TEST_SECTION=$(extract_test_section "$PR_BODY" || true)
+              if [ -n "$TEST_SECTION" ]; then
+                SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+                echo "message<<EOF" >> $GITHUB_OUTPUT
+                echo "🧪 Como testar (extraído da descrição):" >> $GITHUB_OUTPUT
+                printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+              else
+                SAFE_SUMMARY=$(truncate_text "$AI_SUMMARY")
+                echo "message<<EOF" >> $GITHUB_OUTPUT
+                printf '%s\n' "$SAFE_SUMMARY" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            # AI_SUMMARY vazio: tentar extrair do corpo da PR
             TEST_SECTION=$(extract_test_section "$PR_BODY" || true)
             if [ -n "$TEST_SECTION" ]; then
               SAFE_SECTION=$(truncate_text "$TEST_SECTION")
@@ -87,7 +113,6 @@ jobs:
               printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
               echo "EOF" >> $GITHUB_OUTPUT
             else
-              # Fallback para enviar a descrição completa (truncada)
               SAFE_BODY=$(truncate_text "$PR_BODY")
               echo "message<<EOF" >> $GITHUB_OUTPUT
               echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
@@ -96,11 +121,6 @@ jobs:
               printf '%s\n' "$SAFE_BODY" >> $GITHUB_OUTPUT
               echo "EOF" >> $GITHUB_OUTPUT
             fi
-          else
-            SAFE_SUMMARY=$(truncate_text "$AI_SUMMARY")
-            echo "message<<EOF" >> $GITHUB_OUTPUT
-            printf '%s\n' "$SAFE_SUMMARY" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
           fi
 
 
