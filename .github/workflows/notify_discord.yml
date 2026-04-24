@@ -4,14 +4,17 @@ on:
   pull_request:
     types: [opened, closed]
     branches:
-      - master
+      - main
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 🧠 Extrair info relevante da PR
       - name: Extrair resumo da PR com IA
@@ -49,24 +52,27 @@ jobs:
       - name: Definir mensagem final
         id: final-message
         if: github.event.action == 'opened'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
         run: |
-          if [ -z "${{ steps.ai-summary.outputs.text }}" ]; then
+          if [ -z "$AI_SUMMARY" ]; then
             echo "message<<EOF" >> $GITHUB_OUTPUT
             echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
             echo "" >> $GITHUB_OUTPUT
             echo "📄 Descrição original:" >> $GITHUB_OUTPUT
-            echo "${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+            printf '%s\n' "$PR_BODY" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "message<<EOF" >> $GITHUB_OUTPUT
-            echo "${{ steps.ai-summary.outputs.text }}" >> $GITHUB_OUTPUT
+            printf '%s\n' "$AI_SUMMARY" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
       # 🎉 PR aberto
       - name: Notificar PR aberto no Discord
         if: github.event.action == 'opened'
-        uses: appleboy/discord-action@master
+        uses: appleboy/discord-action@0.4.5
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
@@ -86,7 +92,7 @@ jobs:
       # 🚀 PR mergeado
       - name: Notificar PR mergeado
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
-        uses: appleboy/discord-action@master
+        uses: appleboy/discord-action@0.4.5
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
