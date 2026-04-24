@@ -72,7 +72,7 @@ jobs:
       # 🎉 PR aberto
       - name: Notificar PR aberto no Discord
         if: github.event.action == 'opened'
-        uses: appleboy/discord-action@0.4.5
+        uses: appleboy/discord-action@1.2.0
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
       # 🚀 PR mergeado
       - name: Notificar PR mergeado
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
-        uses: appleboy/discord-action@0.4.5
+        uses: appleboy/discord-action@1.2.0
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
