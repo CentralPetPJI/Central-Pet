@@ -56,10 +56,10 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
         run: |
-          # Função para truncar string (limite seguro de ~1000 chars)
+          # Função para truncar string (limite seguro de ~500 chars)
           truncate_text() {
             local text="$1"
-            local limit=1000
+            local limit=500
             if [ ${#text} -gt $limit ]; then
               echo "${text:0:$((limit-3))}... (truncado)"
             else
