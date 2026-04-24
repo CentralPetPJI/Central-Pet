@@ -55,7 +55,7 @@ export default function TermsOfResponsibility() {
           <section>
             <h2 className="text-xl font-bold text-slate-900 mb-3">2. Natureza Não Comercial</h2>
             <p>
-              O Central-Pet é um ecossistema dedicado exclusivamente à <strong>causa animal</strong>{' '}
+              O {SITE_NAME} é um ecossistema dedicado exclusivamente à <strong>causa animal</strong>{' '}
               e à <strong>adoção responsável</strong>.
             </p>
             <ul className="list-disc ml-6 mt-2 space-y-2 font-medium">
@@ -101,7 +101,7 @@ export default function TermsOfResponsibility() {
             </p>
             <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic text-sm">
               <p>
-                <strong>Limitação de Responsabilidade:</strong> O Central-Pet atua como
+                <strong>Limitação de Responsabilidade:</strong> O {SITE_NAME} atua como
                 intermediário. Não garantimos a conduta dos usuários ou a veracidade de informações
                 fornecidas por terceiros. A responsabilidade pelo bem-estar do animal e pela
                 veracidade dos dados informados é dos respectivos usuários.
