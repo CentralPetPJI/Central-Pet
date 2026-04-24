@@ -51,23 +51,36 @@ jobs:
       # 🛟 Fallback (caso IA falhe)
       - name: Definir mensagem final
         id: final-message
-        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        if: github.event.action == 'opened'
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
           AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
         run: |
+          # Função para truncar string (limite seguro de ~1500 chars para o corpo)
+          truncate_text() {
+            local text="$1"
+            if [ ${#text} -gt 1500 ]; then
+              echo "${text:0:1497}..."
+            else
+              echo "$text"
+            fi
+          }
+
           if [ -z "$AI_SUMMARY" ]; then
+            SAFE_BODY=$(truncate_text "$PR_BODY")
             echo "message<<EOF" >> $GITHUB_OUTPUT
             echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
             echo "" >> $GITHUB_OUTPUT
-            echo "📄 Descrição original:" >> $GITHUB_OUTPUT
-            printf '%s\n' "$PR_BODY" >> $GITHUB_OUTPUT
+            echo "📄 Descrição original (truncada):" >> $GITHUB_OUTPUT
+            printf '%s\n' "$SAFE_BODY" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
+            SAFE_SUMMARY=$(truncate_text "$AI_SUMMARY")
             echo "message<<EOF" >> $GITHUB_OUTPUT
-            printf '%s\n' "$AI_SUMMARY" >> $GITHUB_OUTPUT
+            printf '%s\n' "$SAFE_SUMMARY" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           fi
+
 
       # 🎉 PR aberto
       - name: Notificar PR aberto no Discord
