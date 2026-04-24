@@ -51,7 +51,7 @@ jobs:
       # 🛟 Fallback (caso IA falhe)
       - name: Definir mensagem final
         id: final-message
-        if: github.event.action == 'opened'
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
           AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
