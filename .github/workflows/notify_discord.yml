@@ -104,6 +104,14 @@ jobs:
           fi
 
 
+      # Debug: mostrar mensagem final (para logs)
+      - name: Debug: mostrar mensagem final
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        run: |
+          echo "==== START FINAL MESSAGE ===="
+          echo "${{ steps.final-message.outputs.message }}"
+          echo "==== END FINAL MESSAGE ===="
+
       # 🎉 PR aberto
       - name: Notificar PR aberto no Discord
         if: github.event.action == 'opened' || github.event.action == 'reopened'
