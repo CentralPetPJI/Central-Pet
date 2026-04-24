@@ -66,14 +66,36 @@ jobs:
             fi
           }
 
+          # Tenta extrair a seção "Como testar" (case-insensitive). Retorna não-zero se não encontrar.
+          extract_test_section() {
+            printf '%s\n' "$1" | awk 'BEGIN{found=0}
+              tolower($0) ~ /como testar/ {found=1; next}
+              found && /^#{1,6}[[:space:]]/ {exit}
+              found {print}
+              END{if(found==0) exit 1}'
+          }
+
           if [ -z "$AI_SUMMARY" ]; then
-            SAFE_BODY=$(truncate_text "$PR_BODY")
-            echo "message<<EOF" >> $GITHUB_OUTPUT
-            echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "📄 Descrição original (truncada):" >> $GITHUB_OUTPUT
-            printf '%s\n' "$SAFE_BODY" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            # Primeiro, tentar pegar só a seção "Como testar"
+            TEST_SECTION=$(extract_test_section "$PR_BODY" || true)
+            if [ -n "$TEST_SECTION" ]; then
+              SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
+              echo "" >> $GITHUB_OUTPUT
+              echo "🧪 Como testar (extraído da descrição):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              # Fallback para enviar a descrição completa (truncada)
+              SAFE_BODY=$(truncate_text "$PR_BODY")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
+              echo "" >> $GITHUB_OUTPUT
+              echo "📄 Descrição original (truncada):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_BODY" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            fi
           else
             SAFE_SUMMARY=$(truncate_text "$AI_SUMMARY")
             echo "message<<EOF" >> $GITHUB_OUTPUT
