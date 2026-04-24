@@ -146,8 +146,6 @@ jobs:
 
             **${{ github.event.pull_request.title }}**
 
-            ${{ steps.final-message.outputs.message }}
-
             👤 Autor: ${{ github.event.pull_request.user.login }}
 
             🔗 [PR](${{ github.event.pull_request.html_url }})
