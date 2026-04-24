@@ -76,7 +76,7 @@ jobs:
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-          username: "The Bot"
+          username: "Dancer"
           color: "#48f442"
           message: |
             🎉 Novo Pull Request!
@@ -96,7 +96,7 @@ jobs:
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-          username: "The Bot"
+          username: "Dancer"
           color: "#00c3ff"
           message: |
             🚀 Pull Request mesclado!
