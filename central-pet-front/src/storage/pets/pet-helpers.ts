@@ -2,6 +2,7 @@ import type { Pet, PetApiResponse } from '@/Models/pet';
 import {
   ensurePublicId,
   getBackendIdFromPublic,
+  getPublicIdFromBackend,
   saveBatchPublicIdMappings,
 } from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
@@ -56,6 +57,13 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
 export const getPetRouteId = (pet: Pet): number => {
   // Pet já tem publicId
   return typeof pet.id === 'number' ? pet.id : parseInt(String(pet.id), 10);
+};
+
+export const resolvePublicId = (backendId: string): string | number => {
+  // Tenta buscar publicId para o backendId
+  const publicId = getPublicIdFromBackend(backendId);
+  // Se encontrou mapeamento, retorna publicId; senão retorna o próprio backendId
+  return publicId ?? backendId;
 };
 
 /**
