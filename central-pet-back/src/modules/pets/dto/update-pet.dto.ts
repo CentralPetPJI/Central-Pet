@@ -88,8 +88,8 @@ export class UpdatePetDto {
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
-  @IsIn(['ONG', 'PESSOA_FISICA'])
-  sourceType?: 'ONG' | 'PESSOA_FISICA';
+  @IsIn(['ONG', 'PESSOA_FISICA', 'ADMIN'])
+  sourceType?: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()

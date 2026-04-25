@@ -132,3 +132,40 @@ export function sanitizeDocument(_raw: string | undefined, role: string): string
   if (role === 'ONG') return _raw.replace(/[^\dA-Za-z]/g, '');
   return _raw.replace(/\D/g, '');
 }
+
+// ---------------------------------------------------------------------------
+// Report status formatters
+// ---------------------------------------------------------------------------
+
+export function formatReportStatus(status: string | undefined): string {
+  if (!status) return '';
+  const s = String(status).toUpperCase();
+  switch (s) {
+    case 'PENDING':
+      return 'Pendente';
+    case 'APPROVED':
+      return 'Aprovada';
+    case 'REJECTED':
+      return 'Rejeitada';
+    case 'RESOLVED':
+      return 'Resolvida';
+    default:
+      return status;
+  }
+}
+
+export function reportStatusBadgeClass(status: string | undefined): string {
+  const s = String(status ?? '').toUpperCase();
+  switch (s) {
+    case 'PENDING':
+      return 'bg-amber-200 text-amber-800';
+    case 'APPROVED':
+      return 'bg-green-100 text-green-800';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800';
+    case 'RESOLVED':
+      return 'bg-gray-100 text-gray-700';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+}

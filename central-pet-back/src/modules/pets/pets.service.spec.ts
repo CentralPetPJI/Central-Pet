@@ -59,6 +59,9 @@ describe('PetsService', () => {
       upsert: jest.Mock;
       count: jest.Mock;
     };
+    auditLog: {
+      create: jest.Mock;
+    };
   };
 
   const makeCreateDto = (): CreatePetDto => ({
@@ -186,6 +189,9 @@ describe('PetsService', () => {
         count: jest.fn((args: { where: { id: string; deleted: boolean } }) =>
           persistedUserIds.has(args.where.id) ? 1 : 0,
         ),
+      },
+      auditLog: {
+        create: jest.fn(),
       },
     };
 

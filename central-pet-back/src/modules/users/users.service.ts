@@ -3,7 +3,9 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+import { AuditService } from '@/modules/audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPassword } from '../auth/password.util';
@@ -20,6 +22,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPersistence: UserPersistenceService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -50,6 +53,17 @@ export class UsersService {
           passwordHash,
         },
       });
+
+      // audit log: user creation
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: newUser.id,
+          action: 'CREATE_USER',
+          targetId: newUser.id,
+          targetType: 'USER',
+          details: { role: createUserDto.role },
+        });
+      }
 
       return newUser;
     });
@@ -154,6 +168,17 @@ export class UsersService {
         }),
       },
     });
+
+    // audit log: profile update (record changed fields)
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: id,
+        action: 'UPDATE_PROFILE',
+        targetId: id,
+        targetType: 'USER',
+        details: { updatedFields: Object.keys(updateUserDto) },
+      });
+    }
 
     return {
       message: 'User updated successfully',

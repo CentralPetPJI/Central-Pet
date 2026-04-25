@@ -8,6 +8,7 @@ import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx
 import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
+import AdminPage from '@/Pages/Admin/AdminPage';
 
 type AppRoute = RouteObject & {
   element?: ReactNode;
@@ -33,6 +34,10 @@ export const routes = {
   profile: {
     path: '/profile',
     element: <ProfilePage />,
+  } satisfies AppRoute,
+  admin: {
+    path: '/admin',
+    element: <AdminPage />,
   } satisfies AppRoute,
   adoptionRequests: {
     path: '/adoption-requests',

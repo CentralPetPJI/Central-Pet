@@ -27,8 +27,8 @@ export class CreateUserDto {
   password: string;
 
   @IsString()
-  @IsIn(['PESSOA_FISICA', 'ONG'])
-  role: 'PESSOA_FISICA' | 'ONG';
+  @IsIn(['PESSOA_FISICA', 'ONG', 'ADMIN'])
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN';
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {

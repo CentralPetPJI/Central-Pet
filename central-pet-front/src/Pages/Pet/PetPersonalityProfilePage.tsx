@@ -16,6 +16,7 @@ import { petPersonalityOptions } from '@/storage/pets';
 import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
+import { AlertTriangle } from 'lucide-react';
 
 const PetPersonalityProfilePage = () => {
   const { petId } = useParams();
@@ -92,6 +93,27 @@ const PetPersonalityProfilePage = () => {
     selectedPersonalities.includes(option.id),
   );
 
+  const handleReport = async () => {
+    if (!currentUser) {
+      navigate(routes.login.path);
+      return;
+    }
+
+    const reason = window.prompt('Por que você deseja denunciar este pet?');
+    if (!reason) return;
+
+    try {
+      await api.post('/moderation/reports', {
+        targetType: 'PET',
+        targetId: resolveBackendId(petId!),
+        reason,
+      });
+      alert('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
+    } catch (_error) {
+      alert('Erro ao enviar denúncia.');
+    }
+  };
+
   // TODO: Isso deve vir do back, talvez ;)
   const healthItems: PetProfileFact[] = [
     { label: 'Vacinado', value: formData.vaccinated },
@@ -151,7 +173,17 @@ const PetPersonalityProfilePage = () => {
               />
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={handleReport}
+                className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Denunciar conteúdo impróprio
+              </button>
+            </div>
+
+            <div className="mt-8 space-y-3">
               <PetProfileSection title="Saude">
                 <PetProfileFactGrid items={healthItems} />
               </PetProfileSection>

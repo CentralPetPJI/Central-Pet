@@ -2,7 +2,7 @@ import type { MockPet } from '@/mocks';
 import { toISO } from '@/utils/date.util';
 
 export type PetAdoptionStatus = 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
-export type PetSourceType = 'ONG' | 'PESSOA_FISICA';
+export type PetSourceType = 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
 
 export type PetRecord = {
   id: string;

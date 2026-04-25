@@ -15,10 +15,10 @@ test.describe("profile-workflow", () => {
     // 1. Criar usuário e pet
     const usuario = gerarUsuarioUnico("profileWorkflow");
     const user = await criarUsuarioViaApi(request, usuario);
-
+    const nomePet = `Pet Segredo ${new Date().toISOString()}`;
     const petResposta = await request.post(`${BASE_API}/api/pets`, {
       data: {
-        name: "Pet Segredo",
+        name: nomePet,
         age: "2 anos",
         species: "dog",
         breed: "SRD",
@@ -51,7 +51,7 @@ test.describe("profile-workflow", () => {
 
     // Validação do pet
     await page.goto("/");
-    const elements = page.getByRole("img", { name: "Pet Segredo" });
+    const elements = page.getByRole("img", { name: nomePet });
     // OBS: Pode duplicar por conta do carousel ser um loop infinito, mas o importante é garantir que ele aparece
     expect(await elements.count()).toBeGreaterThan(1);
 

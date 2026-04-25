@@ -3,9 +3,12 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+
 import { mockPets, mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
+import { AuditService } from '@/modules/audit/audit.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -36,7 +39,7 @@ type PetRecord = {
   hearingLimitation: boolean;
   selectedPersonalities: string[];
   responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN' | 'ROOT';
   sourceName: string;
   adoptionStatus: 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
   createdAt: string;
@@ -65,6 +68,7 @@ export class PetsService {
     private readonly prisma: PrismaService,
     private readonly personalityTraitsService: PersonalityTraitsService,
     private readonly userPersistence: UserPersistenceService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   private normalizeSpeciesForPersistence(species: string): 'DOG' | 'CAT' {
@@ -166,7 +170,7 @@ export class PetsService {
     hearingLimitation: boolean;
     selectedPersonalitiesJson: string;
     responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceType: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
     sourceName: string;
     status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
     createdAt: Date;
@@ -310,6 +314,16 @@ export class PetsService {
         deleted: false,
       },
     });
+
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: createPetDto.responsibleUserId,
+        action: 'CREATE_PET',
+        targetId: createdPet.id,
+        targetType: 'PET',
+        details: { name: createPetDto.name },
+      });
+    }
 
     return {
       message: 'Pet created successfully',

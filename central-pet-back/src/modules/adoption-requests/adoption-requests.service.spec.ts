@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { mockUserIds, mockUsers } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PetHistoryService } from '../pet-history/pet-history.service';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { AdoptionRequestsService } from './adoption-requests.service';
 import { ApproveAdoptionUseCase, ShareContactUseCase, RejectAdoptionUseCase } from './use-cases';
@@ -50,6 +49,9 @@ describe('Servico de solicitacoes de adocao', () => {
       update: jest.Mock;
     };
     petHistory: {
+      create: jest.Mock;
+    };
+    auditLog: {
       create: jest.Mock;
     };
     institution: {
@@ -357,6 +359,10 @@ describe('Servico de solicitacoes de adocao', () => {
             name: args.create?.name ?? args.update?.name,
           }),
         ),
+      },
+
+      auditLog: {
+        create: jest.fn(),
       },
 
       $transaction: jest.fn(
