@@ -39,7 +39,6 @@ export class AdoptionRequestsController {
     // default to received
     return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
   }
-
   @Patch(':id')
   @UseGuards(SessionGuard)
   async manage(

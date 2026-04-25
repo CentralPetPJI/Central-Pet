@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type {
   ReceivedAdoptionRequest,
@@ -11,6 +11,8 @@ import type { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request
 import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
+import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
+import { PetStatus } from '../../../generated/prisma/enums';
 
 @Injectable()
 export class AdoptionRequestsService {
@@ -150,6 +152,7 @@ export class AdoptionRequestsService {
       adopter: adopterForResponse,
       message: updatedReq.message,
       adopterContactShareConsent: updatedReq.adopterContactShareConsent,
+      responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
       status: updatedReq.status as unknown as AdoptionRequestStatus,
       note: updatedReq.note ?? undefined,
       requestedAt: updatedReq.requestedAt.toISOString(),
@@ -160,6 +163,64 @@ export class AdoptionRequestsService {
       message: result.message,
       data,
       notification: result.notification,
+    };
+  }
+
+  async create(
+    adopterId: string,
+    dto: CreateAdoptionRequestDto,
+  ): Promise<{ message: string; data: ReceivedAdoptionRequest }> {
+    const { petId, message } = dto;
+
+    //1. Buscar pet
+    const pet = await this.petsService.findByIdForAdoption(petId);
+
+    if (!pet) {
+      throw new NotFoundException(`Pet com id "${petId}" não encontrado`);
+    }
+
+    if (pet.adoptionStatus !== 'AVAILABLE') {
+      throw new BadRequestException('Pet não está disponível para adoção');
+    }
+
+    // 2. Não pode adotar o próprio pet
+    if (pet.responsibleUserId === adopterId) {
+      throw new BadRequestException('Você não pode adotar seu próprio pet');
+    }
+
+    // 3. Validar se já existe solicitação pendente
+    const existingRequest = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        petId,
+        adopterId,
+        status: {
+          in: ['PENDING', 'APPROVED'],
+        },
+      },
+    });
+
+    if (existingRequest) {
+      throw new BadRequestException('Você já possui uma solicitação ativa para este pet');
+    }
+
+    // 4. Criar no banco
+    const created = await this.prisma.adoptionRequest.create({
+      data: {
+        petId,
+        adopterId,
+        responsibleUserId: pet.responsibleUserId,
+        message: message ?? '',
+        status: 'PENDING',
+        adopterContactShareConsent: false,
+        responsibleContactShareConsent: false,
+      },
+    });
+
+    const [mapped] = await this.mapRequestsToResponse([created]);
+
+    return {
+      message: 'Solicitação enviada com sucesso',
+      data: mapped,
     };
   }
 }
