@@ -77,7 +77,6 @@ export function ReportsTab() {
             <span className="font-semibold text-gray-900">Motivo:</span> {report.reason}
           </p>
 
-          {/* If report targets a pet, show quick link */}
           {report.targetType === 'PET' && (
             <div className="mb-3">
               <a
@@ -98,13 +97,7 @@ export function ReportsTab() {
                   className="inline-flex items-center gap-1 text-sm font-semibold text-green-600 hover:text-green-800"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Aprovar
-                </button>
-                <button
-                  onClick={() => setDecisionModalData(report)}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-red-600 hover:text-red-800"
-                >
-                  Rejeitar
+                  Validar
                 </button>
               </div>
             ) : (
