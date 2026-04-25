@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dto';
 import type {
