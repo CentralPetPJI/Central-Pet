@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -40,6 +39,7 @@ export class AdoptionRequestsController {
     // default to received
     return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
   }
+
   @Post()
   @UseGuards(SessionGuard)
   async create(@Body() dto: CreateAdoptionRequestDto, @CurrentUser() user: MockUser | PublicUser) {

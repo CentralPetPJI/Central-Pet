@@ -12,7 +12,6 @@ import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from 
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
-import { PetStatus } from '../../../generated/prisma/enums';
 
 @Injectable()
 export class AdoptionRequestsService {
@@ -200,7 +199,7 @@ export class AdoptionRequestsService {
     });
 
     if (existingRequest) {
-      throw new BadRequestException('Você já possui uma solicitação ativa para este pet');
+      throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
     }
 
     // 4. Criar no banco
