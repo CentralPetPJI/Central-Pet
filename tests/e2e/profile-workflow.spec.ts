@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
+  criarUsuarioEFazerLoginViaApi,
   criarUsuarioViaApi,
   fazerLogin,
   gerarUsuarioUnico,
 } from "../utils/user-helpers";
+import { criarPetsViaApi } from "../utils/pet-helpers";
 
 test.describe("profile-workflow", () => {
   const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
@@ -14,37 +16,13 @@ test.describe("profile-workflow", () => {
   }) => {
     // 1. Criar usuário e pet
     const usuario = gerarUsuarioUnico("profileWorkflow");
-    const user = await criarUsuarioViaApi(request, usuario);
+    const user = await criarUsuarioEFazerLoginViaApi(request, usuario);
 
-    const petResposta = await request.post(`${BASE_API}/api/pets`, {
-      data: {
-        name: "Pet Segredo",
-        age: "2 anos",
-        species: "dog",
-        breed: "SRD",
-        sex: "male",
-        size: "medium",
-        profilePhoto: "foto.jpg",
-        tutor: "Tutor",
-        shelter: "Abrigo",
-        city: "Salvador",
-        state: "BA",
-        contact: "999999999",
-        responsibleUserId: user.id,
-        microchipped: false,
-        vaccinated: false,
-        neutered: false,
-        dewormed: false,
-        needsHealthCare: false,
-        physicalLimitation: false,
-        visualLimitation: false,
-        hearingLimitation: false,
-        sourceType: "PESSOA_FISICA",
-        sourceName: "Tutor",
-      },
+    const [pet] = await criarPetsViaApi(request, {
+      quantity: 1,
+      names: ["Pet Segredo"],
+      owner: user,
     });
-    expect(petResposta.ok()).toBeTruthy();
-    const pet = (await petResposta.json()).data;
 
     // Login inicial para criar o pet
     await fazerLogin(page, usuario);
@@ -93,8 +71,6 @@ test.describe("profile-workflow", () => {
     page,
     request,
   }) => {
-    const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
-
     // 1. Criar usuário e login
     const usuario = gerarUsuarioUnico("profilePersist");
     await criarUsuarioViaApi(request, usuario);

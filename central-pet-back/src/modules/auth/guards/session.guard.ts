@@ -31,7 +31,6 @@ export class SessionGuard implements CanActivate {
         throw new UnauthorizedException('Autenticação necessária');
       }
 
-      // TODO: será que vale a pena usar criar uma sessao mock no banco e usar o authService pra pegar o user? ou é melhor deixar assim mesmo, sem passar pelo banco?
       const user = mockUsers.find((mockUser) => mockUser.id === parsedSession.value);
 
       if (!user) {
