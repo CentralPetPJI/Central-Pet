@@ -23,7 +23,7 @@ export type MockPet = {
   city?: string;
   state: string;
   responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
+  sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;
   createdAt: Date;
   updatedAt: Date;

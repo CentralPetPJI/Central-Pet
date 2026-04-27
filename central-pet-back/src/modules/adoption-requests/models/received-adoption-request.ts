@@ -1,4 +1,3 @@
-import type { AdoptionRequestRecord } from './adoption-request-record';
 import type { AdoptionRequestStatus } from './adoption-request-status';
 import type { PetForAdoptionRequest } from '../../pets/pets.service';
 
@@ -9,7 +8,7 @@ export type ReceivedAdoptionRequestPet = {
   city: string;
   state: string;
   responsibleUserId: string | undefined;
-  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN' | 'ROOT';
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName: string | null | undefined;
 };
 

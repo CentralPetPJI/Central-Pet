@@ -1,4 +1,4 @@
-import { PetRecord, PetAdoptionStatus } from '../models/pet-record';
+import { PetRecord, PetAdoptionStatus, PetSourceType } from '../models/pet-record';
 import {
   Pet as PrismaPet,
   PetStatus as PrismaPetStatus,
@@ -35,7 +35,7 @@ export class PetMapper {
       hearingLimitation: pet.hearingLimitation,
       selectedPersonalities: this.parseJsonArray(pet.selectedPersonalitiesJson),
       responsibleUserId: pet.responsibleUserId,
-      sourceType: pet.sourceType as 'ONG' | 'PESSOA_FISICA' | undefined,
+      sourceType: pet.sourceType as PetSourceType | undefined,
       sourceName: pet.sourceName,
       adoptionStatus: this.mapStatusToResponse(pet.status),
       createdAt: pet.createdAt.toISOString(),
