@@ -1,7 +1,6 @@
 import type { AdoptionRequestRecord } from './adoption-request-record';
 import type { AdoptionRequestStatus } from './adoption-request-status';
 import type { PetForAdoptionRequest } from '../../pets/pets.service';
-import type { MockUser } from '@/mocks';
 
 export type ReceivedAdoptionRequestPet = {
   id: string;
@@ -34,19 +33,13 @@ export type ReceivedAdoptionRequest = {
   updatedAt: string;
 };
 
-type ReceivedAdoptionRequestSource = {
-  request: AdoptionRequestRecord;
-  pet: ReceivedAdoptionRequestPet;
-  adopter: ReceivedAdoptionRequestAdopter;
-};
-
 export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionRequestPet {
   return {
     id: pet.id,
     name: pet.name,
     species: pet.species,
     city: pet.city,
-    state: pet.state,
+    state: pet.state ?? '',
     responsibleUserId: pet.responsibleUserId,
     sourceType: pet.sourceType,
     sourceName: pet.sourceName,
@@ -57,8 +50,6 @@ export function mapAdopterForResponse(
   adopterId: string,
   persistedUsersById: Map<string, { id: string; fullName: string }>,
 ): ReceivedAdoptionRequestAdopter {
-  // Treat persisted users and mock users as the same kind of entity.
-  // Prefer persisted user when available, otherwise fall back to mock seed data.
   const persistedUser = persistedUsersById.get(adopterId);
   if (persistedUser) {
     return {

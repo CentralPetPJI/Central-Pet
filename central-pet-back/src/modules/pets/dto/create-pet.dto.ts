@@ -94,10 +94,6 @@ export class CreatePetDto {
   @IsBoolean()
   hearingLimitation: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  responsibleUserId: string;
-
   @IsOptional()
   @IsArray()
   @ArrayUnique()
