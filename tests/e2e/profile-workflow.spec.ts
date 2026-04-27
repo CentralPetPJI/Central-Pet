@@ -18,9 +18,10 @@ test.describe("profile-workflow", () => {
     const usuario = gerarUsuarioUnico("profileWorkflow");
     const user = await criarUsuarioEFazerLoginViaApi(request, usuario);
 
+    const petName = `Pet Segredo ${new Date().toISOString()}`;
     const [pet] = await criarPetsViaApi(request, {
       quantity: 1,
-      names: ["Pet Segredo"],
+      names: [petName],
       owner: user,
     });
 
@@ -29,9 +30,9 @@ test.describe("profile-workflow", () => {
 
     // Validação do pet
     await page.goto("/");
-    const elements = page.getByRole("img", { name: "Pet Segredo" });
+    const elements = page.getByRole("img", { name: petName });
     // OBS: Pode duplicar por conta do carousel ser um loop infinito, mas o importante é garantir que ele aparece
-    expect(await elements.count()).toBeGreaterThan(1);
+    expect(await elements.count()).toBeGreaterThanOrEqual(1);
 
     // 2. Desativar conta
     await page.goto("/profile");
@@ -54,9 +55,7 @@ test.describe("profile-workflow", () => {
     expect(petEncontrado).toBeUndefined();
 
     await page.goto("/");
-    await expect(
-      page.getByRole("heading", { name: "Pet Segredo" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: petName })).toHaveCount(0);
 
     // C) Usuário não deve ser encontrado na API
     const respostaPerfil = await request.get(`${BASE_API}/api/users/me`);
@@ -64,7 +63,7 @@ test.describe("profile-workflow", () => {
 
     // D) Pet não deve ser encontrado na pagina inicial
     await page.goto("/");
-    await expect(page.getByRole("img", { name: "Pet Segredo" })).toHaveCount(0);
+    await expect(page.getByRole("img", { name: petName })).toHaveCount(0);
   });
 
   test("edita, salva, navega e verifica persistência do perfil do usuário", async ({
