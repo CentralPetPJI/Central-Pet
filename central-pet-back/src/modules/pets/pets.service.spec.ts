@@ -84,8 +84,6 @@ describe('PetsService', () => {
     visualLimitation: false,
     hearingLimitation: false,
     selectedPersonalities: ['playful', 'friendly'],
-    sourceType: 'PESSOA_FISICA',
-    sourceName: 'Rafael Lima',
   });
 
   const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {

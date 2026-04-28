@@ -1,174 +1,36 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { mockPets, mockUsers } from '@/mocks';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { UserPersistenceService } from '../users/user-persistence.service';
-
-type PetRecord = {
-  id: string;
-  profilePhoto: string;
-  galleryPhotos: string[];
-  name: string;
-  age: string;
-  species: string;
-  breed: string;
-  sex: string;
-  size: string;
-  microchipped: boolean;
-  vaccinated: boolean;
-  neutered: boolean;
-  dewormed: boolean;
-  needsHealthCare: boolean;
-  physicalLimitation: boolean;
-  visualLimitation: boolean;
-  hearingLimitation: boolean;
-  selectedPersonalities: string[];
-  responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
-  sourceName: string;
-  adoptionStatus: 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
-  createdAt: string;
-  updatedAt: string;
-};
+import { PetSeedService } from './pet-seed.service';
+import { PetMapper } from './mappers/pet-record.mapper';
+import type {
+  PetForAdoptionRequest,
+  PetRecord,
+  PetResponseRecord,
+} from './models/pet-record';
+export type { PetForAdoptionRequest } from './models/pet-record';
 
 type ResponsibleLocation = {
   city: string;
   state: string;
 };
 
-export type PetResponseRecord = PetRecord & ResponsibleLocation;
-
-export type PetForAdoptionRequest = Pick<
-  PetResponseRecord,
-  | 'id'
-  | 'name'
-  | 'species'
-  | 'city'
-  | 'state'
-  | 'responsibleUserId'
-  | 'sourceType'
-  | 'sourceName'
-  | 'adoptionStatus'
->;
-
-type PersistedPetRecord = {
-  id: string;
-  profilePhoto: string;
-  galleryPhotosJson: string | null;
-  name: string;
-  ageText: string;
-  species: 'DOG' | 'CAT';
-  breed: string;
-  sex: 'FEMALE' | 'MALE';
-  size: 'SMALL' | 'MEDIUM' | 'LARGE';
-  microchipped: boolean;
-  vaccinated: boolean;
-  neutered: boolean;
-  dewormed: boolean;
-  needsHealthCare: boolean;
-  physicalLimitation: boolean;
-  visualLimitation: boolean;
-  hearingLimitation: boolean;
-  selectedPersonalitiesJson: string;
-  responsibleUserId: string;
+type ResponsiblePetMetadata = ResponsibleLocation & {
   sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;
-  status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 @Injectable()
 export class PetsService {
-  private readonly isMockPetModeEnabled = process.env.ENABLE_MOCK_PETS === 'true';
-  private hasSeededMockPets = false;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly personalityTraitsService: PersonalityTraitsService,
     private readonly userPersistence: UserPersistenceService,
+    private readonly petSeedService: PetSeedService,
   ) {}
-
-  private normalizeSpeciesForPersistence(species: string): 'DOG' | 'CAT' {
-    const normalized = species.toLowerCase();
-    if (normalized === 'cat') return 'CAT';
-    return 'DOG';
-  }
-
-  private normalizeSexForPersistence(sex: string): 'FEMALE' | 'MALE' {
-    const normalized = sex.toLowerCase();
-    if (normalized === 'female') return 'FEMALE';
-    return 'MALE';
-  }
-
-  private normalizeSizeForPersistence(size: string): 'SMALL' | 'MEDIUM' | 'LARGE' {
-    const normalized = size.toLowerCase();
-
-    if (normalized === 'small') {
-      return 'SMALL';
-    }
-
-    if (normalized === 'large') {
-      return 'LARGE';
-    }
-
-    return 'MEDIUM';
-  }
-
-  private normalizeSpeciesForResponse(species: 'DOG' | 'CAT'): string {
-    return species === 'CAT' ? 'cat' : 'dog';
-  }
-
-  private normalizeSexForResponse(sex: 'FEMALE' | 'MALE'): string {
-    return sex === 'FEMALE' ? 'female' : 'male';
-  }
-
-  private normalizeSizeForResponse(size: 'SMALL' | 'MEDIUM' | 'LARGE'): string {
-    if (size === 'SMALL') {
-      return 'small';
-    }
-
-    if (size === 'LARGE') {
-      return 'large';
-    }
-
-    return 'medium';
-  }
-
-  private normalizeAdoptionStatusForResponse(
-    status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE',
-  ): 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE' {
-    if (status === 'PENDING_ADOPTION') {
-      return 'IN_PROCESS';
-    }
-
-    return status;
-  }
-
-  private parseJsonArray(value: string | null): string[] {
-    if (!value) {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(value) as unknown;
-
-      if (!Array.isArray(parsed)) {
-        return [];
-      }
-
-      return parsed.filter((item): item is string => typeof item === 'string');
-    } catch {
-      return [];
-    }
-  }
 
   private normalizeResponsibleLocation(location?: {
     city: string | null;
@@ -215,32 +77,34 @@ export class PetsService {
     );
   }
 
-  private toRecord(pet: PersistedPetRecord): PetRecord {
+  private async getResponsiblePetMetadata(
+    responsibleUserId: string,
+  ): Promise<ResponsiblePetMetadata> {
+    const responsibleUser = await this.prisma.user.findUnique({
+      where: { id: responsibleUserId },
+      select: {
+        id: true,
+        role: true,
+        fullName: true,
+        organizationName: true,
+        city: true,
+        state: true,
+        deleted: true,
+      },
+    });
+
+    if (!responsibleUser || responsibleUser.deleted) {
+      throw new NotFoundException(`Usuário com id "${responsibleUserId}" não encontrado`);
+    }
+
     return {
-      id: pet.id,
-      profilePhoto: pet.profilePhoto,
-      galleryPhotos: this.parseJsonArray(pet.galleryPhotosJson),
-      name: pet.name,
-      age: pet.ageText,
-      species: this.normalizeSpeciesForResponse(pet.species),
-      breed: pet.breed,
-      sex: this.normalizeSexForResponse(pet.sex),
-      size: this.normalizeSizeForResponse(pet.size),
-      microchipped: pet.microchipped,
-      vaccinated: pet.vaccinated,
-      neutered: pet.neutered,
-      dewormed: pet.dewormed,
-      needsHealthCare: pet.needsHealthCare,
-      physicalLimitation: pet.physicalLimitation,
-      visualLimitation: pet.visualLimitation,
-      hearingLimitation: pet.hearingLimitation,
-      selectedPersonalities: this.parseJsonArray(pet.selectedPersonalitiesJson),
-      responsibleUserId: pet.responsibleUserId,
-      sourceType: pet.sourceType,
-      sourceName: pet.sourceName,
-      adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
-      createdAt: pet.createdAt.toISOString(),
-      updatedAt: pet.updatedAt.toISOString(),
+      city: responsibleUser.city ?? '',
+      state: responsibleUser.state ?? '',
+      sourceType: responsibleUser.role,
+      sourceName:
+        responsibleUser.role === 'ONG'
+          ? (responsibleUser.organizationName ?? responsibleUser.fullName)
+          : responsibleUser.fullName,
     };
   }
 
@@ -264,64 +128,22 @@ export class PetsService {
 
     if (invalidTraits.length > 0) {
       throw new BadRequestException(
-        `Traits de personalidade invalidos: ${invalidTraits.join(', ')}`,
+        `Traits de personalidade inválidos: ${invalidTraits.join(', ')}`,
       );
     }
   }
 
   private async ensureMockPetsSeededIfEnabled() {
-    if (!this.isMockPetModeEnabled || this.hasSeededMockPets) {
-      return;
-    }
-
     // Garante que todos os usuários mock existam no banco
-    const mockUserIds = mockUsers.map((u) => u.id);
-    await this.userPersistence.ensureUsersExist(mockUserIds);
-
-    for (const pet of mockPets) {
-      await this.prisma.pet.upsert({
-        where: { id: String(pet.id) },
-        update: {},
-        create: {
-          id: String(pet.id),
-          name: pet.name,
-          ageText: pet.ageMonths ? `${pet.ageMonths} meses` : 'Idade não informada',
-          species: this.normalizeSpeciesForPersistence(pet.species),
-          breed: pet.breed ?? 'SRD',
-          sex: this.normalizeSexForPersistence(pet.sex ?? 'male'),
-          size: this.normalizeSizeForPersistence(pet.size ?? 'medium'),
-          profilePhoto: pet.photo ?? '',
-          galleryPhotosJson: '[]',
-          microchipped: false,
-          vaccinated: pet.vaccinated,
-          neutered: pet.neutered,
-          dewormed: pet.dewormed,
-          needsHealthCare: false,
-          physicalLimitation: false,
-          visualLimitation: false,
-          hearingLimitation: false,
-          selectedPersonalitiesJson: '[]',
-          responsibleUserId: pet.responsibleUserId,
-          sourceType: pet.sourceType,
-          sourceName: pet.sourceName,
-          status: 'AVAILABLE',
-          deleted: false,
-        },
-      });
-    }
-
-    this.hasSeededMockPets = true;
+    await this.petSeedService.ensureSeed();
   }
 
-  async create(createPetDto: CreatePetDto) {
-    if (!createPetDto.responsibleUserId) {
-      throw new BadRequestException('O campo responsibleUserId é obrigatório');
-    }
-
+  async create(createPetDto: CreatePetDto, responsibleUserId: string) {
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
     this.validateSelectedPersonalities(selectedPersonalities);
 
-    await this.userPersistence.validateUser(createPetDto.responsibleUserId);
+    await this.userPersistence.validateUser(responsibleUserId);
+    const responsibleMetadata = await this.getResponsiblePetMetadata(responsibleUserId);
 
     const createdPet = await this.prisma.pet.create({
       data: {
@@ -329,10 +151,10 @@ export class PetsService {
         galleryPhotosJson: JSON.stringify(createPetDto.galleryPhotos ?? []),
         name: createPetDto.name,
         ageText: createPetDto.age,
-        species: this.normalizeSpeciesForPersistence(createPetDto.species),
+        species: PetMapper.mapSpeciesToPersistence(createPetDto.species),
         breed: createPetDto.breed,
-        sex: this.normalizeSexForPersistence(createPetDto.sex),
-        size: this.normalizeSizeForPersistence(createPetDto.size),
+        sex: PetMapper.mapSexToPersistence(createPetDto.sex),
+        size: PetMapper.mapSizeToPersistence(createPetDto.size),
         microchipped: createPetDto.microchipped,
         vaccinated: createPetDto.vaccinated,
         neutered: createPetDto.neutered,
@@ -342,9 +164,9 @@ export class PetsService {
         visualLimitation: createPetDto.visualLimitation,
         hearingLimitation: createPetDto.hearingLimitation,
         selectedPersonalitiesJson: JSON.stringify(selectedPersonalities),
-        responsibleUserId: createPetDto.responsibleUserId,
-        sourceType: createPetDto.sourceType,
-        sourceName: createPetDto.sourceName,
+        responsibleUserId,
+        sourceType: PetMapper.mapSourceTypeToPersistence(responsibleMetadata.sourceType),
+        sourceName: responsibleMetadata.sourceName,
         status: 'AVAILABLE',
         deleted: false,
       },
@@ -352,10 +174,7 @@ export class PetsService {
 
     return {
       message: 'Pet created successfully',
-      data: this.withResponsibleLocation(
-        this.toRecord(createdPet),
-        await this.getResponsibleLocation(createdPet.responsibleUserId),
-      ),
+      data: this.withResponsibleLocation(PetMapper.toDomain(createdPet), responsibleMetadata),
     };
   }
 
@@ -376,7 +195,7 @@ export class PetsService {
       message: 'Pets retrieved successfully',
       data: pets.map((pet) =>
         this.withResponsibleLocation(
-          this.toRecord(pet),
+          PetMapper.toDomain(pet),
           responsibleLocations.get(pet.responsibleUserId) ?? { city: '', state: '' },
         ),
       ),
@@ -397,7 +216,7 @@ export class PetsService {
     return {
       message: 'Pet retrieved successfully',
       data: this.withResponsibleLocation(
-        this.toRecord(pet),
+        PetMapper.toDomain(pet),
         await this.getResponsibleLocation(pet.responsibleUserId),
       ),
     };
@@ -408,16 +227,6 @@ export class PetsService {
 
     const pet = await this.prisma.pet.findUnique({
       where: { id },
-      select: {
-        id: true,
-        name: true,
-        species: true,
-        responsibleUserId: true,
-        sourceType: true,
-        sourceName: true,
-        status: true,
-        deleted: true,
-      },
     });
 
     if (!pet || pet.deleted || !pet.responsibleUserId) {
@@ -425,17 +234,18 @@ export class PetsService {
     }
 
     const responsibleLocation = await this.getResponsibleLocation(pet.responsibleUserId);
+    const petRecord = PetMapper.toDomain(pet);
 
     return {
-      id: pet.id,
-      name: pet.name,
-      species: this.normalizeSpeciesForResponse(pet.species),
+      id: petRecord.id,
+      name: petRecord.name,
+      species: petRecord.species,
       city: responsibleLocation.city,
       state: responsibleLocation.state,
-      responsibleUserId: pet.responsibleUserId,
-      sourceType: pet.sourceType,
-      sourceName: pet.sourceName,
-      adoptionStatus: this.normalizeAdoptionStatusForResponse(pet.status),
+      responsibleUserId: petRecord.responsibleUserId,
+      sourceType: petRecord.sourceType,
+      sourceName: petRecord.sourceName,
+      adoptionStatus: petRecord.adoptionStatus,
     };
   }
 
@@ -467,7 +277,7 @@ export class PetsService {
 
     return {
       pet: this.withResponsibleLocation(
-        this.toRecord(updatedPet),
+        PetMapper.toDomain(updatedPet),
         await this.getResponsibleLocation(updatedPet.responsibleUserId),
       ),
       previousResponsibleUserId: existingPet.responsibleUserId,
@@ -500,16 +310,14 @@ export class PetsService {
         ageText: updatePetDto.age,
         species:
           updatePetDto.species !== undefined
-            ? this.normalizeSpeciesForPersistence(updatePetDto.species)
+            ? PetMapper.mapSpeciesToPersistence(updatePetDto.species)
             : undefined,
         breed: updatePetDto.breed,
         sex:
-          updatePetDto.sex !== undefined
-            ? this.normalizeSexForPersistence(updatePetDto.sex)
-            : undefined,
+          updatePetDto.sex !== undefined ? PetMapper.mapSexToPersistence(updatePetDto.sex) : undefined,
         size:
           updatePetDto.size !== undefined
-            ? this.normalizeSizeForPersistence(updatePetDto.size)
+            ? PetMapper.mapSizeToPersistence(updatePetDto.size)
             : undefined,
         microchipped: updatePetDto.microchipped,
         vaccinated: updatePetDto.vaccinated,
@@ -529,24 +337,20 @@ export class PetsService {
     return {
       message: 'Pet updated successfully',
       data: this.withResponsibleLocation(
-        this.toRecord(updatedPet),
+        PetMapper.toDomain(updatedPet),
         await this.getResponsibleLocation(updatedPet.responsibleUserId),
       ),
     };
   }
 
-  async remove(id: string, requesterId: string) {
+  async remove(id: string) {
     const currentPet = await this.prisma.pet.findUnique({
       where: { id },
-      select: { id: true, deleted: true, responsibleUserId: true },
+      select: { id: true, deleted: true },
     });
 
     if (!currentPet || currentPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
-    }
-
-    if (currentPet.responsibleUserId !== requesterId) {
-      throw new ForbiddenException('You are not the owner of this pet');
     }
 
     const deletedPet = await this.prisma.pet.update({
@@ -560,7 +364,7 @@ export class PetsService {
     return {
       message: 'Pet deleted successfully',
       data: this.withResponsibleLocation(
-        this.toRecord(deletedPet),
+        PetMapper.toDomain(deletedPet),
         await this.getResponsibleLocation(deletedPet.responsibleUserId),
       ),
     };

@@ -74,22 +74,10 @@ export class CreatePetDto {
   @IsBoolean()
   hearingLimitation: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  responsibleUserId: string;
-
   @IsOptional()
   @IsArray()
   @ArrayUnique()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   selectedPersonalities?: string[];
-
-  @IsString()
-  @IsIn(['ONG', 'PESSOA_FISICA'])
-  sourceType: 'ONG' | 'PESSOA_FISICA';
-
-  @IsString()
-  @IsNotEmpty()
-  sourceName: string;
 }
