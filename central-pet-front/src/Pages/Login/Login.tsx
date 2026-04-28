@@ -64,6 +64,16 @@ function getErrorMessage(error: unknown): string {
   return 'Não foi possível entrar. Verifique suas credenciais e tente novamente.';
 }
 
+/**
+ * Render the login page UI, manage the sign-in form, and handle authentication flow.
+ *
+ * Observes auth state and redirects authenticated users to the home route. Initializes
+ * the form with optional values from location.state (e.g., post-registration email),
+ * displays a loading card while auth status is being determined, and shows contextual
+ * success or error feedback from login attempts (using getErrorMessage on failures).
+ *
+ * @returns The login page UI including the form, feedback banners, loading state, and marketing panel.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -121,34 +131,10 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
-              {SITE_NAME}
-            </p>
-            <h1 className="mt-4 max-w-md text-4xl font-black leading-tight">
-              Entre para continuar ajudando animais.
-            </h1>
-            <p className="mt-4 max-w-lg text-base text-slate-700">
-              Acesse sua conta para gerenciar adoções, denúncias e acompanhar os pets cadastrados.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-white/75 p-4 shadow-sm backdrop-blur">
-              <p className="text-sm font-semibold text-slate-500">🐶 Adote um pet</p>
-              <p className="mt-1 font-bold text-slate-900">Encontre seu companheiro</p>
-            </div>
-            <div className="rounded-2xl bg-white/75 p-4 shadow-sm backdrop-blur">
-              <p className="text-sm font-semibold text-slate-500">🏠 Cadastre animais</p>
-              <p className="mt-1 font-bold text-slate-900">Ajude quem precisa de lar</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-8 sm:p-10">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8 bg-neutral-50">
+      <div className="flex flex-col lg:grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+        {/*Alterado a ordem dos blocos para mudar o comportamento em telas pequenas (celulares)]]*/}
+        <div className="p-8 sm:p-10 bg-white lg:order-2">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
               Acessar conta
@@ -213,11 +199,37 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 border-t border-slate-200 pt-6 text-center text-sm text-slate-600">
+          <div className="mt-8 border-t border-neutral-200 pt-6 text-center text-sm text-neutral-600">
             Ainda não tem conta?{' '}
-            <Link to={routes.register.path} className="font-bold text-[#4fb8c5] hover:underline">
+            <Link to={routes.register.path} className="font-bold text-primary-400 hover:underline">
               Cadastre-se
             </Link>
+          </div>
+        </div>
+
+        {/* BLOCO AZUL alterar para baixo no mobile */}
+        <div className="flex flex-col justify-between bg-gradient-to-br from-primary-300 via-primary-200 to-white p-8 text-neutral-900 sm:p-10 lg:order-1">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-neutral-700">
+              {SITE_NAME}
+            </p>
+            <h1 className="mt-4 max-w-md text-3xl font-black leading-tight">
+              Entre para continuar ajudando animais.
+            </h1>
+            <p className="mt-4 max-w-lg text-neutral-700 text-sm sm:text-base">
+              Acesse sua conta para gerenciar adoções, denúncias e acompanhar os pets cadastrados.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-3 grid-cols-1 sm:grid-cols-2">
+            <div className="glass rounded-2xl p-4 shadow-sm">
+              <p className="text-sm font-semibold text-neutral-500">🐶 Adote um pet</p>
+              <p className="mt-1 font-bold text-neutral-900">Encontre seu companheiro</p>
+            </div>
+            <div className="glass rounded-2xl p-4 shadow-sm">
+              <p className="text-sm font-semibold text-neutral-500">🏠 Cadastre animais</p>
+              <p className="mt-1 font-bold text-neutral-900">Ajude quem precisa de lar</p>
+            </div>
           </div>
         </div>
       </div>
