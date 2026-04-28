@@ -33,10 +33,12 @@ test.describe("home", () => {
       page.getByRole("heading", { name: "Ultimos Pets" }),
     ).toBeVisible();
 
-    await page
-      .getByRole("img", { name: nomePetPrincipal })
-      .first()
-      .click({ force: true });
+    const petCard = page
+      .locator("div")
+      .filter({ has: page.getByRole("img", { name: nomePetPrincipal }) })
+      .first();
+
+    await petCard.click({ force: true });
 
     await expect(
       page.getByRole("heading", { level: 2, name: nomePetPrincipal }),

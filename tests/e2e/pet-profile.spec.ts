@@ -24,10 +24,12 @@ test.describe("perfil do pet", () => {
     petIdsCriados = [pet.id];
 
     await page.goto("/");
-    await page
-      .getByRole("img", { name: nomePet })
-      .first()
-      .click({ force: true });
+    const petCard = page
+      .locator("div")
+      .filter({ has: page.getByRole("img", { name: nomePet }) })
+      .first();
+
+    await petCard.click({ force: true });
     await page.getByRole("link", { name: "Quero adotar" }).click();
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

@@ -76,8 +76,6 @@ export async function criarPetsViaApi(
         physicalLimitation: false,
         visualLimitation: false,
         hearingLimitation: false,
-        sourceType: owner.role,
-        sourceName: owner.organizationName || owner.fullName,
         selectedPersonalities: [],
       },
     });
