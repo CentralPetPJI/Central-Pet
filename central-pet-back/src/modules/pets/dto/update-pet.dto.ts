@@ -61,10 +61,6 @@ export class UpdatePetDto {
   @IsBoolean()
   microchipped?: boolean;
 
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsNotEmpty()
-  responsibleUserId?: string;
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
