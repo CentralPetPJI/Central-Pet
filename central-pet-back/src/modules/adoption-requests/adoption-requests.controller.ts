@@ -45,6 +45,7 @@ export class AdoptionRequestsController {
   async create(@Body() dto: CreateAdoptionRequestDto, @CurrentUser() user: MockUser | PublicUser) {
     return this.adoptionRequestsService.create(user.id, dto);
   }
+
   @Patch(':id')
   @UseGuards(SessionGuard)
   async manage(

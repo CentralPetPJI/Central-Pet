@@ -29,16 +29,12 @@ function getErrorMessage(error: unknown): string {
     const data = axiosError.response?.data;
 
     // Mensagens específicas por status HTTP
-    if (status === 400) {
+    if (status === 400 || status === 409) {
       const apiMessage = data?.message;
       if (apiMessage) {
         return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
       }
       return 'Dados inválidos. Verifique os campos e tente novamente.';
-    }
-
-    if (status === 409) {
-      return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
     }
 
     if (status === 429) {

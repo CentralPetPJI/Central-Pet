@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import type {
   ReceivedAdoptionRequest,
   AdoptionRequestActionResult,
@@ -13,7 +12,7 @@ import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from 
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
-import { PetStatus } from '../../../generated/prisma/enums';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 @Injectable()
 export class AdoptionRequestsService {
@@ -73,10 +72,10 @@ export class AdoptionRequestsService {
   async findReceived(
     responsibleUserId?: string,
   ): Promise<{ message: string; data: ReceivedAdoptionRequest[] }> {
-    const requests: AdoptionRequestRecord[] = await this.prisma.adoptionRequest.findMany({
+    const requests = (await this.prisma.adoptionRequest.findMany({
       where: responsibleUserId ? { responsibleUserId } : undefined,
       orderBy: { requestedAt: 'desc' },
-    });
+    })) as unknown as AdoptionRequestRecord[];
 
     const mapped = await this.mapRequestsToResponse(requests);
 
@@ -89,10 +88,10 @@ export class AdoptionRequestsService {
   async findSent(
     adopterId?: string,
   ): Promise<{ message: string; data: ReceivedAdoptionRequest[] }> {
-    const requests: AdoptionRequestRecord[] = await this.prisma.adoptionRequest.findMany({
+    const requests = (await this.prisma.adoptionRequest.findMany({
       where: adopterId ? { adopterId } : undefined,
       orderBy: { requestedAt: 'desc' },
-    });
+    })) as unknown as AdoptionRequestRecord[];
 
     const mapped = await this.mapRequestsToResponse(requests);
 
@@ -171,7 +170,14 @@ export class AdoptionRequestsService {
     adopterId: string,
     dto: CreateAdoptionRequestDto,
   ): Promise<{ message: string; data: ReceivedAdoptionRequest }> {
-    const { petId, message } = dto;
+    const { petId, message, adopterContactShareConsent } = dto;
+
+    // exige consentimento explícito do adotante
+    if (!adopterContactShareConsent) {
+      throw new BadRequestException(
+        'É obrigatório autorizar o compartilhamento do contato para enviar a solicitação',
+      );
+    }
 
     //1. Buscar pet
     const pet = await this.petsService.findByIdForAdoption(petId);
@@ -194,9 +200,6 @@ export class AdoptionRequestsService {
       where: {
         petId,
         adopterId,
-        status: {
-          in: ['PENDING', 'APPROVED'],
-        },
       },
     });
 
@@ -205,19 +208,19 @@ export class AdoptionRequestsService {
     }
 
     // 4. Criar no banco
-    let created;
+    let created: AdoptionRequestRecord;
     try {
-      created = await this.prisma.adoptionRequest.create({
+      created = (await this.prisma.adoptionRequest.create({
         data: {
           petId,
           adopterId,
           responsibleUserId: pet.responsibleUserId,
           message: message ?? '',
           status: 'PENDING',
-          adopterContactShareConsent: false,
+          adopterContactShareConsent: adopterContactShareConsent,
           responsibleContactShareConsent: false,
         },
-      });
+      })) as unknown as AdoptionRequestRecord;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
