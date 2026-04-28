@@ -11,4 +11,10 @@ export default defineConfig({
       '@@': path.resolve(__dirname, '../'),
     },
   },
+  server: {
+    watch: {
+      usePolling: true, // Forçar a atualização do arquivo
+    },
+    host: true, // Garantir que o Docker esponha a porta para a aplicação
+  },
 });
