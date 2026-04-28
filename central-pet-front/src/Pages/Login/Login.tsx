@@ -123,7 +123,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-8 bg-neutral-50">
       <div className="flex flex-col lg:grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
-        {/*Alterado a ordem dos blocos para mudar o comportamento em telas pequenas (celulares)]]*/}
+        {/*Alterado a ordem dos blocos para mudar o comportamento em telas pequenas (celulares)*/}
         <div className="p-8 sm:p-10 bg-white lg:order-2">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
@@ -206,7 +206,7 @@ export default function Login() {
             <h1 className="mt-4 max-w-md text-3xl font-black leading-tight">
               Entre para continuar ajudando animais.
             </h1>
-            <p className="mt-4 max-w-lg text-base text-neutral-700 hidden md:block">
+            <p className="mt-4 max-w-lg text-base text-neutral-700">
               Acesse sua conta para gerenciar adoções, denúncias e acompanhar os pets cadastrados.
             </p>
           </div>
