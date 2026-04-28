@@ -6,7 +6,7 @@ import {
   PetSex,
   PetSize,
   UserRole,
-} from '@prisma/client/client';
+} from '../../../../generated/prisma/client';
 
 export class PetMapper {
   static toDomain(pet: PrismaPet): PetRecord {
