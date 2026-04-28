@@ -6,7 +6,7 @@ import {
   PetSex,
   PetSize,
   UserRole,
-} from '@prisma/client';
+} from '../../../../generated/prisma/client';
 
 export class PetMapper {
   static toDomain(pet: PrismaPet): PetRecord {
@@ -21,11 +21,6 @@ export class PetMapper {
       sex: this.mapSexToResponse(pet.sex),
       size: this.mapSizeToResponse(pet.size),
       microchipped: pet.microchipped,
-      tutor: pet.tutor,
-      shelter: pet.shelter,
-      city: pet.city,
-      state: pet.state,
-      contact: pet.contact,
       vaccinated: pet.vaccinated,
       neutered: pet.neutered,
       dewormed: pet.dewormed,

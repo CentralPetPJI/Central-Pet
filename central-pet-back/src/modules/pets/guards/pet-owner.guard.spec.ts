@@ -2,7 +2,7 @@ import { ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PetOwnerGuard } from './pet-owner.guard';
 import { PetsService } from '../pets.service';
-import { PetRecord } from '../models/pet-record';
+import { PetResponseRecord } from '../models/pet-record';
 
 describe('PetOwnerGuard', () => {
   let guard: PetOwnerGuard;
@@ -33,7 +33,7 @@ describe('PetOwnerGuard', () => {
 
     petsServiceMock.findOne.mockResolvedValue({
       message: 'Retrieved',
-      data: { responsibleUserId: userId } as PetRecord,
+      data: { responsibleUserId: userId, city: '', state: '' } as PetResponseRecord,
     });
 
     const result = await guard.canActivate(context);
@@ -50,7 +50,7 @@ describe('PetOwnerGuard', () => {
 
     petsServiceMock.findOne.mockResolvedValue({
       message: 'Retrieved',
-      data: { responsibleUserId: otherUserId } as PetRecord,
+      data: { responsibleUserId: otherUserId, city: '', state: '' } as PetResponseRecord,
     });
 
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);

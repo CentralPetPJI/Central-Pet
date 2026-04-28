@@ -56,4 +56,14 @@ export class CreateUserDto {
     message: 'cnpj must contain exactly 14 alphanumeric characters',
   })
   cnpj?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  state?: string;
 }

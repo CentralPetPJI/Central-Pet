@@ -1,4 +1,3 @@
-import type { AdoptionRequestRecord } from './adoption-request-record';
 import type { AdoptionRequestStatus } from './adoption-request-status';
 import type { PetForAdoptionRequest } from '../../pets/pets.service';
 

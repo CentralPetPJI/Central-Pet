@@ -27,11 +27,19 @@ export class UsersService {
 
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
+    const normalizedCnpj = createUserDto.cnpj?.trim().toUpperCase();
+    const normalizedOrganizationName = createUserDto.organizationName?.trim() || undefined;
+    const normalizedCity = createUserDto.city?.trim() || undefined;
+    const normalizedState = createUserDto.state?.trim().toUpperCase() || undefined;
     const passwordHash = await hashPassword(createUserDto.password);
 
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [{ email: normalizedEmail }, ...(normalizedCpf ? [{ cpf: normalizedCpf }] : [])],
+        OR: [
+          { email: normalizedEmail },
+          ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
+          ...(normalizedCnpj ? [{ cnpj: normalizedCnpj }] : []),
+        ],
       },
     });
 
@@ -47,6 +55,10 @@ export class UsersService {
           role: createUserDto.role,
           birthDate: createUserDto.birthDate,
           cpf: normalizedCpf,
+          organizationName: normalizedOrganizationName,
+          cnpj: normalizedCnpj,
+          city: normalizedCity,
+          state: normalizedState,
           passwordHash,
         },
       });

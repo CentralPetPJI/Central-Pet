@@ -24,11 +24,18 @@ test.describe("perfil do pet", () => {
     petIdsCriados = [pet.id];
 
     await page.goto("/");
-    await page
-      .getByRole("img", { name: nomePet })
-      .first()
-      .click({ force: true });
-    await page.getByRole("link", { name: "Quero adotar" }).click();
+    const carouselSection = page
+      .getByRole("heading", { name: "Ultimos Pets" })
+      .locator("xpath=ancestor::section[1]");
+    await carouselSection.hover();
+
+    const petImage = page.locator(`img[alt="${nomePet}"]:visible`).first();
+    await expect(petImage).toBeVisible();
+    await petImage.click();
+
+    const adoptLink = page.getByRole("link", { name: "Quero adotar" });
+    await expect(adoptLink).toBeVisible();
+    await adoptLink.click();
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Galeria" })).toBeVisible();
@@ -36,6 +43,5 @@ test.describe("perfil do pet", () => {
     await expect(
       page.getByText("Comportamento", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Localizacao", { exact: true })).toBeVisible();
   });
 });

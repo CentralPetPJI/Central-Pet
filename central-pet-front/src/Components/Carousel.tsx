@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Pet } from '@/Models/pet';
 import PetModal from './PetModal.tsx';
+import { formatState } from '@/lib/formatters';
 
 type CarouselProps = {
   petsData: Pet[];
@@ -220,6 +221,11 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
               />
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-gray-800">{pet.name}</h3>
+                <p className="mt-1 text-sm font-medium text-slate-500">
+                  {pet.city
+                    ? `${pet.city}${pet.state ? `/${formatState(pet.state)}` : ''}`
+                    : 'Localizacao nao informada'}
+                </p>
                 <p className="mt-2 text-sm text-gray-600 line-clamp-3">
                   {pet.physicalCharacteristics}
                 </p>
