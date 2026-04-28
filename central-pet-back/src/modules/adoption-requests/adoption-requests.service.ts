@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import type {
   ReceivedAdoptionRequest,
   AdoptionRequestActionResult,
@@ -204,17 +205,25 @@ export class AdoptionRequestsService {
     }
 
     // 4. Criar no banco
-    const created = await this.prisma.adoptionRequest.create({
-      data: {
-        petId,
-        adopterId,
-        responsibleUserId: pet.responsibleUserId,
-        message: message ?? '',
-        status: 'PENDING',
-        adopterContactShareConsent: false,
-        responsibleContactShareConsent: false,
-      },
-    });
+    let created;
+    try {
+      created = await this.prisma.adoptionRequest.create({
+        data: {
+          petId,
+          adopterId,
+          responsibleUserId: pet.responsibleUserId,
+          message: message ?? '',
+          status: 'PENDING',
+          adopterContactShareConsent: false,
+          responsibleContactShareConsent: false,
+        },
+      });
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
+      }
+      throw error;
+    }
 
     const [mapped] = await this.mapRequestsToResponse([created]);
 
