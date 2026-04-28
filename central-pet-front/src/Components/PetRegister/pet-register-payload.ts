@@ -1,4 +1,3 @@
-import type { AuthUser } from '@/Models/auth';
 import type { PetRegisterFormData } from '@/storage/pets';
 
 export type ResponsibleLocation = {
@@ -11,11 +10,8 @@ export const isProfileLocationComplete = (location: ResponsibleLocation): boolea
 
 export const buildPetSubmitPayload = (
   data: PetRegisterFormData,
-  currentUser: Pick<AuthUser, 'fullName' | 'organizationName' | 'role'>,
   selectedPersonalities: string[],
 ) => {
-  const sourceName = currentUser.organizationName || currentUser.fullName;
-
   return {
     profilePhoto: data.profilePhoto,
     galleryPhotos: data.galleryPhotos ?? [],
@@ -33,8 +29,6 @@ export const buildPetSubmitPayload = (
     physicalLimitation: data.physicalLimitation,
     visualLimitation: data.visualLimitation,
     hearingLimitation: data.hearingLimitation,
-    sourceType: currentUser.role,
-    sourceName,
     selectedPersonalities,
   };
 };

@@ -123,7 +123,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    const normalizedFormData = buildPetSubmitPayload(data, currentUser, selectedPersonalities);
+    const normalizedFormData = buildPetSubmitPayload(data, selectedPersonalities);
 
     try {
       let response: { data: { message: string; data: PetApiResponse } };

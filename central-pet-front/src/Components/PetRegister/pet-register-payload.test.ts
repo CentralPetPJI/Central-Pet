@@ -25,11 +25,6 @@ describe('pet-register-payload', () => {
         visualLimitation: false,
         hearingLimitation: false,
       },
-      {
-        fullName: 'Maria Silva',
-        organizationName: undefined,
-        role: 'PESSOA_FISICA',
-      },
       ['playful'],
     );
 
@@ -38,8 +33,9 @@ describe('pet-register-payload', () => {
     expect(payload).not.toHaveProperty('tutor');
     expect(payload).not.toHaveProperty('shelter');
     expect(payload).not.toHaveProperty('contact');
+    expect(payload).not.toHaveProperty('sourceType');
+    expect(payload).not.toHaveProperty('sourceName');
     expect(payload.breed).toBe('SRD');
-    expect(payload.sourceName).toBe('Maria Silva');
   });
 
   it('bloqueia publicacao quando falta localizacao no perfil', () => {
