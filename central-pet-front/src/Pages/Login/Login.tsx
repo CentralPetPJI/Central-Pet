@@ -198,7 +198,7 @@ export default function Login() {
 
           <div className="mt-8 border-t border-neutral-200 pt-6 text-center text-sm text-neutral-600">
             Ainda não tem conta?{' '}
-            <Link to={routes.register.path} className="font-bold text-primary-400 hover:underline">
+            <Link to={routes.register.path} className="font-bold text-primary-700 hover:underline">
               Cadastre-se
             </Link>
           </div>
