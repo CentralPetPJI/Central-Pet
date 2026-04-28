@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
+  criarUsuarioEFazerLoginViaApi,
   criarUsuarioViaApi,
   fazerLogin,
   gerarUsuarioUnico,
 } from "../utils/user-helpers";
+import { criarPetsViaApi } from "../utils/pet-helpers";
 
 test.describe("profile-workflow", () => {
   const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
@@ -14,41 +16,23 @@ test.describe("profile-workflow", () => {
   }) => {
     // 1. Criar usuário e pet
     const usuario = gerarUsuarioUnico("profileWorkflow");
-    const user = await criarUsuarioViaApi(request, usuario);
+    const user = await criarUsuarioEFazerLoginViaApi(request, usuario);
 
-    const petResposta = await request.post(`${BASE_API}/api/pets`, {
-      data: {
-        name: "Pet Segredo",
-        age: "2 anos",
-        species: "dog",
-        breed: "SRD",
-        sex: "male",
-        size: "medium",
-        profilePhoto: "foto.jpg",
-        responsibleUserId: user.id,
-        microchipped: false,
-        vaccinated: false,
-        neutered: false,
-        dewormed: false,
-        needsHealthCare: false,
-        physicalLimitation: false,
-        visualLimitation: false,
-        hearingLimitation: false,
-        sourceType: "PESSOA_FISICA",
-        sourceName: "Tutor",
-      },
+    const petName = `Pet Segredo ${new Date().toISOString()}`;
+    const [pet] = await criarPetsViaApi(request, {
+      quantity: 1,
+      names: [petName],
+      owner: user,
     });
-    expect(petResposta.ok()).toBeTruthy();
-    const pet = (await petResposta.json()).data;
 
     // Login inicial para criar o pet
     await fazerLogin(page, usuario);
 
     // Validação do pet
     await page.goto("/");
-    const elements = page.getByRole("img", { name: "Pet Segredo" });
+    const elements = page.getByRole("img", { name: petName });
     // OBS: Pode duplicar por conta do carousel ser um loop infinito, mas o importante é garantir que ele aparece
-    expect(await elements.count()).toBeGreaterThan(1);
+    expect(await elements.count()).toBeGreaterThanOrEqual(1);
 
     // 2. Desativar conta
     await page.goto("/profile");
@@ -71,9 +55,7 @@ test.describe("profile-workflow", () => {
     expect(petEncontrado).toBeUndefined();
 
     await page.goto("/");
-    await expect(
-      page.getByRole("heading", { name: "Pet Segredo" }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: petName })).toHaveCount(0);
 
     // C) Usuário não deve ser encontrado na API
     const respostaPerfil = await request.get(`${BASE_API}/api/users/me`);
@@ -81,15 +63,13 @@ test.describe("profile-workflow", () => {
 
     // D) Pet não deve ser encontrado na pagina inicial
     await page.goto("/");
-    await expect(page.getByRole("img", { name: "Pet Segredo" })).toHaveCount(0);
+    await expect(page.getByRole("img", { name: petName })).toHaveCount(0);
   });
 
   test("edita, salva, navega e verifica persistência do perfil do usuário", async ({
     page,
     request,
   }) => {
-    const BASE_API = process.env.BASE_API ?? "http://localhost:3001";
-
     // 1. Criar usuário e login
     const usuario = gerarUsuarioUnico("profilePersist");
     await criarUsuarioViaApi(request, usuario);

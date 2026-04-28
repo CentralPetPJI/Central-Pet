@@ -33,14 +33,14 @@ export type PerfilLocalizacaoE2E = {
 };
 
 /**
- * Gera dados unicos de usuario para testes E2E.
+ * Gera dados únicos de usuário para testes E2E
  */
 export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
   const sufixo = `${Date.now()}${Math.floor(Math.random() * 1_000_000)}`;
   const cpf = sufixo.replace(/\D/g, "").padStart(11, "0").slice(-11);
 
   return {
-    fullName: `Usuario ${prefixo} ${sufixo.slice(-6)}`,
+    fullName: `Usuário ${prefixo} ${sufixo.slice(-6)}`,
     email: `${prefixo}.${sufixo}@example.com.br`,
     password: SENHA_PADRAO,
     cpf,
@@ -50,7 +50,7 @@ export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
 }
 
 /**
- * Cria usuario via API do backend.
+ * Cria usuário via API do backend
  */
 export async function criarUsuarioViaApi(
   request: APIRequestContext,
@@ -81,7 +81,7 @@ export async function criarUsuarioViaApi(
       lastError = err;
       const message =
         err && typeof err === "object" && "message" in err
-          ? (err as { message?: string }).message
+          ? (err as any).message
           : "";
       // Retry on transient connection errors
       if (
@@ -107,7 +107,35 @@ export async function criarUsuarioViaApi(
 }
 
 /**
- * Faz login no frontend via UI.
+ * Faz login via API e retorna os cookies de sessão
+ */
+export async function fazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<void> {
+  const resposta = await request.post(`${API_BASE_URL}/auth/login`, {
+    data: {
+      email: usuario.email,
+      password: usuario.password,
+    },
+  });
+
+  expect(resposta.ok()).toBeTruthy();
+}
+
+/**
+   Cria usuario e faz login via API
+  */
+export async function criarUsuarioEFazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<UsuarioCriadoE2E> {
+  const criado = await criarUsuarioViaApi(request, usuario);
+  await fazerLoginViaApi(request, usuario);
+  return criado;
+}
+/**
+ * Faz login no frontend via UI
  */
 export async function fazerLogin(
   page: Page,

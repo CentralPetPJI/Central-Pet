@@ -1,0 +1,169 @@
+name: notify
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 🧠 Extrair info relevante da PR
+      - name: Extrair resumo da PR com IA
+        id: ai-summary
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        uses: actions/ai-inference@v1
+        with:
+          prompt: |
+            Você é um assistente técnico.
+
+            A partir da descrição de uma Pull Request, extraia e organize APENAS:
+
+            1. O que foi feito (resumo curto)
+            2. Como testar (passo a passo)
+
+            Regras:
+            - Seja direto
+            - Use bullet points
+            - Se não tiver informação, escreva "Não informado"
+
+            Formato de saída:
+
+            🚀 O que foi feito:
+            - ...
+
+            🧪 Como testar:
+            1.
+            2.
+            3.
+
+            Texto da PR:
+            ${{ github.event.pull_request.body }}
+
+      # 🛟 Fallback (caso IA falhe)
+      - name: Definir mensagem final
+        id: final-message
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          AI_SUMMARY: ${{ steps.ai-summary.outputs.response }}
+        run: |
+          # Função para truncar string (limite seguro de ~500 chars)
+          truncate_text() {
+            local text="$1"
+            local limit=500
+            if [ ${#text} -gt $limit ]; then
+              echo "${text:0:$((limit-3))}... (truncado)"
+            else
+              echo "$text"
+            fi
+          }
+
+          # Extrai seção "Como testar" de um texto (case-insensitive)
+          extract_test_section() {
+            printf '%s\n' "$1" | awk 'BEGIN{found=0}
+              tolower($0) ~ /como testar/ {found=1; next}
+              found && /^#{1,6}[[:space:]]/ {exit}
+              found {print}
+              END{if(found==0) exit 1}'
+          }
+
+          # Priorizar extração da seção "Como testar" do AI_SUMMARY
+          if [ -n "$AI_SUMMARY" ]; then
+            TEST_SECTION=$(extract_test_section "$AI_SUMMARY" || true)
+            if [ -n "$TEST_SECTION" ]; then
+              SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "🧪 Como testar (extraído do resumo da IA):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              # Tenta extrair do corpo da PR antes de enviar o resumo completo
+              TEST_SECTION=$(extract_test_section "$PR_BODY" || true)
+              if [ -n "$TEST_SECTION" ]; then
+                SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+                echo "message<<EOF" >> $GITHUB_OUTPUT
+                echo "🧪 Como testar (extraído da descrição):" >> $GITHUB_OUTPUT
+                printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+              else
+                SAFE_SUMMARY=$(truncate_text "$AI_SUMMARY")
+                echo "message<<EOF" >> $GITHUB_OUTPUT
+                printf '%s\n' "$SAFE_SUMMARY" >> $GITHUB_OUTPUT
+                echo "EOF" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            # AI_SUMMARY vazio: tentar extrair do corpo da PR
+            TEST_SECTION=$(extract_test_section "$PR_BODY" || true)
+            if [ -n "$TEST_SECTION" ]; then
+              SAFE_SECTION=$(truncate_text "$TEST_SECTION")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
+              echo "" >> $GITHUB_OUTPUT
+              echo "🧪 Como testar (extraído da descrição):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_SECTION" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              SAFE_BODY=$(truncate_text "$PR_BODY")
+              echo "message<<EOF" >> $GITHUB_OUTPUT
+              echo "⚠️ Não foi possível extrair resumo automaticamente." >> $GITHUB_OUTPUT
+              echo "" >> $GITHUB_OUTPUT
+              echo "📄 Descrição original (truncada):" >> $GITHUB_OUTPUT
+              printf '%s\n' "$SAFE_BODY" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+
+      # Debug: mostrar mensagem final (para logs)
+      - name: mostrar mensagem final
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        run: |
+          echo "==== START FINAL MESSAGE ===="
+          echo "${{ steps.final-message.outputs.message }}"
+          echo "==== END FINAL MESSAGE ===="
+
+      # 🎉 PR aberto
+      - name: Notificar PR aberto no Discord
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        uses: appleboy/discord-action@v1.2.0
+        with:
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          username: "Dancer"
+          color: "#48f442"
+          message: |
+            🎉 Novo Pull Request!
+
+            **${{ github.event.pull_request.title }}**
+
+            👤 Autor: ${{ github.event.pull_request.user.login }}
+
+            🔗 [PR](${{ github.event.pull_request.html_url }})
+
+      # 🚀 PR mergeado
+      - name: Notificar PR mergeado
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        uses: appleboy/discord-action@v1.2.0
+        with:
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          username: "Dancer"
+          color: "#00c3ff"
+          message: |
+            🚀 Pull Request mesclado!
+
+            **${{ github.event.pull_request.title }}**
+
+            👤 Autor: ${{ github.event.pull_request.user.login }}
+
+            🔗 [PR](${{ github.event.pull_request.html_url }})

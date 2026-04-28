@@ -60,7 +60,9 @@ const PetPersonalityProfilePage = () => {
         }
 
         const petData = response.data.data;
-        const normalizedLocation = petData.city ? `${petData.city} - ${petData.state}` : '';
+        const city = petData.city?.trim() ?? '';
+        const state = petData.state?.trim() ?? '';
+        const normalizedLocation = city && state ? `${city} - ${state}` : city || state;
 
         setFormData(mapPetApiResponseToRegisterFormData(petData));
         setLocationText(normalizedLocation);

@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
 import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
+import { SITE_NAME } from '@/lib/site-config';
 
 const roleLabelMap = {
   PESSOA_FISICA: 'Pessoa física',
@@ -77,7 +78,7 @@ const Header = () => {
             className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
           >
             <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
-            <p className="m-0 text-base font-medium">Pet Central</p>
+            <p className="m-0 text-base font-medium">{SITE_NAME}</p>
           </Link>
 
           {/* Navegação Desktop */}
@@ -221,7 +222,7 @@ const Header = () => {
             {currentUser ? (
               <div className="space-y-2">
                 <NavLink to={routes.pets.mine.path}>🐾 Meus Pets</NavLink>
-                <NavLink to={routes.adoptionRequests.received.path}>
+                <NavLink to={routes.adoptionRequests.path}>
                   <span className="inline-flex items-center gap-2">
                     <ClipboardList className="h-4 w-4 text-cyan-700" />
                     <span>Solicitações</span>

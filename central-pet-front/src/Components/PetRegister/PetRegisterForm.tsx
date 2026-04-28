@@ -135,10 +135,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
           normalizedFormData,
         );
       } else {
-        response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
-          ...normalizedFormData,
-          responsibleUserId: currentUser.id,
-        });
+        response = await api.post<{ message: string; data: PetApiResponse }>(
+          '/pets',
+          normalizedFormData,
+        );
       }
 
       const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
