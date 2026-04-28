@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDate,
   IsEmail,
   IsIn,
@@ -56,4 +57,8 @@ export class CreateUserDto {
     message: 'cnpj must contain exactly 14 alphanumeric characters',
   })
   cnpj?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  mustChangePassword?: boolean;
 }

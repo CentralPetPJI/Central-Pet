@@ -40,7 +40,7 @@ export class AuthService {
       message: 'Login bem-sucedido',
       data: {
         sessionId: session.id,
-        user: user,
+        user: this.usersService.toPublicUser(user),
       },
     };
   }

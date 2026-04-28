@@ -50,7 +50,7 @@ export function UserMenu() {
       ? [
           {
             label: 'Administração',
-            path: routes.admin.path,
+            path: routes.admin.dashboard.path,
             icon: <UserRound className="h-4 w-4 text-purple-600" />,
           },
           { divider: true as const },

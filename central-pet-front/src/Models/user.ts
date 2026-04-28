@@ -18,6 +18,7 @@ export type UserProfile = {
   createdAt: string;
   petsCount: number;
   deleted?: boolean;
+  mustChangePassword?: boolean;
 };
 
 export type UpdateProfileData = {

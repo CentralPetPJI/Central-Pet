@@ -26,6 +26,7 @@ export type AuthUser = {
   foundedAt?: string;
   createdAt: string;
   updatedAt: string;
+  mustChangePassword?: boolean;
 };
 
 export type LoginCredentials = {

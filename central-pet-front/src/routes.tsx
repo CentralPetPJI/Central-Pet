@@ -9,6 +9,7 @@ import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
 import AdminPage from '@/Pages/Admin/AdminPage';
+import SetupPassword from '@/Pages/Admin/SetupPassword';
 
 import { AuthGuard } from '@/Components/Auth/AuthGuard';
 
@@ -42,9 +43,19 @@ export const routes = {
     ),
   } satisfies AppRoute,
   admin: {
-    path: '/admin',
-    element: <AdminPage />,
-  } satisfies AppRoute,
+    dashboard: {
+      path: '/admin',
+      element: <AdminPage />,
+    } satisfies AppRoute,
+    setupPassword: {
+      path: '/admin/setup-password',
+      element: (
+        <AuthGuard>
+          <SetupPassword />
+        </AuthGuard>
+      ),
+    } satisfies AppRoute,
+  },
   adoptionRequests: {
     path: '/adoption-requests',
     element: (

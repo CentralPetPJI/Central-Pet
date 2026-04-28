@@ -42,9 +42,10 @@ export class AdminService {
       email: data.email,
       password: tempPassword,
       role: 'ADMIN' as const,
+      mustChangePassword: true,
     };
 
-    const result = await this.usersService.create(createDto as any);
+    const result = await this.usersService.create(createDto);
 
     // record audit log
     if (this.auditService) {

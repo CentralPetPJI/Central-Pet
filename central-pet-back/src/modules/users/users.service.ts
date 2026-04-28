@@ -8,7 +8,8 @@ import {
 import { AuditService } from '@/modules/audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hashPassword } from '../auth/password.util';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { hashPassword, verifyPassword } from '../auth/password.util';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
@@ -51,6 +52,7 @@ export class UsersService {
           birthDate: createUserDto.birthDate,
           cpf: normalizedCpf,
           passwordHash,
+          mustChangePassword: createUserDto.mustChangePassword || false,
         },
       });
 
@@ -127,6 +129,7 @@ export class UsersService {
         website: user.website,
         foundedAt: user.foundedAt,
         createdAt: user.createdAt,
+        mustChangePassword: user.mustChangePassword,
         petsCount: user._count?.responsiblePets ?? 0,
       },
     };
@@ -222,6 +225,41 @@ export class UsersService {
     ]);
 
     return { message: 'User deactivated successfully' };
+  }
+
+  async updatePassword(id: string, dto: UpdatePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await verifyPassword(dto.currentPassword, user.passwordHash);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('A senha atual está incorreta');
+    }
+
+    const newPasswordHash = await hashPassword(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash: newPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: id,
+        action: 'CHANGE_PASSWORD',
+        targetId: id,
+        targetType: 'USER',
+      });
+    }
+
+    return { message: 'Senha atualizada com sucesso' };
   }
 
   toPublicUser(user: PersistedUser): PublicUser {

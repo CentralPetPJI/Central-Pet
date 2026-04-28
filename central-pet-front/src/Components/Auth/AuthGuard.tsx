@@ -12,7 +12,7 @@ interface AuthGuardProps {
  * Se o usuário não estiver logado, redireciona para a página de login.
  */
 export const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,8 +23,18 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
         state: { from: location.pathname },
         replace: true,
       });
+      return;
     }
-  }, [isAuthenticated, isLoading, navigate, location]);
+
+    // Redireciona para troca de senha se necessário
+    if (
+      isAuthenticated &&
+      currentUser?.mustChangePassword &&
+      location.pathname !== routes.admin.setupPassword.path
+    ) {
+      navigate(routes.admin.setupPassword.path, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, location, currentUser]);
 
   if (isLoading) {
     return (
