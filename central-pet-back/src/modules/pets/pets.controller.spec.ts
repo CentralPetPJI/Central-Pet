@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
+import { PetSeedService } from './pet-seed.service';
 
 describe('Controlador de pets', () => {
   let controller: PetsController;
@@ -37,6 +38,12 @@ describe('Controlador de pets', () => {
           useValue: {
             validateUser: () => Promise.resolve(true),
             ensureUsersExist: () => Promise.resolve(),
+          },
+        },
+        {
+          provide: PetSeedService,
+          useValue: {
+            ensureSeed: () => Promise.resolve(),
           },
         },
       ],
