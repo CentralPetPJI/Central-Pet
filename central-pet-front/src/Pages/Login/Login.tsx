@@ -64,6 +64,16 @@ function getErrorMessage(error: unknown): string {
   return 'Não foi possível entrar. Verifique suas credenciais e tente novamente.';
 }
 
+/**
+ * Render the login page UI, manage the sign-in form, and handle authentication flow.
+ *
+ * Observes auth state and redirects authenticated users to the home route. Initializes
+ * the form with optional values from location.state (e.g., post-registration email),
+ * displays a loading card while auth status is being determined, and shows contextual
+ * success or error feedback from login attempts (using getErrorMessage on failures).
+ *
+ * @returns The login page UI including the form, feedback banners, loading state, and marketing panel.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
