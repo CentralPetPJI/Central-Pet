@@ -102,8 +102,8 @@ export class CreatePetDto {
   selectedPersonalities?: string[];
 
   @IsString()
-  @IsIn(['ONG', 'PESSOA_FISICA', 'ADMIN'])
-  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
+  @IsIn(['ONG', 'PESSOA_FISICA'])
+  sourceType: 'ONG' | 'PESSOA_FISICA';
 
   @IsString()
   @IsNotEmpty()
