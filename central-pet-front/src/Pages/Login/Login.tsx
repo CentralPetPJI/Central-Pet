@@ -216,7 +216,7 @@ export default function Login() {
             <h1 className="mt-4 max-w-md text-3xl font-black leading-tight">
               Entre para continuar ajudando animais.
             </h1>
-            <p className="mt-4 max-w-lg text-base text-neutral-700 hidden md:block">
+            <p className="mt-4 max-w-lg text-neutral-700 text-sm sm:text-base">
               Acesse sua conta para gerenciar adoções, denúncias e acompanhar os pets cadastrados.
             </p>
           </div>
