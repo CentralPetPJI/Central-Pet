@@ -47,7 +47,7 @@ describe('UsersService', () => {
     cpf: '12345678901',
   });
 
-  it('deve criar um usuario adotante', async () => {
+  it('deve criar um usuário adotante', async () => {
     const result = await service.create(makeAdopterDto());
 
     expect(result.message).toBe('User created successfully');

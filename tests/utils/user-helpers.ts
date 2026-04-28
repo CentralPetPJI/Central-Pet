@@ -122,8 +122,13 @@ export async function fazerLogin(
 }
 
 /**
- * Atualiza a localizacao do usuario autenticado quando o teste precisa
- * alterar o perfil apos o cadastro inicial.
+ * Atualiza a localização (cidade/estado) do perfil do usuário via PATCH /users/me.
+ *
+ * Precondição: fazerLogin deve ser chamado antes desta função
+ * para que a sessão autenticada seja compartilhada.
+ *
+ * `@param` page - Instância da página Playwright
+ * `@param` localizacao - Objeto com city e state (padrão: São Paulo, SP)
  */
 export async function atualizarLocalizacaoPerfil(
   page: Page,

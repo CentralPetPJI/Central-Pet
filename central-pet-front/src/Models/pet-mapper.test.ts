@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mapPetApiResponseToPetListItem } from './pet-mapper';
 
 describe('mapPetApiResponseToPetListItem', () => {
-  it('normaliza o item da API e aplica status padrao quando ausente', () => {
+  it('normaliza o item da API e aplica status padrão quando ausente', () => {
     const mapped = mapPetApiResponseToPetListItem({
       id: 'pet-1',
       profilePhoto: 'https://example.com/pet.png',

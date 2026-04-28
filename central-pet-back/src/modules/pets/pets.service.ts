@@ -285,7 +285,7 @@ export class PetsService {
         create: {
           id: String(pet.id),
           name: pet.name,
-          ageText: pet.ageMonths ? `${pet.ageMonths} meses` : 'Idade nao informada',
+          ageText: pet.ageMonths ? `${pet.ageMonths} meses` : 'Idade não informada',
           species: this.normalizeSpeciesForPersistence(pet.species),
           breed: pet.breed ?? 'SRD',
           sex: this.normalizeSexForPersistence(pet.sex ?? 'male'),
@@ -315,7 +315,7 @@ export class PetsService {
 
   async create(createPetDto: CreatePetDto) {
     if (!createPetDto.responsibleUserId) {
-      throw new BadRequestException('O campo responsibleUserId e obrigatorio');
+      throw new BadRequestException('O campo responsibleUserId é obrigatório');
     }
 
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
@@ -391,7 +391,7 @@ export class PetsService {
     });
 
     if (!pet || pet.deleted) {
-      throw new NotFoundException(`Pet com id "${id}" nao encontrado`);
+      throw new NotFoundException(`Pet com id "${id}" não encontrado`);
     }
 
     return {

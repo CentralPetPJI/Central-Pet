@@ -30,7 +30,7 @@ export type MockPet = {
 /**
  * Pets seed vinculados aos mock users:
  * - ONG Patas do Centro: Buddy, Luna
- * - Lar Temporario Quatro Patas: Max
+ * - Lar Temporário Quatro Patas: Max
  * - Juliana Martins: Mel, Thor
  */
 export const mockPets: MockPet[] = [
@@ -43,7 +43,7 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Dourado',
-    description: 'Golden retriever amigavel, ativo e adora brincar de buscar',
+    description: 'Golden retriever amigável, ativo e adora brincar de buscar',
     vaccinated: true,
     neutered: true,
     dewormed: true,
@@ -83,7 +83,7 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Preto',
-    description: 'Labrador tranquilo, otimo com criancas',
+    description: 'Labrador tranquilo, ótimo com criancas',
     vaccinated: true,
     neutered: false,
     dewormed: true,
@@ -123,7 +123,7 @@ export const mockPets: MockPet[] = [
     size: 'large',
     sex: 'male',
     color: 'Branco e marrom',
-    description: 'Cao forte e protetor, precisa de adotante experiente',
+    description: 'Cão forte e protetor, precisa de adotante experiente',
     vaccinated: true,
     neutered: true,
     dewormed: true,

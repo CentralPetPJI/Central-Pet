@@ -226,7 +226,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             petId={petId}
             saveMessage={saveMessage}
             selectedPersonalitiesCount={selectedPersonalities.length}
-            isSaveDisabled={isResponsibleLocationMissing}
+            isSaveDisabled={isAuthLoading || isInitializing || isResponsibleLocationMissing}
           />
           <PetRegisterPhotosSection
             onGalleryPhotosChange={handleGalleryPhotosChange}
