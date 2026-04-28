@@ -83,11 +83,6 @@ export class UpdatePetDto {
 
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
-  @IsNotEmpty()
-  responsibleUserId?: string;
-
-  @ValidateIf((_, value) => value !== undefined)
-  @IsString()
   @IsIn(['ONG', 'PESSOA_FISICA'])
   sourceType?: 'ONG' | 'PESSOA_FISICA';
 

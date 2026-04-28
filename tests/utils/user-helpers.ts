@@ -94,6 +94,34 @@ export async function criarUsuarioViaApi(
 }
 
 /**
+ * Faz login via API e retorna os cookies de sessão
+ */
+export async function fazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<void> {
+  const resposta = await request.post(`${API_BASE_URL}/auth/login`, {
+    data: {
+      email: usuario.email,
+      password: usuario.password,
+    },
+  });
+
+  expect(resposta.ok()).toBeTruthy();
+}
+
+/**
+   Cria usuario e faz login via API
+  */
+export async function criarUsuarioEFazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<UsuarioCriadoE2E> {
+  const criado = await criarUsuarioViaApi(request, usuario);
+  await fazerLoginViaApi(request, usuario);
+  return criado;
+}
+/**
  * Faz login no frontend via UI
  */
 export async function fazerLogin(
