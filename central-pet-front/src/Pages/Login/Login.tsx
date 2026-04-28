@@ -64,6 +64,13 @@ function getErrorMessage(error: unknown): string {
   return 'Não foi possível entrar. Verifique suas credenciais e tente novamente.';
 }
 
+/**
+ * Render the login page and manage the authentication flow, including form validation, submission, feedback, and redirects for authenticated users.
+ *
+ * Displays a loading screen while authentication state initializes, shows a validated email/password form with inline errors and feedback messages, and navigates to the home route on successful login.
+ *
+ * @returns The Login page React element.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
