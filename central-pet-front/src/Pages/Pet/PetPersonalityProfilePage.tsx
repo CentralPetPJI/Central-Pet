@@ -98,7 +98,9 @@ const PetPersonalityProfilePage = () => {
       navigate(routes.login.path);
       return;
     }
-
+    {
+      /*TODO: Criar modal em vez de um prompt */
+    }
     const reason = window.prompt('Por que você deseja denunciar este pet?');
     if (!reason) return;
 
