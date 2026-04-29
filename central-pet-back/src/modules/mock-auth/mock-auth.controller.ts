@@ -4,11 +4,9 @@ import {
   Get,
   Post,
   UnauthorizedException,
-  ForbiddenException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Cookies } from '@/decorators/cookies.decorator';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { CookieInterceptor } from '@/interceptors/cookie.interceptor';
 import { buildSessionCookieValue, isMockAuthEnabled } from '@/utils/session-cookie';
