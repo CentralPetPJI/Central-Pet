@@ -128,7 +128,9 @@ export class AdoptionRequestSimulationService {
       });
     }
 
-    const persistedUsersById = await this.userPersistence.buildUserMap([request.adopterId]);
+    const userIds = [request.adopterId];
+    if (request.responsibleUserId) userIds.push(request.responsibleUserId);
+    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
     const petFound = await this.petsService.findByIdForAdoption(request.petId);
 
@@ -138,12 +140,25 @@ export class AdoptionRequestSimulationService {
 
     const petForResponse = mapPetForResponse(petFound);
 
-    const adopterForResponse = mapAdopterForResponse(request.adopterId, persistedUsersById);
+    const adopterForResponse = mapAdopterForResponse(
+      request.adopterId,
+      persistedUsersById,
+      request.adopterContactShareConsent,
+    );
+
+    const responsibleForResponse = request.responsibleUserId
+      ? mapAdopterForResponse(
+          request.responsibleUserId,
+          persistedUsersById,
+          request.responsibleContactShareConsent,
+        )
+      : undefined;
 
     const data = {
       id: request.id,
       pet: petForResponse,
       adopter: adopterForResponse,
+      responsible: responsibleForResponse,
       message: request.message,
       adopterContactShareConsent: request.adopterContactShareConsent,
       responsibleContactShareConsent: request.responsibleContactShareConsent,

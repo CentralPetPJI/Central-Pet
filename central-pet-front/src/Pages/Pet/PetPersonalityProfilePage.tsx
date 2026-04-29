@@ -113,7 +113,7 @@ const PetPersonalityProfilePage = () => {
       /*TODO: Criar modal em vez de um prompt */
     }
     const reason = window.prompt('Por que você deseja denunciar este pet?');
-    if (!reason) return;
+    if (!reason) alert('Descreva o motivo da denúncia.');
 
     try {
       await api.post('/moderation/reports', {

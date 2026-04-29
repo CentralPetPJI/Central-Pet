@@ -47,9 +47,18 @@ export function SentAdoptionRequestCard({ request }: SentAdoptionRequestCardProp
         <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
           <p className="flex items-center gap-2 font-semibold text-slate-900">
             <UserRound className="h-4 w-4 text-cyan-700" />
-            <span>{request.pet.sourceName}</span>
+            <span>{request.responsible?.name ?? request.pet.sourceName}</span>
           </p>
           <p className="mt-1 text-xs text-slate-500">Responsável pelo pet</p>
+          {request.responsible &&
+          request.responsibleContactShareConsent &&
+          (request.responsible.email || request.responsible.phone || request.responsible.mobile) ? (
+            <div className="mt-2 text-sm text-slate-700">
+              {request.responsible.email ? <div>✉️ {request.responsible.email}</div> : null}
+              {request.responsible.phone ? <div>📞 {request.responsible.phone}</div> : null}
+              {request.responsible.mobile ? <div>📱 {request.responsible.mobile}</div> : null}
+            </div>
+          ) : null}
         </div>
       </div>
 

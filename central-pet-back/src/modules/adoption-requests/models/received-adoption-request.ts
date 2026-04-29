@@ -12,17 +12,21 @@ export type ReceivedAdoptionRequestPet = {
   sourceName: string | null | undefined;
 };
 
-export type ReceivedAdoptionRequestAdopter = {
+export type ReceivedAdoptionRequestUser = {
   id: string;
   name: string;
   city: string;
   state: string;
+  email?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
 };
 
 export type ReceivedAdoptionRequest = {
   id: string;
   pet: ReceivedAdoptionRequestPet;
-  adopter: ReceivedAdoptionRequestAdopter;
+  adopter: ReceivedAdoptionRequestUser;
+  responsible?: ReceivedAdoptionRequestUser;
   message: string;
   adopterContactShareConsent: boolean;
   responsibleContactShareConsent: boolean;
@@ -46,21 +50,36 @@ export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionR
 }
 
 export function mapAdopterForResponse(
-  adopterId: string,
-  persistedUsersById: Map<string, { id: string; fullName: string }>,
-): ReceivedAdoptionRequestAdopter {
-  const persistedUser = persistedUsersById.get(adopterId);
+  userId: string,
+  persistedUsersById: Map<
+    string,
+    {
+      id: string;
+      fullName: string;
+      email?: string | null;
+      city?: string | null;
+      state?: string | null;
+      phone?: string | null;
+      mobile?: string | null;
+    }
+  >,
+  includeContact = false,
+): ReceivedAdoptionRequestUser {
+  const persistedUser = persistedUsersById.get(userId);
   if (persistedUser) {
     return {
       id: persistedUser.id,
       name: persistedUser.fullName,
-      city: '',
-      state: '',
+      city: persistedUser.city ?? '',
+      state: persistedUser.state ?? '',
+      email: includeContact ? (persistedUser.email ?? null) : undefined,
+      phone: includeContact ? (persistedUser.phone ?? null) : undefined,
+      mobile: includeContact ? (persistedUser.mobile ?? null) : undefined,
     };
   }
 
   return {
-    id: adopterId,
+    id: userId,
     name: 'Usuário não encontrado',
     city: '',
     state: '',

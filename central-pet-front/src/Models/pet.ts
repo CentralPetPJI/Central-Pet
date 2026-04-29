@@ -81,6 +81,18 @@ export interface ReceivedAdoptionRequest {
     name: string;
     city: string;
     state: string;
+    email?: string | null;
+    phone?: string | null;
+    mobile?: string | null;
+  };
+  responsible?: {
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+    email?: string | null;
+    phone?: string | null;
+    mobile?: string | null;
   };
   message: string;
   responsibleContactShareConsent: boolean;

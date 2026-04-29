@@ -24,6 +24,7 @@ describe('UsersService', () => {
       get: jest.fn().mockReturnValue('1.0.0'),
     } as unknown as jest.Mocked<ConfigService>;
 
+    // @ts-expect-error verificar porque esta com erro TS2345: Argument of type
     prismaMock.user.create.mockImplementation((args) => ({
       id: 'user-1',
       fullName: args.data.fullName,
