@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { CheckCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { resolveBackendId } from '@/storage/pets';
+import { useAuth } from '@/lib/auth-context';
 import type { PetRegisterFormData } from '@/storage/pets';
 
 interface AdoptionRequestAreaProps {
@@ -19,8 +21,29 @@ export default function AdoptionRequestArea({
   const [consent, setConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
+  const { currentUser } = useAuth();
   const backendId = petId ? resolveBackendId(petId) : undefined;
+
+  // reset sent state when viewing a different pet and check if a pending request already exists
+  useEffect(() => {
+    setSent(false);
+
+    const checkExisting = async () => {
+      try {
+        if (!backendId || !currentUser?.id) return;
+        const resp = await api.get<{ exists: boolean }>('/adoption-requests/check', {
+          params: { petId: String(backendId) },
+        });
+        if (resp.data?.exists) setSent(true);
+      } catch (_err) {
+        // ignore errors — we'll allow user to send and backend will validate
+      }
+    };
+
+    void checkExisting();
+  }, [backendId, currentUser?.id]);
 
   const handleSubmit = async () => {
     if (!backendId) {
@@ -50,9 +73,9 @@ export default function AdoptionRequestArea({
       setShowForm(false);
       setMessage('');
       setConsent(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erro ao enviar solicitação');
+      setSent(true);
+    } catch (_err) {
+      setError('Erro ao enviar solicitação');
     } finally {
       setIsSubmitting(false);
     }
@@ -62,13 +85,28 @@ export default function AdoptionRequestArea({
     <div className="flex flex-col gap-3">
       {!showForm ? (
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
-            onClick={() => setShowForm(true)}
-          >
-            Solicitar Adoção
-          </button>
+          {sent ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700"
+              disabled
+            >
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              Solicitação enviada
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+              onClick={() => {
+                setSent(false);
+                setShowForm(true);
+              }}
+            >
+              Solicitar Adoção
+            </button>
+          )}
+
           <p className="text-sm text-slate-600">
             Interessado? Envie uma solicitação ao tutor do pet.
           </p>

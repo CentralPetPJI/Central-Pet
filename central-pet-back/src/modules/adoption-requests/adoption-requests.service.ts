@@ -121,6 +121,20 @@ export class AdoptionRequestsService {
     };
   }
 
+  /**
+   * Verifica se existe uma solicitação pendente para um adotante em um pet específico.
+   * Retorna true se existir (PENDING ou IN_PROCESS), false caso contrário.
+   */
+  async hasRequest(adopterId: string, petId: string): Promise<boolean> {
+    const found = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        adopterId,
+        petId,
+      },
+    });
+    return !!found;
+  }
+
   async simulateReceived(
     userId: string,
     dto: SimulateAdoptionRequestDto,
