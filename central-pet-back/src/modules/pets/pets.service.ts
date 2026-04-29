@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { AuditService } from '@/modules/audit/audit.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -26,6 +27,7 @@ export class PetsService {
     private readonly personalityTraitsService: PersonalityTraitsService,
     private readonly userPersistence: UserPersistenceService,
     private readonly petSeedService: PetSeedService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   private normalizeResponsibleLocation(location?: {
@@ -91,6 +93,16 @@ export class PetsService {
 
     if (!responsibleUser || responsibleUser.deleted) {
       throw new NotFoundException(`Usuário com id "${responsibleUserId}" não encontrado`);
+    }
+
+    if (
+      responsibleUser.role &&
+      responsibleUser.role !== 'ONG' &&
+      responsibleUser.role !== 'PESSOA_FISICA'
+    ) {
+      throw new BadRequestException(
+        'Apenas ONGs e pessoas físicas podem ser responsáveis por pets.',
+      );
     }
 
     return {
@@ -167,6 +179,16 @@ export class PetsService {
         deleted: false,
       },
     });
+
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: responsibleUserId,
+        action: 'CREATE_PET',
+        targetId: createdPet.id,
+        targetType: 'PET',
+        details: { name: createPetDto.name },
+      });
+    }
 
     return {
       message: 'Pet created successfully',

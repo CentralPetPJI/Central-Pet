@@ -11,7 +11,7 @@ export type AuthUser = {
   id: string;
   fullName: string;
   email: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
@@ -27,6 +27,7 @@ export type AuthUser = {
   acceptedTermsAt?: string;
   createdAt: string;
   updatedAt: string;
+  mustChangePassword?: boolean;
 };
 
 export type LoginCredentials = {
@@ -38,7 +39,7 @@ export type RegisterData = {
   fullName: string;
   email: string;
   password: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;

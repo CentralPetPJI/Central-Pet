@@ -14,6 +14,8 @@ import { SITE_NAME } from '@/lib/site-config';
 const roleLabelMap = {
   PESSOA_FISICA: 'Pessoa física',
   ONG: 'ONG',
+  ADMIN: 'Administrador',
+  ROOT: 'Root',
 } as const;
 
 const Header = () => {
@@ -120,7 +122,7 @@ const Header = () => {
                 </option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.fullName} • {roleLabelMap[user.role]}
+                    {user.fullName} • {roleLabelMap[user.role] ?? user.role}
                   </option>
                 ))}
               </select>
@@ -267,7 +269,7 @@ const Header = () => {
                     </option>
                     {users.map((user) => (
                       <option key={user.id} value={user.id}>
-                        {user.fullName} • {roleLabelMap[user.role]}
+                        {user.fullName} • {roleLabelMap[user.role] ?? user.role}
                       </option>
                     ))}
                   </select>

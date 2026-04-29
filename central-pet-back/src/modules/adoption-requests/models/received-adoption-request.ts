@@ -8,7 +8,7 @@ export type ReceivedAdoptionRequestPet = {
   city: string;
   state: string;
   responsibleUserId: string | undefined;
-  sourceType: 'ONG' | 'PESSOA_FISICA' | undefined;
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName: string | null | undefined;
 };
 

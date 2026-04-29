@@ -26,3 +26,14 @@ export async function verifyPassword(password: string, storedHash: string) {
 
   return timingSafeEqual(storedKey, derivedKey);
 }
+
+/**
+ * Generate a cryptographically secure random password.
+ * Uses base64 encoding and normalizes URL-unsafe chars to letters, then trims to length.
+ */
+export function generateRandomPassword(length = 12) {
+  const bytes = Math.ceil((length * 3) / 4);
+  const raw = randomBytes(bytes).toString('base64');
+  // replace URL-unsafe base64 chars to keep the password simple, then trim
+  return raw.replace(/\+/g, 'A').replace(/\//g, 'B').replace(/=/g, 'C').slice(0, length);
+}

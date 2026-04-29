@@ -12,6 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import type { PublicUser } from './users.service';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { MockUser } from '@/mocks';
@@ -42,6 +43,21 @@ export class UsersController {
       throw new UnauthorizedException('Usuário não autenticado');
     }
     return this.usersService.update(user.id, updateUserDto);
+  }
+
+  @Patch('me/password')
+  @UseGuards(SessionGuard)
+  updatePassword(
+    @Body() updatePasswordDto: UpdatePasswordDto,
+    @CurrentUser() user: PublicUser | MockUser,
+  ) {
+    if (!user) {
+      throw new UnauthorizedException('Usuário não autenticado');
+    }
+    if (!['ADMIN', 'ROOT'].includes(user.role)) {
+      throw new UnauthorizedException('Essa função está disponível apenas para administradores');
+    }
+    return this.usersService.updatePassword(user.id, updatePasswordDto);
   }
 
   @Post('me/deactivate')

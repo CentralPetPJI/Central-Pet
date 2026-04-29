@@ -1,4 +1,4 @@
-import type { MockPet } from '@/mocks';
+import { MockPet } from '@/mocks';
 import { toISO } from '@/utils/date.util';
 
 export type PetAdoptionStatus = 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';

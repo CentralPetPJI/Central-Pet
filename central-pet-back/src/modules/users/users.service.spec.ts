@@ -6,6 +6,9 @@ import { UsersService } from './users.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { makePrismaMock } from '@/utils/prisma-mock';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
+import { hashPassword, verifyPassword } from '../auth/password.util';
+
+jest.mock('../auth/password.util');
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -21,10 +24,6 @@ describe('UsersService', () => {
       get: jest.fn().mockReturnValue('1.0.0'),
     } as unknown as jest.Mocked<ConfigService>;
 
-    // TODO: Verificar se é possível tipar melhor o args
-    // TS2345: Argument of type is not assignable to parameter of type
-
-    // @ts-expect-error prisma mock parcial para os cenarios do service
     prismaMock.user.create.mockImplementation((args) => ({
       id: 'user-1',
       fullName: args.data.fullName,
@@ -39,6 +38,7 @@ describe('UsersService', () => {
       passwordHash: args.data.passwordHash,
       acceptedTermsAt: args.data.acceptedTermsAt,
       acceptedTermsVersion: args.data.acceptedTermsVersion,
+      mustChangePassword: (args.data.mustChangePassword as boolean | null) ?? false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     }));
@@ -114,5 +114,56 @@ describe('UsersService', () => {
     delete invalidDto.cnpj;
 
     await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
+  });
+
+  describe('updatePassword', () => {
+    const userId = 'user-1';
+    const currentPassword = 'old-password';
+    const newPassword = 'new-password-123';
+    const passwordHash = 'hashed-old-password';
+
+    beforeEach(() => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: userId,
+        passwordHash,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      (verifyPassword as jest.Mock).mockReset();
+      (hashPassword as jest.Mock).mockReset();
+    });
+
+    it('deve atualizar a senha com sucesso quando a senha atual estiver correta', async () => {
+      (verifyPassword as jest.Mock).mockResolvedValue(true);
+      (hashPassword as jest.Mock).mockResolvedValue('new-hash');
+
+      const result = await service.updatePassword(userId, {
+        currentPassword,
+        newPassword,
+      });
+
+      expect(result.message).toBe('Senha atualizada com sucesso');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: {
+          passwordHash: 'new-hash',
+          mustChangePassword: false,
+        },
+      });
+    });
+
+    it('deve falhar quando a senha atual estiver incorreta', async () => {
+      (verifyPassword as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.updatePassword(userId, {
+          currentPassword: 'wrong-password',
+          newPassword,
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+    });
   });
 });

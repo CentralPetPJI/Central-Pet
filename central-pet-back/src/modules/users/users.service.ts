@@ -3,12 +3,16 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AuditService } from '@/modules/audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hashPassword } from '../auth/password.util';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { hashPassword, verifyPassword } from '../auth/password.util';
 import { PrismaService } from '@/prisma/prisma.service';
+import type { Prisma } from '../../../generated/prisma/client';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 type UserRecord = Awaited<ReturnType<PrismaService['user']['findUnique']>>;
@@ -22,9 +26,13 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly userPersistence: UserPersistenceService,
     private readonly configService: ConfigService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(
+    createUserDto: CreateUserDto,
+    options?: { mustChangePassword?: boolean; roleOverride?: 'ADMIN' | 'PESSOA_FISICA' | 'ONG' },
+  ) {
     this.validateCreateInput(createUserDto);
 
     if (!createUserDto.acceptTerms) {
@@ -54,11 +62,13 @@ export class UsersService {
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
+      const roleToPersist = options?.roleOverride ?? createUserDto.role;
+
       const newUser = await tx.user.create({
         data: {
           fullName: createUserDto.fullName.trim(),
           email: normalizedEmail,
-          role: createUserDto.role,
+          role: roleToPersist,
           birthDate: createUserDto.birthDate,
           cpf: normalizedCpf,
           organizationName: normalizedOrganizationName,
@@ -68,8 +78,20 @@ export class UsersService {
           passwordHash,
           acceptedTermsAt: new Date(),
           acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
+          mustChangePassword: options?.mustChangePassword ?? false,
         },
       });
+
+      // audit log: user creation
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: newUser.id,
+          action: 'CREATE_USER',
+          targetId: newUser.id,
+          targetType: 'USER',
+          details: { role: roleToPersist },
+        });
+      }
 
       return newUser;
     });
@@ -133,6 +155,7 @@ export class UsersService {
         website: user.website,
         foundedAt: user.foundedAt,
         createdAt: user.createdAt,
+        mustChangePassword: user.mustChangePassword,
         petsCount: user._count?.responsiblePets ?? 0,
       },
     };
@@ -174,6 +197,17 @@ export class UsersService {
         }),
       },
     });
+
+    // audit log: profile update (record changed fields)
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: id,
+        action: 'UPDATE_PROFILE',
+        targetId: id,
+        targetType: 'USER',
+        details: { updatedFields: Object.keys(updateUserDto) },
+      });
+    }
 
     return {
       message: 'User updated successfully',
@@ -217,6 +251,70 @@ export class UsersService {
     ]);
 
     return { message: 'User deactivated successfully' };
+  }
+
+  /**
+   * Perform deactivate steps inside an existing transaction client
+   */
+  async deactivateTransactional(tx: Prisma.TransactionClient, id: string) {
+    // reuse the same steps as deactivate but using the provided tx
+    await Promise.all([
+      tx.pet.updateMany({
+        where: { responsibleUserId: id },
+        data: { deleted: true, status: 'UNAVAILABLE' },
+      }),
+      tx.adoptionRequest.updateMany({
+        where: {
+          OR: [{ responsibleUserId: id }, { adopterId: id }],
+        },
+        data: { status: 'CANCELLED' },
+      }),
+      tx.session.deleteMany({ where: { userId: id } }),
+      tx.user.update({ where: { id }, data: { deleted: true } }),
+    ]);
+  }
+
+  /**
+   * Reactivate user inside provided transaction client. This restores the user's deleted flag.
+   * Note: business rules for restoring pets/adoption state are intentionally minimal — only the user row is reactivated.
+   */
+  async reactivateTransactional(tx: Prisma.TransactionClient, id: string) {
+    await tx.user.update({ where: { id }, data: { deleted: false } });
+  }
+
+  async updatePassword(id: string, dto: UpdatePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await verifyPassword(dto.currentPassword, user.passwordHash);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('A senha atual está incorreta');
+    }
+
+    const newPasswordHash = await hashPassword(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash: newPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: id,
+        action: 'CHANGE_PASSWORD',
+        targetId: id,
+        targetType: 'USER',
+      });
+    }
+
+    return { message: 'Senha atualizada com sucesso' };
   }
 
   toPublicUser(user: PersistedUser): PublicUser {

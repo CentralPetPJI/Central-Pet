@@ -2,7 +2,7 @@ export type UserProfile = {
   id: string;
   fullName: string;
   email: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
@@ -17,6 +17,8 @@ export type UserProfile = {
   foundedAt?: string;
   createdAt: string;
   petsCount: number;
+  deleted?: boolean;
+  mustChangePassword?: boolean;
 };
 
 export type UpdateProfileData = {

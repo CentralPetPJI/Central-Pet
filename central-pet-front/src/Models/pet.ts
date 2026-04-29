@@ -1,4 +1,5 @@
 import type { AdoptionRequestStatus } from './adoption-request-status';
+import { UserProfile } from '@/Models/user.ts';
 
 export interface Pet {
   id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
@@ -11,7 +12,7 @@ export interface Pet {
   city?: string;
   state?: string;
   responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
 }
 
@@ -44,11 +45,13 @@ export interface PetApiResponse {
   hearingLimitation: boolean;
   selectedPersonalities: string[];
   responsibleUserId: string;
+  responsibleUser?: UserProfile;
   adoptionStatus?: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;
 }
 
 export interface PetListItem {
@@ -70,7 +73,7 @@ export interface ReceivedAdoptionRequest {
     city: string;
     state: string;
     responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
     sourceName: string;
   };
   adopter: {
