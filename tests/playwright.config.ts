@@ -25,12 +25,18 @@ export default defineConfig({
       cwd: "..",
     },
   ],
+  // TODO: Verificar problema de concorrencia no adoption-workflow, por enquanto isso está ok, mas so foi necessario por erros de concorrencia
   projects: [
     {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      name: "adoption-workflow",
+      testMatch: /adoption-workflow\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "remaining-tests",
+      dependencies: ["adoption-workflow"],
+      testIgnore: /adoption-workflow\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });

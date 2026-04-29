@@ -39,7 +39,6 @@ test.describe.serial("Fluxo de Adoção", () => {
     });
     pet = pets[0];
   });
-
   test("deve realizar o fluxo completo de adoção: solicitação -> compartilhamento de contato -> aprovação", async ({
     page,
   }) => {
