@@ -33,10 +33,16 @@ test.describe("home", () => {
       page.getByRole("heading", { name: "Ultimos Pets" }),
     ).toBeVisible();
 
-    await page
-      .getByRole("img", { name: nomePetPrincipal })
-      .first()
-      .click({ force: true });
+    const carouselSection = page
+      .getByRole("heading", { name: "Ultimos Pets" })
+      .locator("xpath=ancestor::section[1]");
+    await carouselSection.hover();
+
+    const petImage = page
+      .locator(`img[alt="${nomePetPrincipal}"]:visible`)
+      .first();
+    await expect(petImage).toBeVisible();
+    await petImage.click();
 
     await expect(
       page.getByRole("heading", { level: 2, name: nomePetPrincipal }),

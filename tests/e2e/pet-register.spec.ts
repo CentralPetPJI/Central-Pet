@@ -35,20 +35,6 @@ test("cadastro cria pet e redireciona para o perfil", async ({
   await page.getByLabel("Sexo").selectOption("male");
   await page.getByLabel("Porte").selectOption("medium");
 
-  await page
-    .getByRole("textbox", { name: "Tutor", exact: true })
-    .fill("Teste E2E");
-  await page
-    .getByRole("textbox", { name: "Abrigo", exact: true })
-    .fill("Abrigo E2E");
-  await page
-    .getByRole("textbox", { name: "Cidade", exact: true })
-    .fill("Sao Paulo");
-  await page.getByLabel("Estado").selectOption("SP");
-  await page
-    .getByRole("textbox", { name: "Contato", exact: true })
-    .fill("11999999999");
-
   await page.getByRole("button", { name: "Salvar pet" }).click();
 
   // Redireciona para o perfil (ID numérico amigável)

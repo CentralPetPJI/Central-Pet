@@ -6,6 +6,7 @@ interface PetRegisterActionsProps {
   petId?: string;
   saveMessage: string;
   selectedPersonalitiesCount: number;
+  isSaveDisabled?: boolean;
 }
 
 const PetRegisterActions = ({
@@ -13,6 +14,7 @@ const PetRegisterActions = ({
   petId,
   saveMessage,
   selectedPersonalitiesCount,
+  isSaveDisabled = false,
 }: PetRegisterActionsProps) => {
   const navigate = useNavigate();
 
@@ -28,7 +30,8 @@ const PetRegisterActions = ({
         </span>
         <button
           type="submit"
-          className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          disabled={isSaveDisabled}
+          className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isEditMode ? 'Salvar alteracoes' : 'Salvar pet'}
         </button>

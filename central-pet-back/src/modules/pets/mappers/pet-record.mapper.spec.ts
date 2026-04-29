@@ -28,11 +28,6 @@ describe('PetMapper', () => {
     physicalLimitation: false,
     visualLimitation: false,
     hearingLimitation: false,
-    tutor: 'Rafael',
-    shelter: 'Abrigo',
-    city: 'São Paulo',
-    state: 'SP',
-    contact: '123456',
     selectedPersonalitiesJson: JSON.stringify(['playful']),
     responsibleUserId: 'user-1',
     sourceType: UserRole.PESSOA_FISICA,
@@ -44,7 +39,7 @@ describe('PetMapper', () => {
   };
 
   it('deve mapear um Pet do Prisma para o Domínio', () => {
-    const record = PetMapper.toDomain(mockPrismaPet as any);
+    const record = PetMapper.toDomain(mockPrismaPet);
 
     expect(record).toMatchObject({
       id: '1',

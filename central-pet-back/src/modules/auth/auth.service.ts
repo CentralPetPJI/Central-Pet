@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { verifyPassword } from './password.util';
@@ -9,6 +15,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -98,6 +105,35 @@ export class AuthService {
 
     return {
       message: 'Logout bem-sucedido',
+    };
+  }
+
+  async acceptTerms(userId: string) {
+    const targetVersion = this.configService.get<string>('TERMS_VERSION');
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, acceptedTermsAt: true, acceptedTermsVersion: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    if (user.acceptedTermsVersion === targetVersion) {
+      throw new BadRequestException(`Esta versão dos termos (${targetVersion}) já foi aceita`);
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        acceptedTermsAt: new Date(),
+        acceptedTermsVersion: targetVersion,
+      },
+    });
+
+    return {
+      message: 'Termos aceitos com sucesso',
     };
   }
 }

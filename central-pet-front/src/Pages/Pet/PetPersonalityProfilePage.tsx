@@ -16,6 +16,7 @@ import { petPersonalityOptions } from '@/storage/pets';
 import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
+import AdoptionRequestArea from '@/Pages/Pet/AdoptionRequestArea.tsx';
 import { AlertTriangle } from 'lucide-react';
 
 const PetPersonalityProfilePage = () => {
@@ -25,6 +26,8 @@ const PetPersonalityProfilePage = () => {
   const { currentUser } = useAuth();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
   const [formData, setFormData] = useState<PetRegisterFormData>();
+  const [locationText, setLocationText] = useState('');
+  const [petApi, setPetApi] = useState<PetApiResponse | undefined>(undefined);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -40,6 +43,7 @@ const PetPersonalityProfilePage = () => {
       return () => clearTimeout(timer);
     }
   }, [displayMessage, location.pathname, navigate]);
+
   useEffect(() => {
     if (!petId) {
       setIsLoading(false);
@@ -60,13 +64,21 @@ const PetPersonalityProfilePage = () => {
           return;
         }
 
-        setFormData(mapPetApiResponseToRegisterFormData(response.data.data));
-        setSelectedPersonalities(response.data.data.selectedPersonalities ?? []);
+        const petData = response.data.data;
+        const city = petData.city?.trim() ?? '';
+        const state = petData.state?.trim() ?? '';
+        const normalizedLocation = city && state ? `${city} - ${state}` : city || state;
+
+        setFormData(mapPetApiResponseToRegisterFormData(petData));
+        setLocationText(normalizedLocation);
+        setSelectedPersonalities(petData.selectedPersonalities ?? []);
+        setPetApi(response.data.data);
       } catch {
         if (!isMounted) {
           return;
         }
 
+        setLocationText('');
         setIsNotFound(true);
       } finally {
         if (isMounted) {
@@ -86,9 +98,8 @@ const PetPersonalityProfilePage = () => {
     return null;
   }
 
-  const isOwner = currentUser?.id;
+  const isOwner = Boolean(currentUser?.id && petApi && currentUser.id === petApi.responsibleUserId);
   const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
-
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
   );
@@ -130,15 +141,8 @@ const PetPersonalityProfilePage = () => {
     value: item.value ? 'Sim' : 'Nao',
   }));
 
-  const locationItems: PetProfileFact[] = [
-    { label: 'Tutor', value: formData.tutor },
-    { label: 'Abrigo', value: formData.shelter },
-    { label: 'Cidade', value: formData.city },
-    { label: 'Contato', value: formData.contact },
-  ];
-
   return (
-    <section className="mx-auto w-full max-w-[1320px] px-1 pb-16 pt-4">
+    <section className="mx-auto w-full max-w-330 px-1 pb-16 pt-4">
       {isLoading ? (
         <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
           Carregando perfil do pet...
@@ -147,7 +151,7 @@ const PetPersonalityProfilePage = () => {
       {isNotFound && !isLoading ? (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
           <p className="text-sm font-medium text-red-700">
-            Pet não encontrado. Verifique se o ID está correto ou tente novamente mais tarde.
+            Pet nao encontrado. Verifique se o ID esta correto ou tente novamente mais tarde.
           </p>
         </div>
       ) : null}
@@ -163,11 +167,37 @@ const PetPersonalityProfilePage = () => {
       )}
       {!isNotFound ? (
         <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-          <PetProfileHero formData={formData} />
+          <PetProfileHero formData={formData} locationText={locationText} />
+
+          {/* Solicitar adoção: botão e formulário de consentimento */}
+          <div className="p-4 lg:p-5 border-b border-slate-100 bg-white">
+            {currentUser ? (
+              !isOwner ? (
+                <AdoptionRequestArea
+                  petId={petId}
+                  formData={formData}
+                  setDisplayMessage={setDisplayMessage}
+                />
+              ) : null
+            ) : (
+              <div className="flex items-center gap-3">
+                {/*TODO: Usuários anônimos podem ver apenas ONGs*/}
+                <p className="text-sm text-slate-600">
+                  Faça login para enviar uma solicitação de adoção.
+                </p>
+                <a
+                  className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white"
+                  href={routes.login.path}
+                >
+                  Entrar
+                </a>
+              </div>
+            )}
+          </div>
 
           <div className="p-5 lg:p-6">
             <div className="space-y-4">
-              <PetProfileOverview formData={formData} />
+              <PetProfileOverview formData={formData} locationText={locationText} />
               <PetProfileGallery
                 editPath={editPath}
                 name={formData.name}
@@ -192,13 +222,6 @@ const PetPersonalityProfilePage = () => {
 
               <PetProfileSection title="Comportamento">
                 <PetProfilePersonalityList options={activeOptions} />
-              </PetProfileSection>
-
-              <PetProfileSection title="Localizacao">
-                <PetProfileFactGrid
-                  columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
-                  items={locationItems}
-                />
               </PetProfileSection>
             </div>
           </div>

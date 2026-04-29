@@ -23,6 +23,8 @@ export type MockUser = {
   createdAt: Date;
   updatedAt: Date;
   deleted: boolean;
+  acceptedTermsAt?: Date;
+  acceptedTermsVersion?: string;
 };
 
 export const mockUserIds = {
@@ -47,6 +49,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-01T10:00:00.000Z'),
     updatedAt: new Date('2026-03-01T10:00:00.000Z'),
     deleted: false,
+    acceptedTermsAt: new Date('2026-03-01T11:00:00.000Z'),
   },
   {
     id: mockUserIds.LAR_TEMPORARIO_QUATRO_PATAS,
@@ -60,6 +63,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-02T14:00:00.000Z'),
     updatedAt: new Date('2026-03-02T14:00:00.000Z'),
     deleted: false,
+    acceptedTermsAt: new Date('2026-03-02T14:00:00.000Z'),
   },
   {
     id: mockUserIds.JULIANA_MARTINS,
@@ -73,6 +77,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-04T08:15:00.000Z'),
     updatedAt: new Date('2026-03-04T08:15:00.000Z'),
     deleted: false,
+    acceptedTermsAt: new Date('2026-03-10T09:00:00.000Z'),
   },
   {
     id: mockUserIds.RAFAEL_LIMA,
@@ -86,6 +91,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-05T09:30:00.000Z'),
     updatedAt: new Date('2026-03-05T09:30:00.000Z'),
     deleted: false,
+    acceptedTermsAt: undefined,
   },
   {
     id: mockUserIds.ANA_SOUZA,
@@ -99,6 +105,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-06T16:20:00.000Z'),
     updatedAt: new Date('2026-03-06T16:20:00.000Z'),
     deleted: false,
+    acceptedTermsAt: undefined,
   },
 ];
 

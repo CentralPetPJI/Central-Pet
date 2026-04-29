@@ -64,6 +64,7 @@ describe('App (e2e)', () => {
       role: 'PESSOA_FISICA',
       birthDate: new Date('1995-05-10'),
       cpf: '12345678901',
+      acceptTerms: true,
     });
 
     const httpServer = app.getHttpServer() as Parameters<typeof request>[0];

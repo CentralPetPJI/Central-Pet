@@ -8,6 +8,8 @@ export type UsuarioE2E = {
   email: string;
   password: string;
   cpf: string;
+  city?: string;
+  state?: string;
 };
 
 export type UsuarioCriadoE2E = {
@@ -16,11 +18,18 @@ export type UsuarioCriadoE2E = {
   email: string;
   role: "PESSOA_FISICA" | "ONG";
   birthDate: string | null;
+  city: string | null;
+  state: string | null;
   cpf: string | null;
   organizationName: string | null;
   cnpj: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PerfilLocalizacaoE2E = {
+  city: string;
+  state: string;
 };
 
 /**
@@ -35,6 +44,8 @@ export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
     email: `${prefixo}.${sufixo}@example.com.br`,
     password: SENHA_PADRAO,
     cpf,
+    city: "Sao Paulo",
+    state: "SP",
   };
 }
 
@@ -58,6 +69,9 @@ export async function criarUsuarioViaApi(
           password: usuario.password,
           role: "PESSOA_FISICA",
           cpf: usuario.cpf,
+          city: usuario.city,
+          state: usuario.state,
+          acceptTerms: true,
         },
       });
 
@@ -133,6 +147,41 @@ export async function fazerLogin(
   await page.getByLabel("Senha").fill(usuario.password);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  // Aguardar redirecionamento para home após login
   await expect(page).toHaveURL("/");
+}
+
+/**
+ * Atualiza a localização (cidade/estado) do perfil do usuário via PATCH /users/me.
+ *
+ * Precondição: fazerLogin deve ser chamado antes desta função
+ * para que a sessão autenticada seja compartilhada.
+ *
+ * `@param` page - Instância da página Playwright
+ * `@param` localizacao - Objeto com city e state (padrão: São Paulo, SP)
+ */
+export async function atualizarLocalizacaoPerfil(
+  page: Page,
+  localizacao: PerfilLocalizacaoE2E = { city: "Sao Paulo", state: "SP" },
+): Promise<void> {
+  const resposta = await page.request.patch(`${API_BASE_URL}/users/me`, {
+    data: localizacao,
+  });
+
+  expect(resposta.ok()).toBeTruthy();
+
+  await page.goto("/");
+  await expect(page).toHaveURL("/");
+}
+
+export async function fazerLogout(page: Page): Promise<void> {
+  // Limpa o estado de autenticação de forma síncrona no contexto do browser
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  // Limpa cookies do contexto para garantir que sessões de backend também sejam resetadas
+  await page.context().clearCookies();
+  // Vai para a home para garantir que o estado do React seja resetado
+  await page.goto("/");
+  await page.reload();
 }

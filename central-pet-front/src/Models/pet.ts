@@ -9,6 +9,8 @@ export interface Pet {
   behavioralCharacteristics: string;
   notes: string;
   photo: string;
+  city?: string;
+  state?: string;
   responsibleUserId: string;
   sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
@@ -32,11 +34,8 @@ export interface PetApiResponse {
   sex: 'male' | 'female';
   size: 'small' | 'medium' | 'large';
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
   city: string;
   state: string;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;

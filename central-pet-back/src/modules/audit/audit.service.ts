@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { AuditLog, Prisma } from '@prisma/client';
+import { AuditLog, Prisma } from '../../../generated/prisma/client';
 import { NullableJsonNullValueInput } from 'generated/prisma/internal/prismaNamespace';
 
 interface AuditLogCreateInput {

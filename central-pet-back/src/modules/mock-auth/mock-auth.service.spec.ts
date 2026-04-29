@@ -1,13 +1,17 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
 import { defaultMockUserId, mockUserIds } from '@/mocks';
 import { MockAuthService } from './mock-auth.service';
+import { ConfigService } from '@nestjs/config';
 
 describe('Servico de autenticacao mock', () => {
   let service: MockAuthService;
 
   beforeEach(() => {
-    service = new MockAuthService();
+    const configService = {
+      get: jest.fn().mockReturnValue('1.0.0'),
+    } as unknown as jest.Mocked<ConfigService>;
+    service = new MockAuthService(configService);
   });
 
   it('deve lançar erro quando nenhum id de usuario for informado', () => {
