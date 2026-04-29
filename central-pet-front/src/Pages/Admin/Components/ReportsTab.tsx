@@ -112,6 +112,7 @@ export function ReportsTab() {
 
       {decisionModalData && (
         <ReportDecisionModal
+          key={decisionModalData.id}
           modalData={{
             id: decisionModalData.id,
             petName: decisionModalData.petName,

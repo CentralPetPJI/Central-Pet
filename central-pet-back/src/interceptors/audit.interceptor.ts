@@ -10,6 +10,90 @@ import type { MockUser } from '@/mocks';
 type AuthenticatedUser = PublicUser | MockUser;
 type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
+/**
+ * Sanitization helpers for audit payloads
+ * - Deep clones request body (JSON-safe)
+ * - Obfuscates sensitive fields (case-insensitive)
+ * - Supports per-route allow/deny rules via ROUTE_SANITIZATION_MAP
+ */
+const DEFAULT_SENSITIVE_KEYS = new Set([
+  'password',
+  'currentpassword',
+  'newpassword',
+  'token',
+  'refreshtoken',
+  'secret',
+  'apikey',
+  'api_key',
+  'authorization',
+]);
+
+type SanitizationRule = { allow?: string[]; deny?: string[] };
+
+const ROUTE_SANITIZATION_MAP: Record<string, SanitizationRule> = {
+  // Example: '/auth/change-password': { allow: ['userId'], deny: ['oldPassword'] },
+};
+
+function isPlainObject(val: unknown): val is Record<string, unknown> {
+  return val !== null && typeof val === 'object' && !Array.isArray(val);
+}
+
+function obfuscate(obj: unknown, sensitiveKeys: Set<string>): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => obfuscate(item, sensitiveKeys));
+  }
+  if (isPlainObject(obj)) {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      const lower = k.toLowerCase();
+      if (sensitiveKeys.has(lower)) {
+        result[k] = '[REDACTED]';
+      } else {
+        result[k] = obfuscate(v, sensitiveKeys);
+      }
+    }
+    return result;
+  }
+  return obj;
+}
+
+function sanitizeRequestBody(body: unknown, routeKey?: string): unknown {
+  if (body === undefined || body === null) return null;
+
+  let cloned: unknown;
+  try {
+    // JSON-safe deep clone; will throw for non-serializable things
+    cloned = JSON.parse(JSON.stringify(body));
+  } catch {
+    // If cloning fails, coerce to a safe JSON representation
+    if (typeof body === 'string' || typeof body === 'number' || typeof body === 'boolean') {
+      cloned = body;
+    } else {
+      cloned = null;
+    }
+  }
+
+  const rules = routeKey ? ROUTE_SANITIZATION_MAP[routeKey] : undefined;
+  const sensitive = new Set<string>(DEFAULT_SENSITIVE_KEYS);
+  if (rules?.deny) rules.deny.forEach((k) => sensitive.add(k.toLowerCase()));
+
+  if (rules?.allow) {
+    const allowedSet = new Set(rules.allow.map((s) => s.toLowerCase()));
+    if (isPlainObject(cloned)) {
+      const filtered: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(cloned)) {
+        if (allowedSet.has(k.toLowerCase())) {
+          filtered[k] = v;
+        }
+      }
+      return obfuscate(filtered, sensitive);
+    }
+    return obfuscate(cloned, sensitive);
+  }
+
+  return obfuscate(cloned, sensitive);
+}
+
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
   constructor(
@@ -48,10 +132,20 @@ export class AuditInterceptor implements NestInterceptor {
       action = metadata.action;
       targetType = metadata.targetType;
       if (metadata.targetIdParam) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const paramVal =
-          (request.params && (request.params as Record<string, any>)[metadata.targetIdParam]) ||
-          (request.body && (request.body as Record<string, any>)[metadata.targetIdParam]);
+        const paramName = metadata.targetIdParam;
+        const params = (request.params as Record<string, unknown> | undefined) ?? undefined;
+        const bodyObj = request.body as unknown;
+        let paramVal: unknown;
+
+        if (params && Object.prototype.hasOwnProperty.call(params, paramName)) {
+          paramVal = params[paramName];
+        } else if (
+          isPlainObject(bodyObj) &&
+          Object.prototype.hasOwnProperty.call(bodyObj, paramName)
+        ) {
+          paramVal = bodyObj[paramName];
+        }
+
         if (typeof paramVal === 'string' || typeof paramVal === 'number') {
           targetId = String(paramVal);
         }
@@ -64,6 +158,14 @@ export class AuditInterceptor implements NestInterceptor {
     // Fire-and-forget audit create; swallow errors to avoid affecting request flow
     return next.handle().pipe(
       tap(() => {
+        // Safely extract route path if available without assuming runtime shape
+        let routePath: string | undefined;
+        const maybeRoute = request.route as unknown;
+        if (maybeRoute && typeof (maybeRoute as { path?: unknown }).path === 'string') {
+          routePath = (maybeRoute as { path: string }).path;
+        }
+
+        const sanitizedBody = sanitizeRequestBody(request.body, routePath ?? computedAction);
         void this.auditService
           .create({
             userId: user.id,
@@ -73,8 +175,7 @@ export class AuditInterceptor implements NestInterceptor {
             details: {
               method,
               url: request.url,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              body: request.body,
+              body: sanitizedBody,
             },
           })
           .catch(() => undefined);

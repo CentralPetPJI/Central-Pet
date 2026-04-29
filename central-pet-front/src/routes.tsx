@@ -50,7 +50,11 @@ export const routes = {
   admin: {
     dashboard: {
       path: '/admin',
-      element: <AdminPage />,
+      element: (
+        <AuthGuard>
+          <AdminPage />
+        </AuthGuard>
+      ),
     } satisfies AppRoute,
     setupPassword: {
       path: '/admin/setup-password',

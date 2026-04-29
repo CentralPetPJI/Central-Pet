@@ -15,6 +15,7 @@ import { AdminGuard } from './admin.guard';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { PublicUser } from '@/modules/users/users.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
+import { ResolveReportDto } from './dto/resolve-report.dto';
 
 @Controller('admin')
 @UseGuards(SessionGuard, AdminGuard)
@@ -77,10 +78,9 @@ export class AdminController {
   @Post('reports/:id/resolve')
   async resolveReport(
     @Param('id') reportId: string,
-    @Body('status') status: string,
-    @Body('blockPet') blockPet: boolean,
+    @Body() dto: ResolveReportDto,
     @CurrentUser() admin: PublicUser,
   ) {
-    return this.adminService.resolveReport(reportId, admin.id, status, Boolean(blockPet));
+    return this.adminService.resolveReport(reportId, admin.id, dto.status, Boolean(dto.blockPet));
   }
 }

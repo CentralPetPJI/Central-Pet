@@ -6,7 +6,7 @@ import { routes } from '@/routes';
 import { Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function SetupPassword() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, syncCurrentUser } = useAuth();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -37,6 +37,16 @@ export default function SetupPassword() {
         currentPassword,
         newPassword,
       });
+
+      // Atualiza o estado de autenticação antes de redirecionar para evitar que o AuthGuard
+      // considere ainda que o usuário precise trocar a senha e redirecione de volta.
+      try {
+        if (currentUser) {
+          syncCurrentUser({ ...currentUser, mustChangePassword: false });
+        }
+      } catch {
+        // non-blocking: se falhar, não impede a continuação do fluxo
+      }
 
       setSuccessMessage('Senha atualizada com sucesso! Você será redirecionado...');
 

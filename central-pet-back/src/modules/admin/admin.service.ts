@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
+import { ModerationStatus, PetStatus } from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
 import { AuditService } from '@/modules/audit/audit.service';
@@ -41,11 +42,14 @@ export class AdminService {
       fullName: data.fullName,
       email: data.email,
       password: tempPassword,
-      role: 'ADMIN' as const,
-      mustChangePassword: true,
+      role: 'PESSOA_FISICA' as const,
+      acceptTerms: true,
     };
 
-    const result = await this.usersService.create(createDto);
+    const result = await this.usersService.create(createDto, {
+      mustChangePassword: true,
+      roleOverride: 'ADMIN',
+    });
 
     // record audit log
     if (this.auditService) {
@@ -68,10 +72,13 @@ export class AdminService {
     const newStatus = !user.deleted;
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: userId },
-        data: { deleted: newStatus },
-      });
+      if (newStatus) {
+        // deactivate path - run full lifecycle from UsersService inside this transaction
+        await this.usersService.deactivateTransactional(tx, userId);
+      } else {
+        // reactivate path - restore user deleted flag (business rules kept minimal)
+        await this.usersService.reactivateTransactional(tx, userId);
+      }
 
       if (this.auditService) {
         await this.auditService.createWithTx(tx, {
@@ -177,7 +184,12 @@ export class AdminService {
     });
   }
 
-  async resolveReport(reportId: string, adminId: string, status: string, blockPet = false) {
+  async resolveReport(
+    reportId: string,
+    adminId: string,
+    status: ModerationStatus,
+    blockPet = false,
+  ) {
     const report = await this.prisma.moderationReport.findUnique({ where: { id: reportId } });
     if (!report) throw new NotFoundException('Denúncia não encontrada');
 
@@ -190,9 +202,9 @@ export class AdminService {
 
       // create audit for the report resolution (more explicit action name)
       const action =
-        status === 'APPROVED'
+        status === ModerationStatus.APPROVED
           ? 'APPROVE_REPORT'
-          : status === 'REJECTED'
+          : status === ModerationStatus.REJECTED
             ? 'REJECT_REPORT'
             : 'RESOLVE_REPORT';
 
@@ -207,12 +219,12 @@ export class AdminService {
       }
 
       // if approved and it's a pet report and admin requested blocking, block pet and audit that
-      if (status === 'APPROVED' && blockPet && report.targetType === 'PET') {
+      if (status === ModerationStatus.APPROVED && blockPet && report.targetType === 'PET') {
         const pet = await tx.pet.findUnique({ where: { id: report.targetId } });
         if (pet && !pet.deleted) {
           await tx.pet.update({
             where: { id: pet.id },
-            data: { deleted: true, status: 'UNAVAILABLE' },
+            data: { deleted: true, status: PetStatus.UNAVAILABLE },
           });
 
           if (this.auditService) {
@@ -225,7 +237,7 @@ export class AdminService {
                 reason: 'Report approved',
                 reportId,
                 previousStatus: pet.status,
-                newStatus: 'UNAVAILABLE',
+                newStatus: PetStatus.UNAVAILABLE,
               },
             });
           }

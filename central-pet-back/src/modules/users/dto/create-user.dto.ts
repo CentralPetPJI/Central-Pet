@@ -28,8 +28,8 @@ export class CreateUserDto {
   password: string;
 
   @IsString()
-  @IsIn(['PESSOA_FISICA', 'ONG', 'ADMIN'])
-  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN';
+  @IsIn(['PESSOA_FISICA', 'ONG'])
+  role: 'PESSOA_FISICA' | 'ONG';
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {
@@ -71,8 +71,4 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Você deve aceitar os termos de responsabilidade' })
   @IsIn([true], { message: 'Você deve aceitar os termos de responsabilidade' })
   acceptTerms: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  mustChangePassword?: boolean;
 }

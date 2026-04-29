@@ -19,9 +19,21 @@ export function ReportDecisionModal({
   onCancel,
   onConfirm,
 }: ReportDecisionModalProps) {
-  const [blockPet, setBlockPet] = useState<boolean>(true);
+  const [blockPet, setBlockPet] = useState<boolean>(() => Boolean(modalData?.targetType === 'PET'));
 
   if (!modalData) return null;
+
+  const handleCancel = () => {
+    onCancel();
+  };
+
+  const handleReject = () => {
+    onConfirm('REJECTED', false);
+  };
+
+  const handleApprove = () => {
+    onConfirm('APPROVED', blockPet);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
@@ -55,7 +67,7 @@ export function ReportDecisionModal({
         <div className="mt-6 flex gap-3">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="flex-1 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Cancelar
@@ -64,7 +76,7 @@ export function ReportDecisionModal({
           <button
             type="button"
             disabled={isSubmitting}
-            onClick={() => onConfirm('REJECTED', false)}
+            onClick={handleReject}
             className="flex-1 inline-flex items-center justify-center rounded-full border border-red-600 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
           >
             Rejeitar denúncia
@@ -73,7 +85,7 @@ export function ReportDecisionModal({
           <button
             type="button"
             disabled={isSubmitting}
-            onClick={() => onConfirm('APPROVED', blockPet)}
+            onClick={handleApprove}
             className="flex-1 inline-flex items-center justify-center rounded-full bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
           >
             Aprovar{isSubmitting ? '...' : ''}

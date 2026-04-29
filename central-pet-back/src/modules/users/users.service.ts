@@ -12,6 +12,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { hashPassword, verifyPassword } from '../auth/password.util';
 import { PrismaService } from '@/prisma/prisma.service';
+import type { Prisma } from '../../../generated/prisma/client';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 type UserRecord = Awaited<ReturnType<PrismaService['user']['findUnique']>>;
@@ -28,7 +29,10 @@ export class UsersService {
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(
+    createUserDto: CreateUserDto,
+    options?: { mustChangePassword?: boolean; roleOverride?: 'ADMIN' | 'PESSOA_FISICA' | 'ONG' },
+  ) {
     this.validateCreateInput(createUserDto);
 
     if (!createUserDto.acceptTerms) {
@@ -58,11 +62,13 @@ export class UsersService {
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
+      const roleToPersist = options?.roleOverride ?? createUserDto.role;
+
       const newUser = await tx.user.create({
         data: {
           fullName: createUserDto.fullName.trim(),
           email: normalizedEmail,
-          role: createUserDto.role,
+          role: roleToPersist,
           birthDate: createUserDto.birthDate,
           cpf: normalizedCpf,
           organizationName: normalizedOrganizationName,
@@ -72,7 +78,7 @@ export class UsersService {
           passwordHash,
           acceptedTermsAt: new Date(),
           acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
-          mustChangePassword: createUserDto.mustChangePassword || false,
+          mustChangePassword: options?.mustChangePassword ?? false,
         },
       });
 
@@ -83,7 +89,7 @@ export class UsersService {
           action: 'CREATE_USER',
           targetId: newUser.id,
           targetType: 'USER',
-          details: { role: createUserDto.role },
+          details: { role: roleToPersist },
         });
       }
 
@@ -245,6 +251,35 @@ export class UsersService {
     ]);
 
     return { message: 'User deactivated successfully' };
+  }
+
+  /**
+   * Perform deactivate steps inside an existing transaction client
+   */
+  async deactivateTransactional(tx: Prisma.TransactionClient, id: string) {
+    // reuse the same steps as deactivate but using the provided tx
+    await Promise.all([
+      tx.pet.updateMany({
+        where: { responsibleUserId: id },
+        data: { deleted: true, status: 'UNAVAILABLE' },
+      }),
+      tx.adoptionRequest.updateMany({
+        where: {
+          OR: [{ responsibleUserId: id }, { adopterId: id }],
+        },
+        data: { status: 'CANCELLED' },
+      }),
+      tx.session.deleteMany({ where: { userId: id } }),
+      tx.user.update({ where: { id }, data: { deleted: true } }),
+    ]);
+  }
+
+  /**
+   * Reactivate user inside provided transaction client. This restores the user's deleted flag.
+   * Note: business rules for restoring pets/adoption state are intentionally minimal — only the user row is reactivated.
+   */
+  async reactivateTransactional(tx: Prisma.TransactionClient, id: string) {
+    await tx.user.update({ where: { id }, data: { deleted: false } });
   }
 
   async updatePassword(id: string, dto: UpdatePasswordDto) {

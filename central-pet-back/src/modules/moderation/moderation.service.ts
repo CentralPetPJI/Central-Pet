@@ -25,9 +25,9 @@ export class ModerationService {
         await this.auditService.createWithTx(tx, {
           userId: reporterId,
           action: 'CREATE_REPORT',
-          targetId: report.id,
+          targetId: dto.targetId,
           targetType: dto.targetType,
-          details: { reason: dto.reason, targetId: dto.targetId },
+          details: { reason: dto.reason, reportId: report.id },
         });
       }
 

@@ -201,13 +201,20 @@ model AuditLog {
   @@index([createdAt])
 }
 
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISMISSED
+}
+
 model ModerationReport {
   id           String   @id @default(uuid())
   reporterId   String
   targetType   String
   targetId     String
   reason       String
-  status       String   @default("PENDING")
+  status       ModerationStatus   @default(PENDING)
   resolvedById String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

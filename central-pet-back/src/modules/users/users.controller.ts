@@ -54,7 +54,7 @@ export class UsersController {
     if (!user) {
       throw new UnauthorizedException('Usuário não autenticado');
     }
-    if (user.role != 'ADMIN') {
+    if (!['ADMIN', 'ROOT'].includes(user.role)) {
       throw new UnauthorizedException('Essa função está disponível apenas para administradores');
     }
     return this.usersService.updatePassword(user.id, updatePasswordDto);
