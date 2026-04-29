@@ -7,7 +7,7 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import { PetSeedService } from './pet-seed.service';
 import { PetRecord } from './models/pet-record';
-import { Pet, PetStatus } from '@prisma/client';
+import { Pet, PetStatus } from '../../../generated/prisma/client';
 
 export type PetForAdoptionRequest = Pick<
   PetRecord,
@@ -77,7 +77,7 @@ export class PetsService {
       },
     });
 
-    return { message: 'Pet created successfully', data: PetMapper.toDomain(pet as Pet) };
+    return { message: 'Pet created successfully', data: PetMapper.toDomain(pet) };
   }
 
   async findAll(responsibleUserId?: string) {
@@ -87,7 +87,7 @@ export class PetsService {
 
     return {
       message: 'Pets retrieved successfully',
-      data: pets.map((p) => PetMapper.toDomain(p as Pet)),
+      data: pets.map((p) => PetMapper.toDomain(p)),
     };
   }
 
@@ -96,7 +96,7 @@ export class PetsService {
     const pet = await this.prisma.pet.findUnique({ where: { id } });
     if (!pet || pet.deleted) throw new NotFoundException(`Pet "${id}" não encontrado`);
 
-    return { message: 'Pet retrieved successfully', data: PetMapper.toDomain(pet as Pet) };
+    return { message: 'Pet retrieved successfully', data: PetMapper.toDomain(pet) };
   }
 
   async findByIdForAdoption(id: string): Promise<PetForAdoptionRequest | null> {
@@ -104,7 +104,7 @@ export class PetsService {
     const pet = await this.prisma.pet.findUnique({ where: { id } });
     if (!pet || pet.deleted || !pet.responsibleUserId) return null;
 
-    const domain = PetMapper.toDomain(pet as Pet);
+    const domain = PetMapper.toDomain(pet);
     return {
       id: domain.id,
       name: domain.name,
@@ -129,7 +129,7 @@ export class PetsService {
     });
 
     return {
-      pet: PetMapper.toDomain(updated as Pet),
+      pet: PetMapper.toDomain(updated),
       previousResponsibleUserId: existing.responsibleUserId,
     };
   }
@@ -169,7 +169,7 @@ export class PetsService {
       },
     });
 
-    return { message: 'Pet updated successfully', data: PetMapper.toDomain(updated as Pet) };
+    return { message: 'Pet updated successfully', data: PetMapper.toDomain(updated) };
   }
 
   async remove(id: string) {
@@ -177,6 +177,6 @@ export class PetsService {
       where: { id },
       data: { deleted: true, status: PetStatus.UNAVAILABLE },
     });
-    return { message: 'Pet deleted successfully', data: PetMapper.toDomain(pet as Pet) };
+    return { message: 'Pet deleted successfully', data: PetMapper.toDomain(pet) };
   }
 }

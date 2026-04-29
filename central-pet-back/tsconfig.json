@@ -17,8 +17,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@prisma/client/*": ["./generated/prisma/*"]
+      "@/*": ["./src/*"]
     },
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,

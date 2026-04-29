@@ -7,7 +7,7 @@ export type UsuarioE2E = {
   fullName: string;
   email: string;
   password: string;
-  cpf: string;
+  cpf: string | null;
 };
 
 export type UsuarioCriadoE2E = {
@@ -135,4 +135,17 @@ export async function fazerLogin(
 
   // Aguardar redirecionamento para home após login
   await expect(page).toHaveURL("/");
+}
+
+export async function fazerLogout(page: Page): Promise<void> {
+  // Limpa o estado de autenticação de forma síncrona no contexto do browser
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  // Limpa cookies do contexto para garantir que sessões de backend também sejam resetadas
+  await page.context().clearCookies();
+  // Vai para a home para garantir que o estado do React seja resetado
+  await page.goto("/");
+  await page.reload();
 }
