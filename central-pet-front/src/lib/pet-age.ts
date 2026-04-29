@@ -3,11 +3,15 @@ export const petAgeCategoryValues = ['FILHOTE', 'JOVEM', 'ADULTO', 'IDOSO'] as c
 export type PetAgeCategory = (typeof petAgeCategoryValues)[number];
 
 export const petAgeCategoryOptions = [
-  { value: 'FILHOTE', label: 'Filhote' },
-  { value: 'JOVEM', label: 'Jovem' },
-  { value: 'ADULTO', label: 'Adulto' },
-  { value: 'IDOSO', label: 'Idoso' },
-] as const satisfies ReadonlyArray<{ value: PetAgeCategory; label: string }>;
+  { value: 'FILHOTE', label: 'Filhote', description: 'menos de 1 ano' },
+  { value: 'JOVEM', label: 'Jovem', description: 'entre 1 e 2 anos' },
+  { value: 'ADULTO', label: 'Adulto', description: 'entre 2 e 8 anos' },
+  { value: 'IDOSO', label: 'Idoso', description: 'mais de 8 anos' },
+] as const satisfies ReadonlyArray<{
+  value: PetAgeCategory;
+  label: string;
+  description: string;
+}>;
 
 const petAgeCategoryLabelMap: Record<PetAgeCategory, string> = {
   FILHOTE: 'Filhote',

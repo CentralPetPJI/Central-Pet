@@ -73,8 +73,14 @@ function dropDatabase({ user, password, host, port, database }) {
   try {
     // Use DROP DATABASE IF EXISTS para ser idempotente
     execSync(
-      `PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS \"${database}\""`,
-      { stdio: 'inherit' },
+      `psql -h ${host} -p ${port} -U ${user} -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS \\"${database}\\""`,
+      {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          PGPASSWORD: password,
+        },
+      },
     );
   } catch (e) {
     fail(`Erro ao dropar o banco ${database}: ${e.message}`);
