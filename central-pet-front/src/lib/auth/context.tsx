@@ -51,6 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [strategy]);
 
+  const syncCurrentUser = useCallback((user: AuthUser | null) => {
+    setCurrentUser(user);
+  }, []);
+
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       setIsLoading(true);
@@ -158,13 +162,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       users,
       isLoading,
       isAuthenticated: currentUser !== null,
+      syncCurrentUser,
       login,
       logout,
       register,
       acceptTerms,
       selectUser,
     }),
-    [currentUser, users, isLoading, login, logout, register, acceptTerms, selectUser],
+    [
+      currentUser,
+      users,
+      isLoading,
+      syncCurrentUser,
+      login,
+      logout,
+      register,
+      acceptTerms,
+      selectUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

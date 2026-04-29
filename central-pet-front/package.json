@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --mode test --port 5174",
     "build": "tsc -p tsconfig.app.json && vite build",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "npx prettier . --write",
     "preview": "vite preview",

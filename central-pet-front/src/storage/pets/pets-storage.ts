@@ -132,8 +132,6 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
       : 'medium';
 
   return {
-    city: '',
-    contact: '',
     dewormed: false,
     galleryPhotos: [],
     hearingLimitation: false,
@@ -141,9 +139,6 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
     needsHealthCare: false,
     neutered: false,
     physicalLimitation: false,
-    shelter: '',
-    state: '',
-    tutor: '',
     vaccinated: false,
     visualLimitation: false,
     name: pet.name,

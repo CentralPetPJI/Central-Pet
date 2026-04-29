@@ -7,6 +7,7 @@ import { UserPersistenceService } from '@/modules/users/user-persistence.service
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
+import { PetSeedService } from './pet-seed.service';
 
 type PrismaPetRecord = {
   id: string;
@@ -19,11 +20,6 @@ type PrismaPetRecord = {
   sex: 'FEMALE' | 'MALE';
   size: 'SMALL' | 'MEDIUM' | 'LARGE';
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  state: string | null;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
@@ -41,11 +37,19 @@ type PrismaPetRecord = {
   updatedAt: Date;
 };
 
+type PrismaUserRecord = {
+  id: string;
+  fullName: string;
+  city: string | null;
+  state: string | null;
+  deleted: boolean;
+};
+
 describe('PetsService', () => {
   let service: PetsService;
   let validationPipe: ValidationPipe;
   let records: PrismaPetRecord[];
-  let persistedUserIds: Set<string>;
+  let userRecords: Map<string, PrismaUserRecord>;
   let prismaMock: {
     pet: {
       create: jest.Mock;
@@ -56,6 +60,7 @@ describe('PetsService', () => {
     };
     user: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
       upsert: jest.Mock;
       count: jest.Mock;
     };
@@ -71,11 +76,6 @@ describe('PetsService', () => {
     sex: 'female',
     size: 'medium',
     microchipped: true,
-    tutor: 'ONG Patas do Centro',
-    shelter: 'Abrigo Reencontro',
-    city: 'Sao Paulo',
-    state: 'SP',
-    contact: '(11) 99999-0000',
     vaccinated: true,
     neutered: true,
     dewormed: true,
@@ -83,10 +83,7 @@ describe('PetsService', () => {
     physicalLimitation: false,
     visualLimitation: false,
     hearingLimitation: false,
-    responsibleUserId: mockUserIds.RAFAEL_LIMA,
     selectedPersonalities: ['playful', 'friendly'],
-    sourceType: 'PESSOA_FISICA',
-    sourceName: 'Rafael Lima',
   });
 
   const validateCreateDto = async (dto: unknown): Promise<CreatePetDto> => {
@@ -112,7 +109,28 @@ describe('PetsService', () => {
     const now = new Date('2026-04-10T00:00:00.000Z');
 
     records = [];
-    persistedUserIds = new Set();
+    userRecords = new Map([
+      [
+        mockUserIds.RAFAEL_LIMA,
+        {
+          id: mockUserIds.RAFAEL_LIMA,
+          fullName: 'Rafael Lima',
+          city: 'Sao Paulo',
+          state: 'SP',
+          deleted: false,
+        },
+      ],
+      [
+        mockUserIds.ANA_SOUZA,
+        {
+          id: mockUserIds.ANA_SOUZA,
+          fullName: 'Ana Souza',
+          city: 'Campinas',
+          state: 'SP',
+          deleted: false,
+        },
+      ],
+    ]);
 
     prismaMock = {
       pet: {
@@ -176,15 +194,57 @@ describe('PetsService', () => {
         upsert: jest.fn(),
       },
       user: {
-        findUnique: jest.fn((args: { where: { id: string } }) =>
-          persistedUserIds.has(args.where.id) ? { id: args.where.id } : null,
+        findUnique: jest.fn((args: { where: { id: string }; select?: Record<string, boolean> }) => {
+          const found = userRecords.get(args.where.id) ?? null;
+
+          if (!found || !args.select) {
+            return found;
+          }
+
+          return Object.fromEntries(
+            Object.keys(args.select).map((key) => [key, found[key as keyof PrismaUserRecord]]),
+          );
+        }),
+        findMany: jest.fn(
+          (args: {
+            where?: { id?: { in?: string[] }; deleted?: boolean };
+            select?: Record<string, boolean>;
+          }) => {
+            const users = Array.from(userRecords.values()).filter((record) => {
+              const matchesIds = args.where?.id?.in?.length
+                ? args.where.id.in.includes(record.id)
+                : true;
+              const matchesDeleted =
+                args.where?.deleted !== undefined ? record.deleted === args.where.deleted : true;
+
+              return matchesIds && matchesDeleted;
+            });
+
+            if (!args.select) {
+              return users;
+            }
+
+            return users.map((user) =>
+              Object.fromEntries(
+                Object.keys(args.select!).map((key) => [key, user[key as keyof PrismaUserRecord]]),
+              ),
+            );
+          },
         ),
         upsert: jest.fn((args: { create: { id: string } }) => {
-          persistedUserIds.add(args.create.id);
-          return { id: args.create.id };
+          const existing = userRecords.get(args.create.id);
+          const nextRecord: PrismaUserRecord = existing ?? {
+            id: args.create.id,
+            fullName: args.create.id,
+            city: null,
+            state: null,
+            deleted: false,
+          };
+          userRecords.set(args.create.id, nextRecord);
+          return nextRecord;
         }),
         count: jest.fn((args: { where: { id: string; deleted: boolean } }) =>
-          persistedUserIds.has(args.where.id) ? 1 : 0,
+          userRecords.get(args.where.id)?.deleted === args.where.deleted ? 1 : 0,
         ),
       },
     };
@@ -216,10 +276,15 @@ describe('PetsService', () => {
       }),
     } as unknown as UserPersistenceService;
 
+    const seedServiceMock = {
+      ensureSeed: jest.fn(async () => {}),
+    } as unknown as PetSeedService;
+
     service = new PetsService(
       prismaMock as unknown as PrismaService,
       personalityTraitsMock,
       userPersistenceMock as unknown as UserPersistenceService,
+      seedServiceMock,
     );
 
     validationPipe = new ValidationPipe({
@@ -232,23 +297,43 @@ describe('PetsService', () => {
   it('deve criar um pet com sucesso', async () => {
     const dto = await validateCreateDto(makeCreateDto());
 
-    const result = await service.create(dto);
+    const result = await service.create(dto, mockUserIds.RAFAEL_LIMA);
 
     expect(result.message).toBe('Pet created successfully');
     expect(result.data.id).toBeDefined();
     expect(result.data.name).toBe('Luna');
     expect(result.data.species).toBe('dog');
+    expect(result.data.city).toBe('Sao Paulo');
+    expect(result.data.state).toBe('SP');
     expect(result.data.selectedPersonalities).toEqual(['playful', 'friendly']);
     expect(result.data.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
   });
 
-  it('deve rejeitar criação com responsibleUserId inexistente', async () => {
-    const dto = await validateCreateDto({
-      ...makeCreateDto(),
-      responsibleUserId: 'missing-user-id',
-    });
+  it('deve rejeitar city e state enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateCreateDto({
+        ...makeCreateDto(),
+        city: 'Cidade enviada pelo cliente',
+        state: 'RJ',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+  it('deve rejeitar tutor, shelter e contact enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateCreateDto({
+        ...makeCreateDto(),
+        tutor: 'Responsavel antigo',
+        shelter: 'Abrigo antigo',
+        contact: '(11) 90000-0000',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve rejeitar criação com responsibleUserId inexistente', async () => {
+    const dto = await validateCreateDto(makeCreateDto());
+
+    await expect(service.create(dto, 'missing-user-id')).rejects.toThrow(NotFoundException);
     expect(prismaMock.pet.create).not.toHaveBeenCalled();
   });
 
@@ -258,18 +343,17 @@ describe('PetsService', () => {
       selectedPersonalities: ['invalid-trait'],
     });
 
-    await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    await expect(service.create(dto, mockUserIds.RAFAEL_LIMA)).rejects.toThrow(BadRequestException);
   });
 
   it('deve listar pets filtrando por responsável', async () => {
-    await service.create(await validateCreateDto(makeCreateDto()));
-    await service.create(
-      await validateCreateDto({
-        ...makeCreateDto(),
-        name: 'Toto',
-        responsibleUserId: mockUserIds.ANA_SOUZA,
-      }),
-    );
+    const dto1 = await validateCreateDto(makeCreateDto());
+    await service.create(dto1, mockUserIds.RAFAEL_LIMA);
+    const dto2 = await validateCreateDto({
+      ...makeCreateDto(),
+      name: 'Toto',
+    });
+    await service.create(dto2, mockUserIds.ANA_SOUZA);
 
     const result = await service.findAll(mockUserIds.RAFAEL_LIMA);
 
@@ -279,7 +363,8 @@ describe('PetsService', () => {
   });
 
   it('deve buscar um pet existente por id', async () => {
-    const created = await service.create(await validateCreateDto(makeCreateDto()));
+    const dto = await validateCreateDto(makeCreateDto());
+    const created = await service.create(dto, mockUserIds.RAFAEL_LIMA);
 
     const result = await service.findOne(created.data.id);
 
@@ -292,7 +377,8 @@ describe('PetsService', () => {
   });
 
   it('deve atualizar campos informados e manter os demais', async () => {
-    const created = await service.create(await validateCreateDto(makeCreateDto()));
+    const dto = await validateCreateDto(makeCreateDto());
+    const created = await service.create(dto, mockUserIds.RAFAEL_LIMA);
     const updateDto = await validateUpdateDto({ name: 'Luna Renomeada', size: 'large' });
 
     const result = await service.update(created.data.id, updateDto);
@@ -300,6 +386,44 @@ describe('PetsService', () => {
     expect(result.data.name).toBe('Luna Renomeada');
     expect(result.data.size).toBe('large');
     expect(result.data.species).toBe(created.data.species);
+  });
+
+  it('deve rejeitar city e state enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateUpdateDto({
+        name: 'Luna Renomeada',
+        city: 'Rio de Janeiro',
+        state: 'RJ',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve rejeitar tutor, shelter e contact enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+    await expect(
+      validateUpdateDto({
+        name: 'Luna Renomeada',
+        tutor: 'Responsavel antigo',
+        shelter: 'Abrigo antigo',
+        contact: '(11) 90000-0000',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve refletir mudanca de cidade e estado do usuario em pets existentes', async () => {
+    const created = await service.create(
+      await validateCreateDto(makeCreateDto()),
+      mockUserIds.RAFAEL_LIMA,
+    );
+    userRecords.set(mockUserIds.RAFAEL_LIMA, {
+      ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
+      city: 'Santos',
+      state: 'SP',
+    });
+
+    const result = await service.findOne(created.data.id);
+
+    expect(result.data.city).toBe('Santos');
+    expect(result.data.state).toBe('SP');
   });
 
   it('deve retornar null para adoção quando pet não tiver responsável', async () => {
@@ -314,11 +438,6 @@ describe('PetsService', () => {
       sex: 'MALE',
       size: 'MEDIUM',
       microchipped: false,
-      tutor: 'Tutor',
-      shelter: 'Abrigo',
-      city: 'Sao Paulo',
-      state: 'SP',
-      contact: 'Contato',
       vaccinated: true,
       neutered: true,
       dewormed: true,
@@ -327,9 +446,9 @@ describe('PetsService', () => {
       visualLimitation: false,
       hearingLimitation: false,
       selectedPersonalitiesJson: '[]',
-      responsibleUserId: null,
-      sourceType: null,
-      sourceName: null,
+      responsibleUserId: null as unknown as string,
+      sourceType: null as unknown as 'ONG',
+      sourceName: null as unknown as string,
       status: 'AVAILABLE',
       deleted: false,
       createdAt: new Date('2026-04-10T00:00:00.000Z'),
@@ -341,8 +460,46 @@ describe('PetsService', () => {
     expect(result).toBeNull();
   });
 
+  it('deve derivar localizacao na listagem e em findByIdForAdoption', async () => {
+    const created = await service.create(
+      await validateCreateDto(makeCreateDto()),
+      mockUserIds.RAFAEL_LIMA,
+    );
+    userRecords.set(mockUserIds.RAFAEL_LIMA, {
+      ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
+      city: 'Osasco',
+      state: 'SP',
+    });
+
+    const listed = await service.findAll(mockUserIds.RAFAEL_LIMA);
+    const forAdoption = await service.findByIdForAdoption(created.data.id);
+
+    expect(listed.data[0]?.city).toBe('Osasco');
+    expect(listed.data[0]?.state).toBe('SP');
+    expect(forAdoption?.city).toBe('Osasco');
+    expect(forAdoption?.state).toBe('SP');
+  });
+
+  it('deve retornar localizacao vazia quando o responsavel nao tiver city ou state', async () => {
+    userRecords.set(mockUserIds.RAFAEL_LIMA, {
+      ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
+      city: null,
+      state: null,
+    });
+    const created = await service.create(
+      await validateCreateDto(makeCreateDto()),
+      mockUserIds.RAFAEL_LIMA,
+    );
+
+    const result = await service.findOne(created.data.id);
+
+    expect(result.data.city).toBe('');
+    expect(result.data.state).toBe('');
+  });
+
   it('deve finalizar adoção transferindo responsável e status', async () => {
-    const created = await service.create(await validateCreateDto(makeCreateDto()));
+    const dto = await validateCreateDto(makeCreateDto());
+    const created = await service.create(dto, mockUserIds.RAFAEL_LIMA);
 
     const result = await service.finalizeAdoption(created.data.id, mockUserIds.ANA_SOUZA);
 
@@ -352,10 +509,10 @@ describe('PetsService', () => {
   });
 
   it('deve realizar soft delete e ocultar pet das consultas', async () => {
-    const created = await service.create(await validateCreateDto(makeCreateDto()));
-    const requesterId = created.data.responsibleUserId; // Use the pet's owner as requesterId
+    const dto = await validateCreateDto(makeCreateDto());
+    const created = await service.create(dto, mockUserIds.RAFAEL_LIMA);
 
-    const deleted = await service.remove(created.data.id, requesterId);
+    const deleted = await service.remove(created.data.id);
     const listed = await service.findAll();
 
     expect(deleted.message).toBe('Pet deleted successfully');

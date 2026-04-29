@@ -57,6 +57,16 @@ export class CreateUserDto {
   })
   cnpj?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  state?: string;
+
   @IsNotEmpty({ message: 'Você deve aceitar os termos de responsabilidade' })
   @IsIn([true], { message: 'Você deve aceitar os termos de responsabilidade' })
   acceptTerms: boolean;

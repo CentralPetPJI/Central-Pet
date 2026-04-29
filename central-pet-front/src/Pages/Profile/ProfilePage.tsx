@@ -5,12 +5,13 @@ import { useAuth } from '@/lib/auth-context';
 import { formatDocument, brazilianStates } from '@/lib/formatters';
 import FormSelect from '@/Components/Form/FormSelect';
 import { routes } from '@/routes';
+import type { AuthUser } from '@/Models/auth';
 import type { UserProfile } from '@/Models/user';
 import { UserX, ShieldCheck } from 'lucide-react';
 import { userProfileSchema } from '@/lib/validation/profile';
 
 export default function ProfilePage() {
-  const { currentUser, isLoading: isAuthLoading, logout } = useAuth();
+  const { currentUser, isLoading: isAuthLoading, logout, syncCurrentUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,7 +45,7 @@ export default function ProfilePage() {
 
   const profileToEditForm = (p: UserProfile) => ({
     fullName: p.fullName,
-    birthDate: p.birthDate ? new Date(p.birthDate).toISOString().split('T')[0] : '',
+    birthDate: p.birthDate ? new Date(p.birthDate).toISOString() : '',
     city: p.city ?? '',
     state: p.state ?? '',
     organizationName: p.organizationName ?? '',
@@ -84,6 +85,7 @@ export default function ProfilePage() {
         if (!isMounted) {
           return;
         }
+
         setProfile(response.data.data);
         setEditForm(profileToEditForm(response.data.data));
       } catch (_error) {
@@ -150,13 +152,14 @@ export default function ProfilePage() {
     setSuccessMessage(null);
 
     try {
-      const payload = {
-        ...editForm,
-        birthDate: editForm.birthDate ? new Date(editForm.birthDate).toISOString() : undefined,
-      };
-      const response = await api.patch<{ data: UserProfile }>(`/users/me`, payload);
+      const response = await api.patch<{ data: UserProfile }>(`/users/me`, editForm);
 
       setProfile(response.data.data);
+      syncCurrentUser({
+        ...(currentUser as AuthUser),
+        ...response.data.data,
+        updatedAt: new Date().toISOString(),
+      });
       setSuccessMessage('Perfil atualizado com sucesso!');
     } catch (_error) {
       setErrorMessage('Não foi possível atualizar o perfil.');
@@ -243,7 +246,7 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-100">
           <div className="flex items-center gap-5">
             <div
-              className="h-20 w-20 flex-shrink-0 flex items-center justify-center rounded-3xl bg-cyan-600 text-white text-2xl font-bold shadow-lg shadow-cyan-100"
+              className="h-20 w-20 shrink-0 flex items-center justify-center rounded-3xl bg-cyan-600 text-white text-2xl font-bold shadow-lg shadow-cyan-100"
               aria-hidden
             >
               {profile.fullName
@@ -389,7 +392,7 @@ export default function ProfilePage() {
                   aria-invalid={!!validationErrors.birthDate}
                   aria-describedby={validationErrors.birthDate ? 'birthDate-error' : undefined}
                   max={new Date().toISOString().split('T')[0]}
-                  value={editForm.birthDate}
+                  value={editForm.birthDate ?? ''}
                   onChange={(e) => handleInputChange('birthDate', e.target.value)}
                   className={`w-full rounded-2xl border ${
                     validationErrors.birthDate
@@ -439,7 +442,7 @@ export default function ProfilePage() {
                   aria-describedby={validationErrors.state ? 'state-error' : undefined}
                   value={editForm.state || ''}
                   onChange={(e) => handleInputChange('state', e.target.value)}
-                  className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} !bg-white !py-3.5 !px-5`}
+                  className={`${validationErrors.state ? 'border-rose-500 ring-4 ring-rose-50' : 'border-slate-200 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-50'} bg-white! py-3.5! px-5!`}
                 >
                   <option value="">Selecione seu estado</option>
                   {brazilianStates.map((state) => (

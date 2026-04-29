@@ -7,17 +7,6 @@ import { makePrismaMock } from '@/utils/prisma-mock';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 
 describe('UsersService', () => {
-  type CreateUserInput = {
-    fullName: string;
-    email: string;
-    role: 'PESSOA_FISICA' | 'ONG';
-    birthDate?: Date | null;
-    cpf?: string | null;
-    organizationName?: string | null;
-    cnpj?: string | null;
-    passwordHash: string;
-  };
-
   let service: UsersService;
   let prismaMock = makePrismaMock();
 
@@ -28,8 +17,8 @@ describe('UsersService', () => {
 
     // TODO: Verificar se é possível tipar melhor o args
     // TS2345: Argument of type is not assignable to parameter of type
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
+
+    // @ts-expect-error prisma mock parcial para os cenarios do service
     prismaMock.user.create.mockImplementation((args) => ({
       id: 'user-1',
       fullName: args.data.fullName,
@@ -39,6 +28,8 @@ describe('UsersService', () => {
       cpf: (args.data.cpf as string | null) ?? null,
       organizationName: (args.data.organizationName as string | null) ?? null,
       cnpj: (args.data.cnpj as string | null) ?? null,
+      city: (args.data.city as string | null) ?? null,
+      state: (args.data.state as string | null) ?? null,
       passwordHash: args.data.passwordHash,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -65,6 +56,17 @@ describe('UsersService', () => {
     expect(result.data.email).toBe('maria@example.com');
     expect(result.data.role).toBe('PESSOA_FISICA');
     expect(result.data.cpf).toBe('12345678901');
+  });
+
+  it('deve persistir city e state quando informados no cadastro', async () => {
+    const result = await service.create({
+      ...makeAdopterDto(),
+      city: 'Campinas',
+      state: 'sp',
+    });
+
+    expect(result.data.city).toBe('Campinas');
+    expect(result.data.state).toBe('SP');
   });
 
   it('deve rejeitar e-mails duplicados', async () => {

@@ -43,6 +43,8 @@ export type RegisterData = {
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
   acceptTerms: boolean;
 };
 
@@ -132,6 +134,7 @@ export type AuthContextValue = {
   currentUser: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  syncCurrentUser: (user: AuthUser | null) => void;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: (redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;

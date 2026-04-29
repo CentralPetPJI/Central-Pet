@@ -18,7 +18,7 @@ export default defineConfig({
       cwd: "..",
     },
     {
-      command: "pnpm dev:front --mode test --host 0.0.0.0 --port 5174",
+      command: "pnpm dev:front:test",
       url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

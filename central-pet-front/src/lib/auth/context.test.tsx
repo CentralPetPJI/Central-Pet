@@ -93,7 +93,7 @@ describe('AuthProvider', () => {
     expect(result.current.isAuthenticated).toBe(true);
   });
 
-  it('encerra a sessão usando logout', async () => {
+  it('encerra a sessao usando logout', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper: Wrapper });
 
     await waitFor(() => {
@@ -107,5 +107,30 @@ describe('AuthProvider', () => {
     expect(strategyMock.logout).toHaveBeenCalledTimes(1);
     expect(result.current.currentUser).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('sincroniza o currentUser sem nova requisicao quando necessario', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.syncCurrentUser({
+        id: 'user-1',
+        fullName: 'ONG Patas do Centro',
+        email: 'contato@patasdocentro.org',
+        role: 'ONG',
+        city: 'Campinas',
+        state: 'SP',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        updatedAt: '2026-04-02T00:00:00.000Z',
+      });
+    });
+
+    expect(strategyMock.getCurrentUser).toHaveBeenCalledTimes(1);
+    expect(result.current.currentUser?.city).toBe('Campinas');
+    expect(result.current.currentUser?.state).toBe('SP');
   });
 });

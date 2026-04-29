@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegisterData } from '@/Models';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
-import { formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
+import { brazilianStates, formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
 import { registerSchema, type RegisterFormValues } from '@/lib/validation/auth';
 import { SITE_NAME } from '@/lib/site-config';
 
@@ -89,6 +89,8 @@ export default function Register() {
       confirmPassword: '',
       role: 'PESSOA_FISICA',
       documentValue: '',
+      city: '',
+      state: '',
       acceptTerms: false,
     },
   });
@@ -117,6 +119,8 @@ export default function Register() {
     setFeedback(null);
 
     const sanitizedDocument = sanitizeDocument(data.documentValue, data.role);
+    const normalizedCity = data.city?.trim() || undefined;
+    const normalizedState = data.state?.trim() || undefined;
     const payload: RegisterData =
       data.role === 'ONG'
         ? {
@@ -126,6 +130,8 @@ export default function Register() {
             role: data.role,
             organizationName: data.fullName,
             cnpj: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
             acceptTerms: data.acceptTerms,
           }
         : {
@@ -134,6 +140,8 @@ export default function Register() {
             password: data.password,
             role: data.role,
             cpf: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
             acceptTerms: data.acceptTerms,
           };
 
@@ -163,7 +171,7 @@ export default function Register() {
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
         <div className="order-2 p-8 sm:p-10 lg:order-1">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
@@ -264,6 +272,39 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
+                <label htmlFor="register-city" className="text-sm font-semibold text-slate-700">
+                  Cidade
+                </label>
+                <input
+                  id="register-city"
+                  {...register('city')}
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  placeholder="Sua cidade"
+                  autoComplete="address-level2"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="register-state" className="text-sm font-semibold text-slate-700">
+                  Estado
+                </label>
+                <select
+                  id="register-state"
+                  {...register('state')}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  autoComplete="address-level1"
+                >
+                  <option value="">Selecione</option>
+                  {brazilianStates.map((stateOption) => (
+                    <option key={stateOption.value} value={stateOption.value}>
+                      {stateOption.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
                 <label htmlFor="register-password" className="text-sm font-semibold text-slate-700">
                   Senha
                 </label>
@@ -345,7 +386,7 @@ export default function Register() {
           </div>
         </div>
 
-        <div className="order-1 flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
+        <div className="order-1 flex flex-col justify-between bg-linear-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
               Junte-se a nós

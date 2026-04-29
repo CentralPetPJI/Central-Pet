@@ -17,6 +17,7 @@ const authValue: AuthContextValue = {
   },
   isLoading: false,
   isAuthenticated: true,
+  syncCurrentUser: vi.fn(),
   acceptTerms: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),

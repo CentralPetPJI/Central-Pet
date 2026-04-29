@@ -1,4 +1,4 @@
-import type { PetRecord } from '../models/pet-record';
+import type { PetResponseRecord } from '../models/pet-record';
 
 export class PetResponseDto {
   id!: string;
@@ -11,11 +11,8 @@ export class PetResponseDto {
   sex!: string;
   size!: string;
   microchipped!: boolean;
-  tutor!: string;
-  shelter!: string;
   city!: string;
   state!: string;
-  contact!: string;
   vaccinated!: boolean;
   neutered!: boolean;
   dewormed!: boolean;
@@ -31,7 +28,7 @@ export class PetResponseDto {
   createdAt!: string;
   updatedAt!: string;
 
-  constructor(record: PetRecord) {
+  constructor(record: PetResponseRecord) {
     Object.assign(this, record);
   }
 }

@@ -24,21 +24,21 @@ const PetPersonalityProfilePage = () => {
   const { currentUser } = useAuth();
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
   const [formData, setFormData] = useState<PetRegisterFormData>();
+  const [locationText, setLocationText] = useState('');
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
 
-  // Limpar a mensagem após 3 segundos
   useEffect(() => {
     if (displayMessage) {
       const timer = setTimeout(() => {
         setDisplayMessage('');
-        // Remove successMessage from location.state to prevent reappearing on remount
         navigate(location.pathname, { replace: true, state: {} });
       }, 3000);
       return () => clearTimeout(timer);
     }
   }, [displayMessage, location.pathname, navigate]);
+
   useEffect(() => {
     if (!petId) {
       setIsLoading(false);
@@ -59,13 +59,20 @@ const PetPersonalityProfilePage = () => {
           return;
         }
 
-        setFormData(mapPetApiResponseToRegisterFormData(response.data.data));
-        setSelectedPersonalities(response.data.data.selectedPersonalities ?? []);
+        const petData = response.data.data;
+        const city = petData.city?.trim() ?? '';
+        const state = petData.state?.trim() ?? '';
+        const normalizedLocation = city && state ? `${city} - ${state}` : city || state;
+
+        setFormData(mapPetApiResponseToRegisterFormData(petData));
+        setLocationText(normalizedLocation);
+        setSelectedPersonalities(petData.selectedPersonalities ?? []);
       } catch {
         if (!isMounted) {
           return;
         }
 
+        setLocationText('');
         setIsNotFound(true);
       } finally {
         if (isMounted) {
@@ -87,12 +94,10 @@ const PetPersonalityProfilePage = () => {
 
   const isOwner = currentUser?.id;
   const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
-
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
   );
 
-  // TODO: Isso deve vir do back, talvez ;)
   const healthItems: PetProfileFact[] = [
     { label: 'Vacinado', value: formData.vaccinated },
     { label: 'Castrado', value: formData.neutered },
@@ -106,15 +111,8 @@ const PetPersonalityProfilePage = () => {
     value: item.value ? 'Sim' : 'Nao',
   }));
 
-  const locationItems: PetProfileFact[] = [
-    { label: 'Tutor', value: formData.tutor },
-    { label: 'Abrigo', value: formData.shelter },
-    { label: 'Cidade', value: formData.city },
-    { label: 'Contato', value: formData.contact },
-  ];
-
   return (
-    <section className="mx-auto w-full max-w-[1320px] px-1 pb-16 pt-4">
+    <section className="mx-auto w-full max-w-330 px-1 pb-16 pt-4">
       {isLoading ? (
         <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
           Carregando perfil do pet...
@@ -123,7 +121,7 @@ const PetPersonalityProfilePage = () => {
       {isNotFound && !isLoading ? (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
           <p className="text-sm font-medium text-red-700">
-            Pet não encontrado. Verifique se o ID está correto ou tente novamente mais tarde.
+            Pet nao encontrado. Verifique se o ID esta correto ou tente novamente mais tarde.
           </p>
         </div>
       ) : null}
@@ -139,11 +137,11 @@ const PetPersonalityProfilePage = () => {
       )}
       {!isNotFound ? (
         <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-          <PetProfileHero formData={formData} />
+          <PetProfileHero formData={formData} locationText={locationText} />
 
           <div className="p-5 lg:p-6">
             <div className="space-y-4">
-              <PetProfileOverview formData={formData} />
+              <PetProfileOverview formData={formData} locationText={locationText} />
               <PetProfileGallery
                 editPath={editPath}
                 name={formData.name}
@@ -158,13 +156,6 @@ const PetPersonalityProfilePage = () => {
 
               <PetProfileSection title="Comportamento">
                 <PetProfilePersonalityList options={activeOptions} />
-              </PetProfileSection>
-
-              <PetProfileSection title="Localizacao">
-                <PetProfileFactGrid
-                  columnsClassName="sm:grid-cols-2 lg:grid-cols-4"
-                  items={locationItems}
-                />
               </PetProfileSection>
             </div>
           </div>
