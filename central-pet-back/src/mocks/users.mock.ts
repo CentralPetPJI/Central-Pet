@@ -90,6 +90,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-05T09:30:00.000Z'),
     updatedAt: new Date('2026-03-05T09:30:00.000Z'),
     deleted: false,
+    acceptedTermsAt: undefined,
   },
   {
     id: mockUserIds.ANA_SOUZA,
@@ -103,6 +104,7 @@ export const mockUsers: MockUser[] = [
     createdAt: new Date('2026-03-06T16:20:00.000Z'),
     updatedAt: new Date('2026-03-06T16:20:00.000Z'),
     deleted: false,
+    acceptedTermsAt: undefined,
   },
 ];
 

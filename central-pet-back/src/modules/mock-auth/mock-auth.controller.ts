@@ -11,12 +11,7 @@ import {
 import { Cookies } from '@/decorators/cookies.decorator';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { CookieInterceptor } from '@/interceptors/cookie.interceptor';
-import {
-  buildSessionCookieValue,
-  isMockAuthEnabled,
-  parseSessionCookieValue,
-  SESSION_COOKIE_NAME,
-} from '@/utils/session-cookie';
+import { buildSessionCookieValue, isMockAuthEnabled } from '@/utils/session-cookie';
 import type { MockUser } from '@/mocks';
 import type { PublicUser } from '@/modules/users/users.service';
 import { MockAuthService } from './mock-auth.service';
@@ -31,17 +26,8 @@ export class MockAuthController {
   constructor(private readonly mockAuthService: MockAuthService) {}
 
   @Get('me')
-  @UseGuards(SessionGuard)
-  getMe(
-    @CurrentUser() user: MockUser | PublicUser,
-    @Cookies(SESSION_COOKIE_NAME) sessionCookie?: string,
-  ) {
-    const parsedSession = parseSessionCookieValue(sessionCookie);
-
-    if (!parsedSession || parsedSession.mode !== 'mock') {
-      throw new UnauthorizedException('Authentication required');
-    }
-
+  @UseGuards(SessionGuard, MockModeGuard)
+  getMe(@CurrentUser() user: MockUser | PublicUser) {
     return {
       message: 'Authenticated user retrieved successfully',
       data: {

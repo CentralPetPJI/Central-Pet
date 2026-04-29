@@ -44,23 +44,14 @@ export class MockAuthService {
   }
 
   acceptTerms(userId: string) {
-    const targetVersion = this.configService.get<string>('TERMS_VERSION');
-
     const userIndex = this.mockUsers.findIndex((item) => item.id === userId);
 
     if (userIndex === -1) {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    if (this.mockUsers[userIndex].acceptedTermsVersion === targetVersion) {
-      throw new BadRequestException(`Esta versão dos termos (${targetVersion}) já foi aceita`);
-    }
-
-    this.mockUsers[userIndex] = {
-      ...this.mockUsers[userIndex],
-      acceptedTermsAt: new Date(),
-      acceptedTermsVersion: targetVersion,
-    };
+    // TODO: Por enqaunto nao faz sentido usar version aqui
+    this.mockUsers[userIndex].acceptedTermsAt = new Date();
 
     return {
       message: 'Termos aceitos com sucesso',
