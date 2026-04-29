@@ -95,7 +95,11 @@ export class PetsService {
       throw new NotFoundException(`Usuário com id "${responsibleUserId}" não encontrado`);
     }
 
-    if (responsibleUser.role != 'ONG' && responsibleUser.role != 'PESSOA_FISICA') {
+    if (
+      responsibleUser.role &&
+      responsibleUser.role !== 'ONG' &&
+      responsibleUser.role !== 'PESSOA_FISICA'
+    ) {
       throw new BadRequestException(
         'Apenas ONGs e pessoas físicas podem ser responsáveis por pets.',
       );
