@@ -75,6 +75,8 @@ model User {
   website              String?
   foundedAt            DateTime?          @db.Date
   passwordHash         String
+  acceptedTermsAt      DateTime?
+  acceptedTermsVersion String?
   deleted              Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
@@ -114,11 +116,6 @@ model Pet {
   physicalLimitation Boolean            @default(false)
   visualLimitation   Boolean            @default(false)
   hearingLimitation  Boolean            @default(false)
-  tutor              String
-  shelter            String
-  city               String
-  state              String
-  contact            String
   selectedPersonalitiesJson String         @default("[]")
   responsibleUserId  String
   sourceType         UserRole
@@ -134,7 +131,6 @@ model Pet {
 
   @@index([status])
   @@index([species])
-  @@index([city])
   @@index([responsibleUserId])
   @@index([deleted])
 }

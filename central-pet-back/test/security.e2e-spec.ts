@@ -102,6 +102,7 @@ describe('Security (e2e)', () => {
       password: 'Senha123!',
       role: 'PESSOA_FISICA',
       cpf: '12345678901',
+      acceptTerms: true,
     });
 
     const response = await login(httpServer, {
@@ -134,6 +135,7 @@ describe('Security (e2e)', () => {
       password: 'Senha123!',
       role: 'PESSOA_FISICA',
       cpf: '98765432100',
+      acceptTerms: true,
     });
 
     const loginResponse = await login(httpServer, {

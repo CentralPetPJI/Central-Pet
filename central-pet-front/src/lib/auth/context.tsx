@@ -24,7 +24,8 @@ import type {
   RegisterData,
 } from '@/Models';
 import { createAuthStrategy } from './strategies/factory';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { routes } from '@/routes.tsx';
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -49,6 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser(null);
     }
   }, [strategy]);
+
+  const syncCurrentUser = useCallback((user: AuthUser | null) => {
+    setCurrentUser(user);
+  }, []);
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -92,6 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [strategy],
   );
 
+  const acceptTerms = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await strategy.acceptTerms();
+      await refreshCurrentUser();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [strategy, refreshCurrentUser]);
+
   const selectUser = useCallback(
     async (userId: string) => {
       if (!strategy.selectUser) {
@@ -127,18 +142,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void bootstrap();
   }, [strategy, refreshCurrentUser]);
 
+  // Redireciona para termos se o usuário estiver logado mas não aceitou os termos
+  const location = useLocation();
+
+  useEffect(() => {
+    if (
+      !isLoading &&
+      currentUser &&
+      !currentUser.acceptedTermsAt &&
+      location.pathname !== routes.termsOfResponsibility.path &&
+      location.pathname !== routes.login.path &&
+      location.pathname !== routes.register.path
+    ) {
+      navigate(routes.termsOfResponsibility.path);
+    }
+  }, [currentUser, isLoading, navigate, location.pathname]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       currentUser,
       users,
       isLoading,
       isAuthenticated: currentUser !== null,
+      syncCurrentUser,
       login,
       logout,
       register,
+      acceptTerms,
       selectUser,
     }),
-    [currentUser, users, isLoading, login, logout, register, selectUser],
+    [
+      currentUser,
+      users,
+      isLoading,
+      syncCurrentUser,
+      login,
+      logout,
+      register,
+      acceptTerms,
+      selectUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

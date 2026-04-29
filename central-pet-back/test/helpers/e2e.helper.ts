@@ -9,6 +9,7 @@ export interface UserData {
   role: string;
   cpf?: string;
   birthDate?: Date;
+  acceptTerms: boolean;
 }
 
 export interface Credentials {

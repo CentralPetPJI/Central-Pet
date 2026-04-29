@@ -135,6 +135,7 @@ describe('Estrategia MockAuthStrategy', () => {
         password: 'secret',
         fullName: 'Test',
         role: 'ONG',
+        acceptTerms: true,
       }),
     ).rejects.toThrow('Mock auth does not support registration.');
   });

@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Pet"
+DROP COLUMN IF EXISTS "tutor",
+DROP COLUMN IF EXISTS "shelter",
+DROP COLUMN IF EXISTS "contact";

@@ -54,26 +54,6 @@ export class CreatePetDto {
   @IsBoolean()
   microchipped: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  tutor: string;
-
-  @IsString()
-  @IsNotEmpty()
-  shelter: string;
-
-  @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  state: string;
-
-  @IsString()
-  @IsNotEmpty()
-  contact: string;
-
   @IsBoolean()
   vaccinated: boolean;
 
@@ -95,22 +75,10 @@ export class CreatePetDto {
   @IsBoolean()
   hearingLimitation: boolean;
 
-  @IsString()
-  @IsNotEmpty()
-  responsibleUserId: string;
-
   @IsOptional()
   @IsArray()
   @ArrayUnique()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   selectedPersonalities?: string[];
-
-  @IsString()
-  @IsIn(['ONG', 'PESSOA_FISICA'])
-  sourceType: 'ONG' | 'PESSOA_FISICA';
-
-  @IsString()
-  @IsNotEmpty()
-  sourceName: string;
 }

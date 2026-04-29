@@ -11,8 +11,11 @@ import PetRegisterBehaviorSection from '@/Components/PetRegister/PetRegisterBeha
 import PetRegisterHeader from '@/Components/PetRegister/PetRegisterHeader';
 import PetRegisterHealthSection from '@/Components/PetRegister/PetRegisterHealthSection';
 import PetRegisterInfoSection from '@/Components/PetRegister/PetRegisterInfoSection';
-import PetRegisterLocationSection from '@/Components/PetRegister/PetRegisterLocationSection';
 import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotosSection';
+import {
+  buildPetSubmitPayload,
+  isProfileLocationComplete,
+} from '@/Components/PetRegister/pet-register-payload';
 import { ensurePublicId, resolveBackendId } from '@/storage/pets';
 import { petPersonalityStorageKey } from '@/storage/pets';
 import {
@@ -40,6 +43,11 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const { reset, handleSubmit, watch, setValue } = methods;
   const formData = watch();
+  const responsibleLocation = {
+    city: currentUser?.city?.trim() ?? '',
+    state: currentUser?.state?.trim() ?? '',
+  };
+  const isResponsibleLocationMissing = !isProfileLocationComplete(responsibleLocation);
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
@@ -110,19 +118,12 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       return;
     }
 
-    const normalizedFormData = {
-      ...data,
-      name: data.name.trim(),
-      breed: data.breed.trim() || 'SRD',
-      tutor: data.tutor.trim(),
-      shelter: data.shelter.trim(),
-      city: data.city.trim(),
-      contact: data.contact.trim(),
-      sourceType: currentUser.role,
-      sourceName: currentUser.organizationName || currentUser.fullName,
-      state: data.state.trim() || 'SP',
-      selectedPersonalities: selectedPersonalities, // Merge personalities
-    };
+    if (isResponsibleLocationMissing) {
+      setSaveMessage('Atualize cidade e estado no seu perfil antes de publicar este pet.');
+      return;
+    }
+
+    const normalizedFormData = buildPetSubmitPayload(data, selectedPersonalities);
 
     try {
       let response: { data: { message: string; data: PetApiResponse } };
@@ -134,10 +135,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
           normalizedFormData,
         );
       } else {
-        response = await api.post<{ message: string; data: PetApiResponse }>('/pets', {
-          ...normalizedFormData,
-          responsibleUserId: currentUser.id,
-        });
+        response = await api.post<{ message: string; data: PetApiResponse }>(
+          '/pets',
+          normalizedFormData,
+        );
       }
 
       const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
@@ -207,15 +208,15 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     );
   };
 
-  /*  const onErrors = (errors: any) => {
+  const onErrors = (_errors: unknown) => {
     // caso de erro no formulario, podemos colocar isso no onSubimit
     //  onSubmit={handleSubmit(handleSavePet, onErrors)}
-    console.error(errors);
-  }*/
+  };
   return (
     <FormProvider {...methods}>
       <form
-        onSubmit={handleSubmit(handleSavePet)}
+        //onSubmit={handleSubmit(handleSavePet)}
+        onSubmit={handleSubmit(handleSavePet, onErrors)}
         className="mx-auto w-full max-w-345 px-1 pb-16 pt-4"
       >
         <div className="rounded-[1.75rem] bg-linear-to-br from-cyan-100 via-white to-emerald-100 p-5 lg:p-6 shadow-[0_20px_60px_rgba(14,116,144,0.10)]">
@@ -225,6 +226,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             petId={petId}
             saveMessage={saveMessage}
             selectedPersonalitiesCount={selectedPersonalities.length}
+            isSaveDisabled={isAuthLoading || isInitializing || isResponsibleLocationMissing}
           />
           <PetRegisterPhotosSection
             onGalleryPhotosChange={handleGalleryPhotosChange}
@@ -232,12 +234,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             onRemoveGalleryPhoto={removeGalleryPhoto}
           />
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
             <PetRegisterInfoSection />
-            <PetRegisterLocationSection />
+            <PetRegisterHealthSection />
           </div>
-
-          <PetRegisterHealthSection />
           <PetRegisterBehaviorSection
             selectedPersonalities={selectedPersonalities}
             onTogglePersonality={togglePersonality}

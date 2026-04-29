@@ -21,24 +21,25 @@ export default defineConfig({
       cwd: "..",
     },
     {
-      command: `${pnpmCommand} dev:front --host 0.0.0.0 --port 5174`,
-      env: {
-        ...process.env,
-        VITE_API_URL: "http://localhost:3001/api",
-        VITE_AUTH_STRATEGY: "session",
-      },
+      command: "pnpm dev:front:test",
       url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       cwd: "..",
     },
   ],
+  // TODO: Verificar problema de concorrencia no adoption-workflow, por enquanto isso está ok, mas so foi necessario por erros de concorrencia
   projects: [
     {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-      },
+      name: "adoption-workflow",
+      testMatch: /adoption-workflow\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "remaining-tests",
+      dependencies: ["adoption-workflow"],
+      testIgnore: /adoption-workflow\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 });

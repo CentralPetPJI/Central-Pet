@@ -7,37 +7,25 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Cookies } from '@/decorators/cookies.decorator';
 import { CurrentUser } from '@/decorators/current-user.decorator';
 import { CookieInterceptor } from '@/interceptors/cookie.interceptor';
-import {
-  buildSessionCookieValue,
-  isMockAuthEnabled,
-  parseSessionCookieValue,
-  SESSION_COOKIE_NAME,
-} from '@/utils/session-cookie';
+import { buildSessionCookieValue, isMockAuthEnabled } from '@/utils/session-cookie';
 import type { MockUser } from '@/mocks';
 import type { PublicUser } from '@/modules/users/users.service';
 import { MockAuthService } from './mock-auth.service';
 import { SelectMockUserDto } from './dto/select-mock-user.dto';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
+import { NotProductionGuard } from '@/modules/mock-auth/guards/not-production.guard';
+import { MockModeGuard } from '@/modules/mock-auth/guards/mock-mode.guard';
 
+@UseGuards(NotProductionGuard)
 @Controller('mock-auth')
 export class MockAuthController {
   constructor(private readonly mockAuthService: MockAuthService) {}
 
   @Get('me')
-  @UseGuards(SessionGuard)
-  getMe(
-    @CurrentUser() user: MockUser | PublicUser,
-    @Cookies(SESSION_COOKIE_NAME) sessionCookie?: string,
-  ) {
-    const parsedSession = parseSessionCookieValue(sessionCookie);
-
-    if (!parsedSession || parsedSession.mode !== 'mock') {
-      throw new UnauthorizedException('Authentication required');
-    }
-
+  @UseGuards(SessionGuard, MockModeGuard)
+  getMe(@CurrentUser() user: MockUser | PublicUser) {
     return {
       message: 'Authenticated user retrieved successfully',
       data: {
@@ -70,5 +58,11 @@ export class MockAuthController {
         sessionId: buildSessionCookieValue('mock', dto.userId),
       },
     };
+  }
+
+  @UseGuards(SessionGuard, MockModeGuard)
+  @Post('accept-terms')
+  acceptTerms(@CurrentUser() user: MockUser) {
+    return this.mockAuthService.acceptTerms(user.id);
   }
 }

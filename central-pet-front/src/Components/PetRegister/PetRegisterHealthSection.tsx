@@ -8,23 +8,25 @@ const healthFields = [
   ['vaccinated', 'Vacinado'],
   ['neutered', 'Castrado'],
   ['dewormed', 'Vermifugado'],
-  ['needsHealthCare', 'Necessita de cuidados de saude'],
   ['physicalLimitation', 'Limitacao fisica'],
   ['visualLimitation', 'Limitacao visual'],
   ['hearingLimitation', 'Limitacao auditiva'],
+  ['needsHealthCare', 'Necessita de cuidados de saude'],
 ] as const;
+
+// TODO: validar a disposição dos checkbox para a quantidade correta de itens (maior que atual talvez)
 
 const PetRegisterHealthSection = () => {
   const { register } = useFormContext<PetRegisterFormData>();
 
   return (
     <FormSection
-      className="mt-4"
+      className="h-full"
       accentClassName="text-rose-700"
       eyebrow="Saude"
       title="Status clinico"
     >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-2">
         {healthFields.map(([field, label]) => (
           <FormCheckbox
             key={field}

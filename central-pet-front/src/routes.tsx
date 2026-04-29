@@ -2,12 +2,15 @@ import type { ReactNode } from 'react';
 import { useRoutes, type RouteObject } from 'react-router-dom';
 import MainPage from '@/Pages/MainPage';
 import MyPetsPage from '@/Pages/MyPetsPage';
-import AdoptionRequestsReceivedPage from '@/Pages/AdoptionRequestsReceived/AdoptionRequestsReceivedPage';
+import AdoptionRequestsPage from '@/Pages/AdoptionRequests/AdoptionRequestsPage';
 import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
 import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
 import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
+import TermsOfResponsibility from '@/Pages/TermsOfResponsibility/TermsOfResponsibility';
+
+import { AuthGuard } from '@/Components/Auth/AuthGuard';
 
 type AppRoute = RouteObject & {
   element?: ReactNode;
@@ -30,24 +33,42 @@ export const routes = {
     path: '/register',
     element: <Register />,
   } satisfies AppRoute,
+  termsOfResponsibility: {
+    path: '/terms',
+    element: <TermsOfResponsibility />,
+  } satisfies AppRoute,
   profile: {
     path: '/profile',
-    element: <ProfilePage />,
+    element: (
+      <AuthGuard>
+        <ProfilePage />
+      </AuthGuard>
+    ),
   } satisfies AppRoute,
   adoptionRequests: {
-    received: {
-      path: '/adoption-requests/received',
-      element: <AdoptionRequestsReceivedPage />,
-    } satisfies AppRoute,
-  },
+    path: '/adoption-requests',
+    element: (
+      <AuthGuard>
+        <AdoptionRequestsPage />
+      </AuthGuard>
+    ),
+  } satisfies AppRoute,
   pets: {
     new: {
       path: '/pets/new',
-      element: <PetPersonalityRegisterPage />,
+      element: (
+        <AuthGuard>
+          <PetPersonalityRegisterPage />
+        </AuthGuard>
+      ),
     } satisfies AppRoute,
     mine: {
       path: '/pets/mine',
-      element: <MyPetsPage />,
+      element: (
+        <AuthGuard>
+          <MyPetsPage />
+        </AuthGuard>
+      ),
     } satisfies AppRoute,
     detail: {
       path: '/pets/:petId',
@@ -56,7 +77,11 @@ export const routes = {
     } satisfies DynamicAppRoute,
     edit: {
       path: '/pets/:petId/edit',
-      element: <PetPersonalityRegisterPage />,
+      element: (
+        <AuthGuard>
+          <PetPersonalityRegisterPage />
+        </AuthGuard>
+      ),
       build: (petId: number | string) => `/pets/${petId}/edit`,
     } satisfies DynamicAppRoute,
   },
