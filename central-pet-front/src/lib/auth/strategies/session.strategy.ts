@@ -96,6 +96,8 @@ export class SessionAuthStrategy implements AuthStrategy {
       cpf: data.cpf,
       organizationName: data.organizationName,
       cnpj: data.cnpj,
+      city: data.city,
+      state: data.state,
     });
 
     // Faz auto-login após criar a conta

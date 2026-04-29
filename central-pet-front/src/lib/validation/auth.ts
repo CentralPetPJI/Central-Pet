@@ -15,6 +15,8 @@ export const registerSchema = z
     confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
     role: z.enum(['PESSOA_FISICA', 'ONG']),
     documentValue: z.string().min(1, 'Documento é obrigatório'),
+    city: z.string().trim().optional(),
+    state: z.string().trim().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem.',

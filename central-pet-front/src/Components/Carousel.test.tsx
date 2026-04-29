@@ -13,6 +13,8 @@ const petsStub: Pet[] = [
     behavioralCharacteristics: 'Brincalhao',
     notes: 'Tutor: Ana',
     photo: 'https://example.com/bolt.png',
+    city: 'Osasco',
+    state: 'SP',
     responsibleUserId: 'user-1',
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Ana',
@@ -44,6 +46,7 @@ describe('Carousel', () => {
     fireEvent.click(screen.getAllByText('Bolt')[0]);
 
     expect(screen.getByRole('heading', { level: 2, name: 'Bolt' })).toBeInTheDocument();
+    expect(screen.getAllByText('Osasco/São Paulo')[0]).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Quero adotar' })).toHaveAttribute('href', '/pets/7');
   });
 });

@@ -114,11 +114,6 @@ model Pet {
   physicalLimitation Boolean            @default(false)
   visualLimitation   Boolean            @default(false)
   hearingLimitation  Boolean            @default(false)
-  tutor              String
-  shelter            String
-  city               String
-  state              String
-  contact            String
   selectedPersonalitiesJson String         @default("[]")
   responsibleUserId  String
   sourceType         UserRole
@@ -134,7 +129,6 @@ model Pet {
 
   @@index([status])
   @@index([species])
-  @@index([city])
   @@index([responsibleUserId])
   @@index([deleted])
 }

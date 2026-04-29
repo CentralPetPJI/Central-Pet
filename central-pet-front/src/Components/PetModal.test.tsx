@@ -12,6 +12,8 @@ const petStub: Pet = {
   behavioralCharacteristics: 'Calma, sociavel',
   notes: 'Contato: 11999999999',
   photo: 'https://example.com/luna.png',
+  city: 'Campinas',
+  state: 'SP',
   responsibleUserId: 'user-2',
   sourceType: 'PESSOA_FISICA',
   sourceName: 'Luna',
@@ -29,5 +31,7 @@ describe('PetModal', () => {
 
     expect(cta).toBeInTheDocument();
     expect(cta).toHaveAttribute('href', '/pets/42');
+    expect(screen.getByText(/Campinas\//i)).toBeInTheDocument();
+    expect(screen.queryByText(/Notas:/i)).not.toBeInTheDocument();
   });
 });

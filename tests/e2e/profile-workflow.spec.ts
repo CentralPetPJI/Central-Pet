@@ -46,7 +46,7 @@ test.describe("profile-workflow", () => {
     await page.getByLabel("E-mail").fill(usuario.email);
     await page.getByLabel("Senha").fill(usuario.password);
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(page.getByText("Esta conta foi desativada")).toBeVisible();
+    await expect(page.getByText(/Esta conta foi desativada/i)).toBeVisible();
 
     // B) Pet não deve aparecer na listagem pública (API e UI)
     const listaPets = await request.get(`${BASE_API}/api/pets`);
