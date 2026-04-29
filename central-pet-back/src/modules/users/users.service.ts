@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPassword } from '../auth/password.util';
@@ -20,10 +21,15 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPersistence: UserPersistenceService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
+
+    if (!createUserDto.acceptTerms) {
+      throw new BadRequestException('Você deve aceitar os termos de responsabilidade');
+    }
 
     const normalizedEmail = createUserDto.email.trim().toLowerCase();
     const normalizedCpf = createUserDto.cpf?.trim().toUpperCase();
@@ -60,6 +66,8 @@ export class UsersService {
           city: normalizedCity,
           state: normalizedState,
           passwordHash,
+          acceptedTermsAt: new Date(),
+          acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
         },
       });
 

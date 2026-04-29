@@ -71,6 +71,7 @@ export async function criarUsuarioViaApi(
           cpf: usuario.cpf,
           city: usuario.city,
           state: usuario.state,
+          acceptTerms: true,
         },
       });
 

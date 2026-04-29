@@ -66,4 +66,8 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(2)
   state?: string;
+
+  @IsNotEmpty({ message: 'Você deve aceitar os termos de responsabilidade' })
+  @IsIn([true], { message: 'Você deve aceitar os termos de responsabilidade' })
+  acceptTerms: boolean;
 }

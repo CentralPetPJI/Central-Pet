@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -9,11 +10,16 @@ import { UserPersistenceService } from '@/modules/users/user-persistence.service
 describe('UsersService', () => {
   let service: UsersService;
   let prismaMock = makePrismaMock();
+  let configService: jest.Mocked<ConfigService>;
 
   beforeEach(() => {
     prismaMock = makePrismaMock();
     prismaMock.user.findFirst.mockResolvedValue(null);
     prismaMock.user.findUnique.mockResolvedValue(null);
+
+    configService = {
+      get: jest.fn().mockReturnValue('1.0.0'),
+    } as unknown as jest.Mocked<ConfigService>;
 
     // TODO: Verificar se é possível tipar melhor o args
     // TS2345: Argument of type is not assignable to parameter of type
@@ -31,12 +37,18 @@ describe('UsersService', () => {
       city: (args.data.city as string | null) ?? null,
       state: (args.data.state as string | null) ?? null,
       passwordHash: args.data.passwordHash,
+      acceptedTermsAt: args.data.acceptedTermsAt,
+      acceptedTermsVersion: args.data.acceptedTermsVersion,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     }));
 
     const userPersistence = new UserPersistenceService(prismaMock as unknown as PrismaService);
-    service = new UsersService(prismaMock as unknown as PrismaService, userPersistence);
+    service = new UsersService(
+      prismaMock as unknown as PrismaService,
+      userPersistence,
+      configService,
+    );
   });
 
   const makeAdopterDto = (): CreateUserDto => ({
@@ -45,6 +57,7 @@ describe('UsersService', () => {
     password: 'Senha123!',
     role: 'PESSOA_FISICA',
     cpf: '12345678901',
+    acceptTerms: true,
   });
 
   it('deve criar um usuário adotante', async () => {
@@ -84,8 +97,9 @@ describe('UsersService', () => {
       email: 'maria@example.com',
       password: 'Senha123!',
       role: 'PESSOA_FISICA',
+      acceptTerms: true,
     };
-
+    delete invalidDto.cnpj;
     await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
   });
 
@@ -95,7 +109,9 @@ describe('UsersService', () => {
       email: 'ong@example.com',
       password: 'Senha123!',
       role: 'ONG',
+      acceptTerms: true,
     };
+    delete invalidDto.cnpj;
 
     await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
   });

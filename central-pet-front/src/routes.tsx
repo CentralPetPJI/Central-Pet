@@ -8,6 +8,7 @@ import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx
 import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
+import TermsOfResponsibility from '@/Pages/TermsOfResponsibility/TermsOfResponsibility';
 
 import { AuthGuard } from '@/Components/Auth/AuthGuard';
 
@@ -31,6 +32,10 @@ export const routes = {
   register: {
     path: '/register',
     element: <Register />,
+  } satisfies AppRoute,
+  termsOfResponsibility: {
+    path: '/terms',
+    element: <TermsOfResponsibility />,
   } satisfies AppRoute,
   profile: {
     path: '/profile',
