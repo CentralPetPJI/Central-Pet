@@ -2,8 +2,8 @@ import { BadRequestException, NotFoundException, ValidationPipe } from '@nestjs/
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mockUserIds } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
+import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
@@ -65,7 +65,7 @@ describe('PetsService', () => {
     profilePhoto: 'data:image/png;base64,abc',
     galleryPhotos: ['data:image/png;base64,def'],
     name: 'Luna',
-    age: '3 anos',
+    age: 'ADULTO',
     species: 'dog',
     breed: 'SRD',
     sex: 'female',
@@ -163,9 +163,13 @@ describe('PetsService', () => {
               throw new Error('Record not found');
             }
 
+            const sanitizedData = Object.fromEntries(
+              Object.entries(args.data).filter(([, value]) => value !== undefined),
+            ) as Partial<Omit<PrismaPetRecord, 'id' | 'createdAt'>>;
+
             const updated: PrismaPetRecord = {
               ...records[index],
-              ...args.data,
+              ...sanitizedData,
               updatedAt: new Date('2026-04-10T00:10:00.000Z'),
             };
 
@@ -193,13 +197,11 @@ describe('PetsService', () => {
       getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
     } as unknown as PersonalityTraitsService;
 
-    // Provide a lightweight UserPersistenceService mock that uses the prismaMock helpers
     const userPersistenceMock = {
       validateUser: jest.fn(async (userId: string) => {
-        // If the test's prisma mock already knows the user, return true
         const found = prismaMock.user.findUnique({ where: { id: userId } });
         if (found) return true;
-        // Only upsert when the id is one of the project's mockUserIds (replicates UserPersistenceService behavior)
+
         const knownMockIds = Object.values(mockUserIds) as string[];
         if (knownMockIds.includes(userId) && typeof prismaMock.user.upsert === 'function') {
           await prismaMock.user.upsert({
@@ -209,7 +211,8 @@ describe('PetsService', () => {
           });
           return true;
         }
-        throw new NotFoundException(`Usuário com id "${userId}" não encontrado`);
+
+        throw new NotFoundException(`Usuario com id "${userId}" nao encontrado`);
       }),
       ensureUsersExist: jest.fn(async (userIds: string[]) => {
         await Promise.all(userIds.map((id) => userPersistenceMock.validateUser(id)));
@@ -238,11 +241,12 @@ describe('PetsService', () => {
     expect(result.data.id).toBeDefined();
     expect(result.data.name).toBe('Luna');
     expect(result.data.species).toBe('dog');
+    expect(result.data.age).toBe('ADULTO');
     expect(result.data.selectedPersonalities).toEqual(['playful', 'friendly']);
     expect(result.data.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
   });
 
-  it('deve rejeitar criação com responsibleUserId inexistente', async () => {
+  it('deve rejeitar criacao com responsibleUserId inexistente', async () => {
     const dto = await validateCreateDto({
       ...makeCreateDto(),
       responsibleUserId: 'missing-user-id',
@@ -252,7 +256,7 @@ describe('PetsService', () => {
     expect(prismaMock.pet.create).not.toHaveBeenCalled();
   });
 
-  it('deve rejeitar traços de personalidade inválidos na criação', async () => {
+  it('deve rejeitar tracos de personalidade invalidos na criacao', async () => {
     const dto = await validateCreateDto({
       ...makeCreateDto(),
       selectedPersonalities: ['invalid-trait'],
@@ -261,7 +265,16 @@ describe('PetsService', () => {
     await expect(service.create(dto)).rejects.toThrow(BadRequestException);
   });
 
-  it('deve listar pets filtrando por responsável', async () => {
+  it('deve rejeitar faixa etaria fora da lista permitida na criacao', async () => {
+    await expect(
+      validateCreateDto({
+        ...makeCreateDto(),
+        age: '2 anos',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve listar pets filtrando por responsavel', async () => {
     await service.create(await validateCreateDto(makeCreateDto()));
     await service.create(
       await validateCreateDto({
@@ -287,7 +300,7 @@ describe('PetsService', () => {
     expect(result.data.id).toBe(created.data.id);
   });
 
-  it('deve lançar NotFoundException quando pet não existir em findOne', async () => {
+  it('deve lancar NotFoundException quando pet nao existir em findOne', async () => {
     await expect(service.findOne('missing-id')).rejects.toThrow(NotFoundException);
   });
 
@@ -300,15 +313,20 @@ describe('PetsService', () => {
     expect(result.data.name).toBe('Luna Renomeada');
     expect(result.data.size).toBe('large');
     expect(result.data.species).toBe(created.data.species);
+    expect(result.data.age).toBe(created.data.age);
   });
 
-  it('deve retornar null para adoção quando pet não tiver responsável', async () => {
+  it('deve rejeitar faixa etaria invalida na atualizacao', async () => {
+    await expect(validateUpdateDto({ age: '1 ano' })).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve retornar null para adocao quando pet nao tiver responsavel', async () => {
     records.push({
       id: 'pet-no-owner',
       profilePhoto: '',
       galleryPhotosJson: '[]',
       name: 'Sem Dono',
-      ageText: '1 ano',
+      ageText: 'ADULTO',
       species: 'DOG',
       breed: 'SRD',
       sex: 'MALE',
@@ -341,7 +359,7 @@ describe('PetsService', () => {
     expect(result).toBeNull();
   });
 
-  it('deve finalizar adoção transferindo responsável e status', async () => {
+  it('deve finalizar adocao transferindo responsavel e status', async () => {
     const created = await service.create(await validateCreateDto(makeCreateDto()));
 
     const result = await service.finalizeAdoption(created.data.id, mockUserIds.ANA_SOUZA);
@@ -353,7 +371,7 @@ describe('PetsService', () => {
 
   it('deve realizar soft delete e ocultar pet das consultas', async () => {
     const created = await service.create(await validateCreateDto(makeCreateDto()));
-    const requesterId = created.data.responsibleUserId; // Use the pet's owner as requesterId
+    const requesterId = created.data.responsibleUserId;
 
     const deleted = await service.remove(created.data.id, requesterId);
     const listed = await service.findAll();

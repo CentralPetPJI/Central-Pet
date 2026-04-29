@@ -25,9 +25,7 @@ test("cadastro cria pet e redireciona para o perfil", async ({
   await page
     .getByRole("textbox", { name: "Nome", exact: true })
     .fill("Rex E2E");
-  await page
-    .getByRole("textbox", { name: "Idade", exact: true })
-    .fill("2 anos");
+  await page.getByLabel("Faixa etaria").selectOption("ADULTO");
   await page.getByRole("textbox", { name: "Raca", exact: true }).fill("SRD");
 
   // Selecionar opções obrigatórias

@@ -9,7 +9,7 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-import { SpeciesValues, SexValues, SizeValues } from '../constants';
+import { PetAgeCategoryValues, SpeciesValues, SexValues, SizeValues } from '../constants';
 
 export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
@@ -34,6 +34,7 @@ export class UpdatePetDto {
   @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @IsNotEmpty()
+  @IsIn([...PetAgeCategoryValues])
   age?: string;
 
   @ValidateIf((_, value) => value !== undefined)

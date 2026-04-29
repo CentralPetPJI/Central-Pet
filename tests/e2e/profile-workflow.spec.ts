@@ -19,7 +19,7 @@ test.describe("profile-workflow", () => {
     const petResposta = await request.post(`${BASE_API}/api/pets`, {
       data: {
         name: "Pet Segredo",
-        age: "2 anos",
+        age: "ADULTO",
         species: "dog",
         breed: "SRD",
         sex: "male",

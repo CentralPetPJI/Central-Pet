@@ -48,7 +48,7 @@ export async function criarPetsViaApi(
           "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=640",
         galleryPhotos: [],
         name: petName,
-        age: "2 anos",
+        age: "ADULTO",
         species: "dog",
         breed: "SRD",
         sex: "male",

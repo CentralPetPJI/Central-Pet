@@ -4,6 +4,7 @@ import PetProfileFactGrid, {
   type PetProfileFact,
 } from '@/Components/PetProfile/PetProfileFactGrid';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
+import { formatPetAge } from '@/lib/pet-age';
 
 interface PetProfileOverviewProps {
   formData: PetRegisterFormData;
@@ -45,7 +46,7 @@ const PetProfileOverview = ({ formData }: PetProfileOverviewProps) => {
             Porte {formatPetSize(formData.size)}
           </span>
           <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
-            {formData.age}
+            {formatPetAge(formData.age)}
           </span>
           <span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-semibold text-slate-700">
             {formData.breed}

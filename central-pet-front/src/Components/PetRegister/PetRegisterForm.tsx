@@ -114,7 +114,6 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
       ...data,
       name: data.name.trim(),
       breed: data.breed.trim() || 'SRD',
-      age: data.age.trim(),
       tutor: data.tutor.trim(),
       shelter: data.shelter.trim(),
       city: data.city.trim(),
