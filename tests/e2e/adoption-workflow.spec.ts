@@ -154,12 +154,8 @@ test.describe.serial("Fluxo de Adoção", () => {
       .first()
       .click({ force: true });
     await page.getByRole("link", { name: "Quero adotar" }).click();
-    await page.getByRole("button", { name: "Solicitar Adoção" }).click();
-    await page.locator('input[type="checkbox"]').check();
-    await page.getByRole("button", { name: "Enviar solicitação" }).click();
-
     await expect(
-      page.getByText("Você já possui uma solicitação ativa para este pet"),
-    ).toBeVisible();
+      page.getByRole("button", { name: "Solicitar Adoção" }),
+    ).not.toBeVisible();
   });
 });
