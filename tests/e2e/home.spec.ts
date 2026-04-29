@@ -38,7 +38,9 @@ test.describe("home", () => {
       .locator("xpath=ancestor::section[1]");
     await carouselSection.hover();
 
-    const petImage = page.locator(`img[alt="${nomePetPrincipal}"]:visible`).first();
+    const petImage = page
+      .locator(`img[alt="${nomePetPrincipal}"]:visible`)
+      .first();
     await expect(petImage).toBeVisible();
     await petImage.click();
 

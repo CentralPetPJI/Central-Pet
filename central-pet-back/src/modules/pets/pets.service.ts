@@ -6,11 +6,7 @@ import { UpdatePetDto } from './dto/update-pet.dto';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
-import type {
-  PetForAdoptionRequest,
-  PetRecord,
-  PetResponseRecord,
-} from './models/pet-record';
+import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
 export type { PetForAdoptionRequest } from './models/pet-record';
 
 type ResponsibleLocation = {
@@ -235,7 +231,6 @@ export class PetsService {
 
     const responsibleLocation = await this.getResponsibleLocation(pet.responsibleUserId);
     const petRecord = PetMapper.toDomain(pet);
-
     return {
       id: petRecord.id,
       name: petRecord.name,
@@ -314,7 +309,9 @@ export class PetsService {
             : undefined,
         breed: updatePetDto.breed,
         sex:
-          updatePetDto.sex !== undefined ? PetMapper.mapSexToPersistence(updatePetDto.sex) : undefined,
+          updatePetDto.sex !== undefined
+            ? PetMapper.mapSexToPersistence(updatePetDto.sex)
+            : undefined,
         size:
           updatePetDto.size !== undefined
             ? PetMapper.mapSizeToPersistence(updatePetDto.size)

@@ -16,6 +16,7 @@ import { petPersonalityOptions } from '@/storage/pets';
 import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
+import AdoptionRequestArea from '@/Pages/Pet/AdoptionRequestArea.tsx';
 
 const PetPersonalityProfilePage = () => {
   const { petId } = useParams();
@@ -25,14 +26,17 @@ const PetPersonalityProfilePage = () => {
   const [displayMessage, setDisplayMessage] = useState(location.state?.successMessage ?? '');
   const [formData, setFormData] = useState<PetRegisterFormData>();
   const [locationText, setLocationText] = useState('');
+  const [petApi, setPetApi] = useState<PetApiResponse | undefined>(undefined);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
 
+  // Limpar a mensagem após 3 segundos
   useEffect(() => {
     if (displayMessage) {
       const timer = setTimeout(() => {
         setDisplayMessage('');
+        // Remove successMessage from location.state to prevent reappearing on remount
         navigate(location.pathname, { replace: true, state: {} });
       }, 3000);
       return () => clearTimeout(timer);
@@ -67,6 +71,7 @@ const PetPersonalityProfilePage = () => {
         setFormData(mapPetApiResponseToRegisterFormData(petData));
         setLocationText(normalizedLocation);
         setSelectedPersonalities(petData.selectedPersonalities ?? []);
+        setPetApi(response.data.data);
       } catch {
         if (!isMounted) {
           return;
@@ -92,7 +97,7 @@ const PetPersonalityProfilePage = () => {
     return null;
   }
 
-  const isOwner = currentUser?.id;
+  const isOwner = Boolean(currentUser?.id && petApi && currentUser.id === petApi.responsibleUserId);
   const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
   const activeOptions = petPersonalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
@@ -138,6 +143,32 @@ const PetPersonalityProfilePage = () => {
       {!isNotFound ? (
         <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
           <PetProfileHero formData={formData} locationText={locationText} />
+
+          {/* Solicitar adoção: botão e formulário de consentimento */}
+          <div className="p-4 lg:p-5 border-b border-slate-100 bg-white">
+            {currentUser ? (
+              !isOwner ? (
+                <AdoptionRequestArea
+                  petId={petId}
+                  formData={formData}
+                  setDisplayMessage={setDisplayMessage}
+                />
+              ) : null
+            ) : (
+              <div className="flex items-center gap-3">
+                {/*TODO: Usuários anônimos podem ver apenas ONGs*/}
+                <p className="text-sm text-slate-600">
+                  Faça login para enviar uma solicitação de adoção.
+                </p>
+                <a
+                  className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white"
+                  href={routes.login.path}
+                >
+                  Entrar
+                </a>
+              </div>
+            )}
+          </div>
 
           <div className="p-5 lg:p-6">
             <div className="space-y-4">

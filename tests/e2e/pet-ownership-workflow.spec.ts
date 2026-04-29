@@ -41,8 +41,12 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
 
-    await page.getByRole("textbox", { name: "Nome", exact: true }).fill(petName);
-    await page.getByRole("textbox", { name: "Idade", exact: true }).fill("2 anos");
+    await page
+      .getByRole("textbox", { name: "Nome", exact: true })
+      .fill(petName);
+    await page
+      .getByRole("textbox", { name: "Idade", exact: true })
+      .fill("2 anos");
     await page
       .getByRole("textbox", { name: "Raca", exact: true })
       .fill("Inteligência Artificial");
@@ -92,8 +96,12 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
 
-    await page.getByRole("textbox", { name: "Nome", exact: true }).fill(petName);
-    await page.getByRole("textbox", { name: "Idade", exact: true }).fill("1 ano");
+    await page
+      .getByRole("textbox", { name: "Nome", exact: true })
+      .fill(petName);
+    await page
+      .getByRole("textbox", { name: "Idade", exact: true })
+      .fill("1 ano");
     await page.getByRole("textbox", { name: "Raca", exact: true }).fill("SRD");
 
     await page.getByLabel("Especie").selectOption("dog");

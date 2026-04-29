@@ -17,6 +17,7 @@ import { AdoptionRequestsService } from './adoption-requests.service';
 import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
 import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
 import type { AdoptionRequestActionResult } from './models';
+import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
 
 export type { AdoptionRequestActionResult };
 
@@ -38,6 +39,11 @@ export class AdoptionRequestsController {
 
     // default to received
     return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
+  }
+  @Post()
+  @UseGuards(SessionGuard)
+  async create(@Body() dto: CreateAdoptionRequestDto, @CurrentUser() user: MockUser | PublicUser) {
+    return this.adoptionRequestsService.create(user.id, dto);
   }
 
   @Patch(':id')
