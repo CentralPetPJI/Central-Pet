@@ -50,13 +50,13 @@ export function PetsTab() {
   }, []);
 
   useEffect(() => {
-    // when filter changes, reset to page 1 and reload pets
+    // quando o filtro mudar, resetar para a página 1 e recarregar pets
     setPage(1);
     fetchPets(filterUserId, 1);
   }, [filterUserId]);
 
   useEffect(() => {
-    // when page changes, fetch new page
+    // quando a página mudar, buscar a nova página
     fetchPets(filterUserId, page);
   }, [page]);
 

@@ -4,6 +4,7 @@ import { ModerationStatus, PetStatus } from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
 import { AuditService } from '@/modules/audit/audit.service';
+import { generateRandomPassword } from '@/modules/auth/password.util';
 
 @Injectable()
 export class AdminService {
@@ -34,20 +35,22 @@ export class AdminService {
    * If password is not provided, generate a temporary one and return it.
    */
   async createAdmin(data: { fullName: string; email: string; password?: string }, rootId: string) {
-    const tempPassword =
-      data.password ??
-      Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+    const passwordWasProvided = typeof data.password === 'string' && data.password.length > 0;
+
+    // generate a cryptographically secure temporary password only when not provided
+    const generatedPassword = !passwordWasProvided ? generateRandomPassword(12) : undefined;
+    const passwordToUse = passwordWasProvided ? data.password! : generatedPassword!;
 
     const createDto = {
       fullName: data.fullName,
       email: data.email,
-      password: tempPassword,
+      password: passwordToUse,
       role: 'PESSOA_FISICA' as const,
       acceptTerms: true,
     };
 
     const result = await this.usersService.create(createDto, {
-      mustChangePassword: true,
+      mustChangePassword: !passwordWasProvided,
       roleOverride: 'ADMIN',
     });
 
@@ -62,7 +65,7 @@ export class AdminService {
       });
     }
 
-    return { message: 'Admin criado com sucesso', data: { ...result.data, tempPassword } };
+    return { message: 'Admin criado com sucesso', data: result.data };
   }
 
   async toggleUserStatus(userId: string, adminId: string) {

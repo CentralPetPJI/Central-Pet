@@ -134,7 +134,7 @@ export function sanitizeDocument(_raw: string | undefined, role: string): string
 }
 
 // ---------------------------------------------------------------------------
-// Report status formatters
+// Formatadores de status de relatório
 // ---------------------------------------------------------------------------
 
 export function formatReportStatus(status: string | undefined): string {

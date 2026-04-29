@@ -86,10 +86,8 @@ export function AuditTab() {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">
-              <span className="font-bold">
-                {log.admin?.fullName ?? log.user?.fullName ?? 'Desconhecido'}
-              </span>{' '}
-              executou <span className="text-purple-600 font-semibold">{log.action}</span>
+              <span className="font-bold">{log.user?.fullName ?? 'Desconhecido'}</span> executou{' '}
+              <span className="text-purple-600 font-semibold">{log.action}</span>
             </p>
             <p className="text-xs text-gray-500 mb-2">
               Alvo: {log.targetType} ({log.targetId})
@@ -107,7 +105,9 @@ export function AuditTab() {
       {/* pagination controls */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-gray-600">
-          Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total}
+          {total === 0
+            ? 'Mostrando 0 de 0'
+            : `Mostrando ${(page - 1) * limit + 1} - ${Math.min(page * limit, total)} de ${total}`}
         </div>
         <div className="flex items-center gap-2">
           <button

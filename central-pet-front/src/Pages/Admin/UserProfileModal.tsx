@@ -39,7 +39,7 @@ export function UserProfileModal({ user, onClose }: { user: UserProfile; onClose
           )}
           <div>
             <p className="text-xs text-gray-500">Data de criação</p>
-            <p className="font-medium">{new Date(user.createdAt).toLocaleString()}</p>
+            <p className="font-medium">{new Date(user.createdAt).toLocaleString('pt-BR')}</p>
           </div>
 
           <div>

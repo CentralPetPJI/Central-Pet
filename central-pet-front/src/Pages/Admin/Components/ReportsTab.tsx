@@ -89,7 +89,7 @@ export function ReportsTab() {
           )}
 
           <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500">Reportado por: {report.reporter.fullName}</p>
+            <p className="text-xs text-gray-500">Reportado por: {report.reporter?.fullName}</p>
             {report.status === 'PENDING' ? (
               <div className="flex gap-2">
                 <button
