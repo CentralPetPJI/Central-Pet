@@ -231,7 +231,6 @@ export class PetsService {
 
     const responsibleLocation = await this.getResponsibleLocation(pet.responsibleUserId);
     const petRecord = PetMapper.toDomain(pet);
-
     return {
       id: petRecord.id,
       name: petRecord.name,
