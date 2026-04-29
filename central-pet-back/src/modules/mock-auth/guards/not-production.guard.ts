@@ -6,7 +6,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
  */
 @Injectable()
 export class NotProductionGuard implements CanActivate {
-  canActivate(_context: ExecutionContext): boolean {
+  canActivate(this: void, _context: ExecutionContext): boolean {
     if (process.env.NODE_ENV === 'production') {
       throw new UnauthorizedException('Acesso não permitido em produção');
     }

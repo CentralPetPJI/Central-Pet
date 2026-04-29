@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   UnauthorizedException,
+  ForbiddenException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ import { MockAuthService } from './mock-auth.service';
 import { SelectMockUserDto } from './dto/select-mock-user.dto';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import { NotProductionGuard } from '@/modules/mock-auth/guards/not-production.guard';
+import { MockModeGuard } from '@/modules/mock-auth/guards/mock-mode.guard';
 
 @UseGuards(NotProductionGuard)
 @Controller('mock-auth')
@@ -74,7 +76,7 @@ export class MockAuthController {
     };
   }
 
-  @UseGuards(SessionGuard)
+  @UseGuards(SessionGuard, MockModeGuard)
   @Post('accept-terms')
   acceptTerms(@CurrentUser() user: MockUser) {
     return this.mockAuthService.acceptTerms(user.id);

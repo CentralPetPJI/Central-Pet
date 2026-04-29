@@ -357,6 +357,7 @@ export default function Register() {
                     to={routes.termsOfResponsibility.path}
                     className="font-bold text-[#4fb8c5] hover:underline"
                     target="_blank"
+                    rel="noopener noreferrer"
                   >
                     Termo de Responsabilidade e Privacidade
                   </Link>

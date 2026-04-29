@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hashPassword } from '../auth/password.util';
@@ -20,6 +21,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPersistence: UserPersistenceService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -65,6 +67,7 @@ export class UsersService {
           state: normalizedState,
           passwordHash,
           acceptedTermsAt: new Date(),
+          acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
         },
       });
 

@@ -24,6 +24,7 @@ export type MockUser = {
   updatedAt: Date;
   deleted: boolean;
   acceptedTermsAt?: Date;
+  acceptedTermsVersion?: string;
 };
 
 export const mockUserIds = {

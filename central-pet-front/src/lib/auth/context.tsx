@@ -24,7 +24,7 @@ import type {
   RegisterData,
 } from '@/Models';
 import { createAuthStrategy } from './strategies/factory';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { routes } from '@/routes.tsx';
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -143,18 +143,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [strategy, refreshCurrentUser]);
 
   // Redireciona para termos se o usuário estiver logado mas não aceitou os termos
+  const location = useLocation();
+
   useEffect(() => {
     if (
       !isLoading &&
       currentUser &&
       !currentUser.acceptedTermsAt &&
-      window.location.pathname !== routes.termsOfResponsibility.path &&
-      window.location.pathname !== routes.login.path &&
-      window.location.pathname !== routes.register.path
+      location.pathname !== routes.termsOfResponsibility.path &&
+      location.pathname !== routes.login.path &&
+      location.pathname !== routes.register.path
     ) {
       navigate(routes.termsOfResponsibility.path);
     }
-  }, [currentUser, isLoading, navigate]);
+  }, [currentUser, isLoading, navigate, location.pathname]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

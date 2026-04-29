@@ -1,11 +1,18 @@
-import { Injectable, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { mockUsers, defaultMockUserId, type MockUser } from '@/mocks';
-import { NotProductionGuard } from '@/modules/mock-auth/guards/not-production.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MockAuthService {
   private readonly mockUsers: MockUser[] = [...mockUsers];
   private readonly defaultUserId = defaultMockUserId;
+
+  constructor(private readonly configService: ConfigService) {}
 
   listUsers() {
     return {
@@ -37,15 +44,26 @@ export class MockAuthService {
   }
 
   acceptTerms(userId: string) {
+    const targetVersion = this.configService.get<string>('TERMS_VERSION');
+
     const userIndex = this.mockUsers.findIndex((item) => item.id === userId);
 
     if (userIndex === -1) {
-      throw new UnauthorizedException('Invalid or missing user credentials');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
-    this.mockUsers[userIndex].acceptedTermsAt = new Date();
+    if (this.mockUsers[userIndex].acceptedTermsVersion === targetVersion) {
+      throw new BadRequestException(`Esta versão dos termos (${targetVersion}) já foi aceita`);
+    }
+
+    this.mockUsers[userIndex] = {
+      ...this.mockUsers[userIndex],
+      acceptedTermsAt: new Date(),
+      acceptedTermsVersion: targetVersion,
+    };
+
     return {
-      message: 'Terms accepted successfully',
+      message: 'Termos aceitos com sucesso',
       data: {
         user: this.mockUsers[userIndex],
       },

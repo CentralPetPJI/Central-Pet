@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   UnauthorizedException,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Cookies } from '@/decorators/cookies.decorator';
@@ -18,6 +19,9 @@ import {
   SESSION_COOKIE_NAME,
 } from '@/utils/session-cookie';
 import { Throttle } from '@nestjs/throttler';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
+import { CurrentUser } from '@/decorators/current-user.decorator';
+import { PublicUser } from '@/modules/users/users.service';
 
 @Controller('auth')
 export class AuthController {
@@ -76,16 +80,10 @@ export class AuthController {
     return this.authService.getAuthenticatedUser(parsedSession.value);
   }
 
+  @UseGuards(SessionGuard)
   @Post('accept-terms')
-  async acceptTerms(@Cookies(SESSION_COOKIE_NAME) sessionCookie?: string) {
-    const parsedSession = parseSessionCookieValue(sessionCookie);
-
-    if (!parsedSession || parsedSession.mode !== 'session') {
-      throw new UnauthorizedException('Authentication required');
-    }
-
-    const { data } = await this.authService.getAuthenticatedUser(parsedSession.value);
-    return this.authService.acceptTerms(data.user.id);
+  async acceptTerms(@CurrentUser() user: PublicUser) {
+    return this.authService.acceptTerms(user.id);
   }
 
   @Post('logout')

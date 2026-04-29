@@ -96,8 +96,8 @@ export default function TermsOfResponsibility() {
               4. Compartilhamento e Responsabilidades
             </h2>
             <p>
-              O compartilhamento de contato (telefone/e-mail) entre usuários **somente ocorre com
-              consentimento expresso** de ambas as partes.
+              O compartilhamento de contato (telefone/e-mail) entre usuários{' '}
+              <strong> somente ocorre com consentimento expresso</strong> de ambas as partes.
             </p>
             <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic text-sm">
               <p>
