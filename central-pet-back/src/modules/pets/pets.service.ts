@@ -240,14 +240,19 @@ export class PetsService {
     };
   }
 
-  async findByIdForAdoption(id: string): Promise<PetForAdoptionRequest | null> {
+  async findByIdForAdoption(
+    id: string,
+    opts?: { includeDeleted?: boolean },
+  ): Promise<PetForAdoptionRequest | null> {
     await this.ensureMockPetsSeededIfEnabled();
+
+    const includeDeleted = opts?.includeDeleted ?? false;
 
     const pet = await this.prisma.pet.findUnique({
       where: { id },
     });
 
-    if (!pet || pet.deleted || !pet.responsibleUserId) {
+    if (!pet || (!includeDeleted && pet.deleted) || !pet.responsibleUserId) {
       return null;
     }
 

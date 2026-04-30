@@ -44,21 +44,44 @@ export class AdoptionRequestsService {
     const persistedUsersById = await this.userPersistence.buildUserMap(allUserIds);
 
     const petsById = new Map<string, PetForAdoptionRequest | null>();
+    // Buscar pets incluindo soft-deleted para que solicitações existentes continuem visíveis
     await Promise.all(
       requests.map(async (r) => {
-        const pet = await this.petsService.findByIdForAdoption(r.petId);
+        const pet = await this.petsService.findByIdForAdoption(r.petId, { includeDeleted: true });
         petsById.set(r.petId, pet ?? null);
       }),
     );
 
     return requests.map((r) => {
       const petFound = petsById.get(r.petId);
+
+      let petForResponseObj: PetForAdoptionRequest;
+
       if (!petFound) {
-        // Solicitação deve sempre referenciar um pet existente; falha rápida para expor problemas de integridade de dados.
-        throw new NotFoundException(`Pet com id "${r.petId}" não encontrado`);
+        // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
+        petForResponseObj = {
+          id: r.petId,
+          name: 'Indisponível',
+          species: 'UNKNOWN',
+          city: '',
+          state: '',
+          responsibleUserId: r.responsibleUserId ?? undefined,
+          sourceType: undefined,
+          sourceName: undefined,
+          adoptionStatus: 'UNAVAILABLE',
+        };
+      } else if (petFound.adoptionStatus === 'UNAVAILABLE') {
+        // Pet existente mas marcado como indisponível (soft-deleted / removido): ofuscar nome, manter relação com responsável e metadados
+        petForResponseObj = {
+          ...petFound,
+          name: 'Indisponível',
+        };
+      } else {
+        petForResponseObj = petFound;
       }
 
-      const petForResponse = mapPetForResponse(petFound);
+      const petForResponse = mapPetForResponse(petForResponseObj);
+
       const adopterForResponse = mapAdopterForResponse(
         r.adopterId,
         persistedUsersById,
@@ -175,9 +198,30 @@ export class AdoptionRequestsService {
     await this.userPersistence.ensureUsersExist(userIds);
     const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
-    const petFound = await this.petsService.findByIdForAdoption(updatedReq.petId);
+    // buscar pet incluindo soft-deleted para manter solicitações existentes visíveis
+    let petFound = await this.petsService.findByIdForAdoption(updatedReq.petId, {
+      includeDeleted: true,
+    });
+
     if (!petFound) {
-      throw new NotFoundException(`Pet com id "${updatedReq.petId}" não encontrado`);
+      // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
+      petFound = {
+        id: updatedReq.petId,
+        name: 'Indisponível',
+        species: 'UNKNOWN',
+        city: '',
+        state: '',
+        responsibleUserId: updatedReq.responsibleUserId,
+        sourceType: undefined,
+        sourceName: undefined,
+        adoptionStatus: 'UNAVAILABLE',
+      };
+    } else if (petFound.adoptionStatus === 'UNAVAILABLE') {
+      // Pet existente mas indisponível: ofuscar nome, manter relação com responsável
+      petFound = {
+        ...petFound,
+        name: 'Indisponível',
+      } as PetForAdoptionRequest;
     }
 
     const petForResponse = mapPetForResponse(petFound);
