@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from '@/modules/audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { hashPassword, verifyPassword } from '../auth/password.util';
@@ -29,10 +30,7 @@ export class UsersService {
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
-  async create(
-    createUserDto: CreateUserDto,
-    options?: { mustChangePassword?: boolean; roleOverride?: 'ADMIN' | 'PESSOA_FISICA' | 'ONG' },
-  ) {
+  async create(createUserDto: CreateUserDto) {
     this.validateCreateInput(createUserDto);
 
     if (!createUserDto.acceptTerms) {
@@ -62,7 +60,7 @@ export class UsersService {
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
-      const roleToPersist = options?.roleOverride ?? createUserDto.role;
+      const roleToPersist = createUserDto.role;
 
       const newUser = await tx.user.create({
         data: {
@@ -77,12 +75,11 @@ export class UsersService {
           state: normalizedState,
           passwordHash,
           acceptedTermsAt: new Date(),
-          acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
-          mustChangePassword: options?.mustChangePassword ?? false,
+          acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION'),
+          mustChangePassword: false,
         },
       });
 
-      // audit log: user creation
       if (this.auditService) {
         await this.auditService.createWithTx(tx, {
           userId: newUser.id,
@@ -90,6 +87,70 @@ export class UsersService {
           targetId: newUser.id,
           targetType: 'USER',
           details: { role: roleToPersist },
+        });
+      }
+
+      return newUser;
+    });
+
+    return {
+      message: 'User created successfully',
+      data: this.toPublicUser(user),
+    };
+  }
+
+  async createByAdmin(adminId: string, adminDto: AdminCreateUserDto) {
+    const normalizedEmail = adminDto.email.trim().toLowerCase();
+    const normalizedCpf = adminDto.cpf?.trim().toUpperCase();
+    const normalizedCnpj = adminDto.cnpj?.trim().toUpperCase();
+    const normalizedOrganizationName = adminDto.organizationName?.trim() || undefined;
+    const normalizedCity = adminDto.city?.trim() || undefined;
+    const normalizedState = adminDto.state?.trim().toUpperCase() || undefined;
+    const passwordHash = await hashPassword(adminDto.password);
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: normalizedEmail },
+          ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
+          ...(normalizedCnpj ? [{ cnpj: normalizedCnpj }] : []),
+        ],
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Usuário com esse email ou CPF já existe');
+    }
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      const roleToPersist = adminDto.roleOverride ?? adminDto.role;
+
+      const newUser = await tx.user.create({
+        data: {
+          fullName: adminDto.fullName.trim(),
+          email: normalizedEmail,
+          role: roleToPersist,
+          birthDate: adminDto.birthDate,
+          cpf: normalizedCpf,
+          organizationName: normalizedOrganizationName,
+          cnpj: normalizedCnpj,
+          city: normalizedCity,
+          state: normalizedState,
+          passwordHash,
+          acceptedTermsAt: new Date(),
+          acceptedTermsVersion: this.configService.get<string>('TERMS_VERSION') ?? '1.0.0',
+          mustChangePassword: adminDto.mustChangePassword ?? false,
+        },
+      });
+
+      // audit log: admin performed the creation
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: adminId,
+          action: 'CREATE_USER',
+          targetId: newUser.id,
+          targetType: 'USER',
+          details: { role: roleToPersist, createdBy: adminId },
         });
       }
 

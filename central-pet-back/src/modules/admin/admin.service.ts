@@ -3,6 +3,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { ModerationStatus, PetStatus } from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
+import { AdminCreateUserDto } from '@/modules/users/dto/admin-create-user.dto';
 import { AuditService } from '@/modules/audit/audit.service';
 import { generateRandomPassword } from '@/modules/auth/password.util';
 
@@ -47,12 +48,11 @@ export class AdminService {
       password: passwordToUse,
       role: 'PESSOA_FISICA' as const,
       acceptTerms: true,
+      roleOverride: 'ADMIN' as const,
+      mustChangePassword: true,
     };
 
-    const result = await this.usersService.create(createDto, {
-      mustChangePassword: !passwordWasProvided,
-      roleOverride: 'ADMIN',
-    });
+    const result = await this.usersService.createByAdmin(rootId, createDto as AdminCreateUserDto);
 
     // record audit log
     if (this.auditService) {
