@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dto';
 import type {
@@ -6,10 +6,14 @@ import type {
   AdoptionRequestNotification,
 } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
+import { AuditService } from '@/modules/audit/audit.service';
 
 @Injectable()
 export class RejectAdoptionUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly auditService?: AuditService,
+  ) {}
 
   async execute(
     requestId: string,
@@ -64,6 +68,17 @@ export class RejectAdoptionUseCase {
 
       if (!updatedRequest) {
         throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+      }
+
+      // audit log: responsible user rejected adoption request
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: _responsibleUserId,
+          action: 'REJECT_ADOPTION_REQUEST',
+          targetId: requestId,
+          targetType: 'ADOPTION_REQUEST',
+          details: { petId: currentRequest.petId, autoRejectedCount },
+        });
       }
 
       return { updatedRequest, autoRejectedCount };

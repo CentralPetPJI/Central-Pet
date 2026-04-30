@@ -1,6 +1,7 @@
 import { expect, type APIRequestContext } from "@playwright/test";
 import {
   criarUsuarioViaApi,
+  fazerLoginViaApi,
   gerarUsuarioUnico,
   type UsuarioCriadoE2E,
 } from "./user-helpers";
@@ -10,7 +11,7 @@ const API_BASE_URL = "http://localhost:3001/api";
 type CriarPetsViaApiOpcoes = {
   quantity: number;
   names?: string[];
-  owner?: UsuarioCriadoE2E;
+  owner?: UsuarioCriadoE2E & { password?: string }; // Adicionado password opcional
 };
 
 export type PetCriadoE2E = {
@@ -31,9 +32,23 @@ export async function criarPetsViaApi(
     throw new Error("quantity deve ser maior que zero");
   }
 
-  const owner =
-    opcoes.owner ??
-    (await criarUsuarioViaApi(request, gerarUsuarioUnico("pet-seed-owner")));
+  let owner = opcoes.owner;
+
+  if (!owner) {
+    const dadosUsuario = gerarUsuarioUnico("pet-seed-owner");
+    const criado = await criarUsuarioViaApi(request, dadosUsuario);
+    owner = { ...criado, password: dadosUsuario.password };
+  }
+
+  // Se temos a senha, fazemos login para garantir que os cookies de sessão real estão no request
+  if (owner.password) {
+    await fazerLoginViaApi(request, {
+      email: owner.email,
+      password: owner.password,
+      fullName: owner.fullName,
+      cpf: owner.cpf || "",
+    });
+  }
 
   const pets: PetCriadoE2E[] = [];
 
@@ -51,14 +66,9 @@ export async function criarPetsViaApi(
         age: "2 anos",
         species: "dog",
         breed: "SRD",
-        sex: "Macho",
-        size: "Medio",
+        sex: "male",
+        size: "medium",
         microchipped: false,
-        tutor: owner.fullName,
-        shelter: "Abrigo E2E",
-        city: "Sao Paulo",
-        state: "SP",
-        contact: "(11) 98888-0000",
         vaccinated: true,
         neutered: true,
         dewormed: true,
@@ -66,9 +76,6 @@ export async function criarPetsViaApi(
         physicalLimitation: false,
         visualLimitation: false,
         hearingLimitation: false,
-        responsibleUserId: owner.id,
-        sourceType: owner.role,
-        sourceName: owner.organizationName || owner.fullName,
         selectedPersonalities: [],
       },
     });
@@ -90,19 +97,17 @@ export async function criarPetsViaApi(
 
 /**
  * Aplica soft delete nos pets informados para isolar os testes.
- * Nota: DELETE requer autenticação, então pode retornar 401 se a autenticação não estiver configurada.
- * O teste aceita 401, 404 e 200 como resultados válidos.
  */
 export async function softDeletePetsViaApi(
   request: APIRequestContext,
   petIds: string[],
-  _ownerIds?: string[],
 ): Promise<void> {
   for (let index = 0; index < petIds.length; index += 1) {
     const petId = petIds[index];
 
     const resposta = await request.delete(`${API_BASE_URL}/pets/${petId}`);
-    // Aceita 200 (sucesso), 401 (não autenticado), 403 (não autorizado), ou 404 (pet não encontrado)
-    expect([200, 401, 403, 404]).toContain(resposta.status());
+    // Aceita 200 (sucesso) ou 404 (pet não encontrado).
+    // Se retornar 401 ou 403, o teste deve falhar pois a sessão deveria estar ativa.
+    expect([200, 404]).toContain(resposta.status());
   }
 }

@@ -24,10 +24,11 @@
     "db:setup": "node scripts/setup-dev-db.js",
     "db:clean": "node scripts/clean-dev-tables.js",
     "test:setup": "node scripts/setup-test-db.js",
-    "test:clean": "node scripts/clean-test-db.js",
+    "test:clean": "node scripts/clean-test-tables.js",
+    "drop:test": "node scripts/drop-test-db.js",
     "prisma:generate": "prisma generate",
     "postinstall": "prisma generate",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "dotenv -e .env.development prisma studio"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.17",

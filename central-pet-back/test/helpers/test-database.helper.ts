@@ -69,6 +69,8 @@ export class TestDatabaseHelper {
    */
   async cleanup(): Promise<void> {
     // Limpa dados de teste na ordem correta para respeitar constraints
+    await this.prisma.moderationReport.deleteMany();
+    await this.prisma.auditLog.deleteMany();
     await this.prisma.adoptionRequest.deleteMany();
     await this.prisma.petHistory.deleteMany();
     await this.prisma.session.deleteMany();
@@ -123,11 +125,6 @@ export class TestDatabaseHelper {
             physicalLimitation: false,
             visualLimitation: false,
             hearingLimitation: false,
-            tutor: `Tutor Seed ${index + 1}`,
-            shelter: 'Abrigo Seed',
-            city: 'Sao Paulo',
-            state: 'SP',
-            contact: '(11) 90000-0000',
             selectedPersonalitiesJson: '[]',
             responsibleUserId: ownerId,
             sourceType: 'PESSOA_FISICA',

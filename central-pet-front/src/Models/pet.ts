@@ -1,15 +1,18 @@
 import type { AdoptionRequestStatus } from './adoption-request-status';
+import { UserProfile } from '@/Models/user.ts';
 
 export interface Pet {
   id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
   name: string;
-  species: string;
+  species: 'dog' | 'cat';
   physicalCharacteristics: string;
   behavioralCharacteristics: string;
   notes: string;
   photo: string;
+  city?: string;
+  state?: string;
   responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
 }
 
@@ -26,16 +29,13 @@ export interface PetApiResponse {
   galleryPhotos: string[];
   name: string;
   age: string;
-  species: string;
+  species: 'dog' | 'cat';
   breed: string;
-  sex: string;
-  size: string;
+  sex: 'male' | 'female';
+  size: 'small' | 'medium' | 'large';
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
   city: string;
   state: string;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
@@ -45,11 +45,13 @@ export interface PetApiResponse {
   hearingLimitation: boolean;
   selectedPersonalities: string[];
   responsibleUserId: string;
+  responsibleUser?: UserProfile;
   adoptionStatus?: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;
 }
 
 export interface PetListItem {
@@ -71,7 +73,7 @@ export interface ReceivedAdoptionRequest {
     city: string;
     state: string;
     responsibleUserId: string;
-    sourceType: 'ONG' | 'PESSOA_FISICA';
+    sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
     sourceName: string;
   };
   adopter: {
@@ -79,6 +81,18 @@ export interface ReceivedAdoptionRequest {
     name: string;
     city: string;
     state: string;
+    email?: string | null;
+    phone?: string | null;
+    mobile?: string | null;
+  };
+  responsible?: {
+    id: string;
+    name: string;
+    city: string;
+    state: string;
+    email?: string | null;
+    phone?: string | null;
+    mobile?: string | null;
   };
   message: string;
   responsibleContactShareConsent: boolean;

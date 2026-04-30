@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   UnauthorizedException,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Cookies } from '@/decorators/cookies.decorator';
@@ -17,11 +18,21 @@ import {
   parseSessionCookieValue,
   SESSION_COOKIE_NAME,
 } from '@/utils/session-cookie';
+import { Throttle } from '@nestjs/throttler';
+import { SessionGuard } from '@/modules/auth/guards/session.guard';
+import { CurrentUser } from '@/decorators/current-user.decorator';
+import { PublicUser } from '@/modules/users/users.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60,
+    },
+  })
   @Post('login')
   @UseInterceptors(CookieInterceptor)
   async login(@Body() loginDto: LoginDto) {
@@ -67,6 +78,12 @@ export class AuthController {
     }
 
     return this.authService.getAuthenticatedUser(parsedSession.value);
+  }
+
+  @UseGuards(SessionGuard)
+  @Post('accept-terms')
+  async acceptTerms(@CurrentUser() user: PublicUser) {
+    return this.authService.acceptTerms(user.id);
   }
 
   @Post('logout')

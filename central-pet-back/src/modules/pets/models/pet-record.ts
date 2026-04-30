@@ -1,4 +1,4 @@
-import type { MockPet } from '@/mocks';
+import { MockPet } from '@/mocks';
 import { toISO } from '@/utils/date.util';
 
 export type PetAdoptionStatus = 'AVAILABLE' | 'IN_PROCESS' | 'ADOPTED' | 'UNAVAILABLE';
@@ -15,11 +15,6 @@ export type PetRecord = {
   sex: string;
   size: string;
   microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  state?: string;
-  contact: string;
   vaccinated: boolean;
   neutered: boolean;
   dewormed: boolean;
@@ -36,55 +31,55 @@ export type PetRecord = {
   updatedAt: string;
 };
 
+export type PetLocation = {
+  city: string;
+  state: string;
+};
+
+export type PetResponseRecord = PetRecord & PetLocation;
+
+export type PetForAdoptionRequest = Pick<
+  PetResponseRecord,
+  | 'id'
+  | 'name'
+  | 'species'
+  | 'city'
+  | 'state'
+  | 'responsibleUserId'
+  | 'sourceType'
+  | 'sourceName'
+  | 'adoptionStatus'
+>;
+
 const normalizeSpecies = (species: string): string => {
   const speciesMap: Record<string, string> = {
     dog: 'DOG',
-    Dog: 'DOG',
-    DOG: 'DOG',
-    cachorro: 'DOG',
-    Cachorro: 'DOG',
-    CACHORRO: 'DOG',
     cat: 'CAT',
-    Cat: 'CAT',
-    CAT: 'CAT',
-    gato: 'CAT',
-    Gato: 'CAT',
-    GATO: 'CAT',
   };
 
-  return speciesMap[species] || species;
+  const normalized = species.toLowerCase();
+  return speciesMap[normalized] || 'DOG';
 };
 
 const normalizeSex = (sex: string): string => {
   const sexMap: Record<string, string> = {
-    macho: 'MALE',
-    Macho: 'MALE',
-    MACHO: 'MALE',
+    male: 'MALE',
     female: 'FEMALE',
-    Female: 'FEMALE',
-    FEMALE: 'FEMALE',
-    femea: 'FEMALE',
-    Femea: 'FEMALE',
-    FEMEA: 'FEMALE',
   };
 
-  return sexMap[sex] || sex;
+  const normalized = sex.toLowerCase();
+  return sexMap[normalized] || 'MALE';
 };
 
 const normalizeSize = (size: string): string => {
   const sizeMap: Record<string, string> = {
-    pequeno: 'SMALL',
-    Pequeno: 'SMALL',
-    PEQUENO: 'SMALL',
-    medio: 'MEDIUM',
-    Medio: 'MEDIUM',
-    MEDIO: 'MEDIUM',
-    grande: 'LARGE',
-    Grande: 'LARGE',
-    GRANDE: 'LARGE',
+    small: 'SMALL',
+    medium: 'MEDIUM',
+    large: 'LARGE',
   };
 
-  return sizeMap[size] || size;
+  const normalized = size.toLowerCase();
+  return sizeMap[normalized] || 'MEDIUM';
 };
 
 export const mapMockPetToPetRecord = (pet: MockPet): PetRecord => ({
@@ -98,11 +93,6 @@ export const mapMockPetToPetRecord = (pet: MockPet): PetRecord => ({
   sex: normalizeSex(pet.sex ?? ''),
   size: normalizeSize(pet.size ?? ''),
   microchipped: false,
-  tutor: pet.sourceName ?? '',
-  shelter: pet.sourceName ?? '',
-  city: pet.city ?? '',
-  state: pet.state,
-  contact: '',
   vaccinated: pet.vaccinated,
   neutered: pet.neutered,
   dewormed: pet.dewormed,

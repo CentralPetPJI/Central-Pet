@@ -11,13 +11,23 @@ export type AuthUser = {
   id: string;
   fullName: string;
   email: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  mobile?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
+  foundedAt?: string;
+  acceptedTermsAt?: string;
   createdAt: string;
   updatedAt: string;
+  mustChangePassword?: boolean;
 };
 
 export type LoginCredentials = {
@@ -29,11 +39,14 @@ export type RegisterData = {
   fullName: string;
   email: string;
   password: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN' | 'ROOT';
   birthDate?: string;
   cpf?: string;
   organizationName?: string;
   cnpj?: string;
+  city?: string;
+  state?: string;
+  acceptTerms: boolean;
 };
 
 export interface AuthStrategy {
@@ -86,6 +99,13 @@ export interface AuthStrategy {
    */
   register(data: RegisterData): Promise<AuthUser>;
 
+  /**
+   * Marca os termos de uso como aceitos para o usuário atual.
+   * Mock: atualiza o usuário mock selecionado.
+   * Session: POST /auth/accept-terms e atualiza o usuário atual.
+   */
+  acceptTerms(): Promise<void>;
+
   // -------------------------------------------------------------------------
   // Métodos específicos do modo mock (opcionais)
   // -------------------------------------------------------------------------
@@ -115,9 +135,11 @@ export type AuthContextValue = {
   currentUser: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  syncCurrentUser: (user: AuthUser | null) => void;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  acceptTerms: () => Promise<void>;
   users: AuthUser[];
   selectUser: (userId: string) => Promise<void>;
 };

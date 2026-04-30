@@ -1,15 +1,17 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PetsService } from '../../pets/pets.service';
 import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dto';
 import type { AdoptionRequestRecord } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
+import { AuditService } from '@/modules/audit/audit.service';
 
 @Injectable()
 export class ApproveAdoptionUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly petsService: PetsService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async execute(
@@ -89,6 +91,26 @@ export class ApproveAdoptionUseCase {
           performedByUserId: responsibleUserId,
         },
       });
+
+      // audit log: adoption approved
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: responsibleUserId,
+          action: 'APPROVE_ADOPTION_REQUEST',
+          targetId: updatedReq.id,
+          targetType: 'ADOPTION_REQUEST',
+          details: { petId: updatedReq.petId, adopterId: updatedReq.adopterId },
+        });
+
+        // audit log: pet responsibility transferred
+        await this.auditService.createWithTx(tx, {
+          userId: responsibleUserId,
+          action: 'TRANSFER_PET',
+          targetId: updatedReq.petId,
+          targetType: 'PET',
+          details: { from: currentRequest.responsibleUserId, to: updatedReq.adopterId },
+        });
+      }
 
       return { updatedReq, autoRejectedCount };
     });

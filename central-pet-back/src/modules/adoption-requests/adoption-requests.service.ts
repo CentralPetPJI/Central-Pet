@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { mockUsers, type MockUser } from '@/mocks';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type {
   ReceivedAdoptionRequest,
@@ -11,20 +10,18 @@ import { type ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto
 import type { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
 import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from './services';
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
-import { MockUserPersistenceService } from '../mock-auth';
+import { UserPersistenceService } from '../users/user-persistence.service';
+import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 @Injectable()
 export class AdoptionRequestsService {
-  private readonly mockUsersById = new Map<string, MockUser>(
-    mockUsers.map((u) => [u.id, u] as const),
-  );
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly simulationService: AdoptionRequestSimulationService,
     private readonly manageService: ManageAdoptionRequestsService,
     private readonly petsService: PetsService,
-    private readonly userPersistence: MockUserPersistenceService,
+    private readonly userPersistence: UserPersistenceService,
   ) {}
 
   /**
@@ -36,11 +33,15 @@ export class AdoptionRequestsService {
     requests: AdoptionRequestRecord[],
   ): Promise<ReceivedAdoptionRequest[]> {
     const adopterIds = Array.from(new Set(requests.map((r) => r.adopterId)));
-    await this.userPersistence.ensurePersistedUsersExist(adopterIds, this.mockUsersById);
-    const persistedUsersById = await this.userPersistence.buildPersistedUserMap(
-      adopterIds,
-      this.mockUsersById,
+    const responsibleIds = Array.from(
+      new Set(requests.map((r) => r.responsibleUserId).filter((id) => !!id)),
     );
+
+    const allUserIds = Array.from(new Set([...adopterIds, ...responsibleIds]));
+    if (allUserIds.length > 0) {
+      await this.userPersistence.ensureUsersExist(allUserIds);
+    }
+    const persistedUsersById = await this.userPersistence.buildUserMap(allUserIds);
 
     const petsById = new Map<string, PetForAdoptionRequest | null>();
     await Promise.all(
@@ -60,14 +61,23 @@ export class AdoptionRequestsService {
       const petForResponse = mapPetForResponse(petFound);
       const adopterForResponse = mapAdopterForResponse(
         r.adopterId,
-        this.mockUsersById,
         persistedUsersById,
+        r.adopterContactShareConsent,
       );
+
+      const responsibleForResponse = r.responsibleUserId
+        ? mapAdopterForResponse(
+            r.responsibleUserId,
+            persistedUsersById,
+            r.responsibleContactShareConsent,
+          )
+        : undefined;
 
       return {
         id: r.id,
         pet: petForResponse,
         adopter: adopterForResponse,
+        responsible: responsibleForResponse,
         message: r.message,
         adopterContactShareConsent: r.adopterContactShareConsent,
         responsibleContactShareConsent: r.responsibleContactShareConsent,
@@ -82,10 +92,10 @@ export class AdoptionRequestsService {
   async findReceived(
     responsibleUserId?: string,
   ): Promise<{ message: string; data: ReceivedAdoptionRequest[] }> {
-    const requests: AdoptionRequestRecord[] = await this.prisma.adoptionRequest.findMany({
+    const requests = (await this.prisma.adoptionRequest.findMany({
       where: responsibleUserId ? { responsibleUserId } : undefined,
       orderBy: { requestedAt: 'desc' },
-    });
+    })) as unknown as AdoptionRequestRecord[];
 
     const mapped = await this.mapRequestsToResponse(requests);
 
@@ -98,10 +108,10 @@ export class AdoptionRequestsService {
   async findSent(
     adopterId?: string,
   ): Promise<{ message: string; data: ReceivedAdoptionRequest[] }> {
-    const requests: AdoptionRequestRecord[] = await this.prisma.adoptionRequest.findMany({
+    const requests = (await this.prisma.adoptionRequest.findMany({
       where: adopterId ? { adopterId } : undefined,
       orderBy: { requestedAt: 'desc' },
-    });
+    })) as unknown as AdoptionRequestRecord[];
 
     const mapped = await this.mapRequestsToResponse(requests);
 
@@ -109,6 +119,20 @@ export class AdoptionRequestsService {
       message: 'Solicitações de adoção enviadas recuperadas com sucesso',
       data: mapped,
     };
+  }
+
+  /**
+   * Verifica se existe uma solicitação pendente para um adotante em um pet específico.
+   * Retorna true se existir (PENDING ou IN_PROCESS), false caso contrário.
+   */
+  async hasRequest(adopterId: string, petId: string): Promise<boolean> {
+    const found = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        adopterId,
+        petId,
+      },
+    });
+    return !!found;
   }
 
   async simulateReceived(
@@ -145,14 +169,11 @@ export class AdoptionRequestsService {
       );
     }
 
-    await this.userPersistence.ensurePersistedUsersExist(
-      [updatedReq.adopterId],
-      this.mockUsersById,
-    );
-    const persistedUsersById = await this.userPersistence.buildPersistedUserMap(
-      [updatedReq.adopterId],
-      this.mockUsersById,
-    );
+    // ensure both adopter and responsible user info are available for the response
+    const userIds = [updatedReq.adopterId];
+    if (updatedReq.responsibleUserId) userIds.push(updatedReq.responsibleUserId);
+    await this.userPersistence.ensureUsersExist(userIds);
+    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
     const petFound = await this.petsService.findByIdForAdoption(updatedReq.petId);
     if (!petFound) {
@@ -162,16 +183,26 @@ export class AdoptionRequestsService {
     const petForResponse = mapPetForResponse(petFound);
     const adopterForResponse = mapAdopterForResponse(
       updatedReq.adopterId,
-      this.mockUsersById,
       persistedUsersById,
+      updatedReq.adopterContactShareConsent,
     );
+
+    const responsibleForResponse = updatedReq.responsibleUserId
+      ? mapAdopterForResponse(
+          updatedReq.responsibleUserId,
+          persistedUsersById,
+          updatedReq.responsibleContactShareConsent,
+        )
+      : undefined;
 
     const data = {
       id: updatedReq.id,
       pet: petForResponse,
       adopter: adopterForResponse,
+      responsible: responsibleForResponse,
       message: updatedReq.message,
       adopterContactShareConsent: updatedReq.adopterContactShareConsent,
+      responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
       status: updatedReq.status as unknown as AdoptionRequestStatus,
       note: updatedReq.note ?? undefined,
       requestedAt: updatedReq.requestedAt.toISOString(),
@@ -182,6 +213,82 @@ export class AdoptionRequestsService {
       message: result.message,
       data,
       notification: result.notification,
+    };
+  }
+
+  async create(
+    adopterId: string,
+    dto: CreateAdoptionRequestDto,
+  ): Promise<{ message: string; data: ReceivedAdoptionRequest }> {
+    const { petId, message, adopterContactShareConsent } = dto;
+
+    // exige consentimento explícito do adotante
+    if (!adopterContactShareConsent) {
+      throw new BadRequestException(
+        'É obrigatório autorizar o compartilhamento do contato para enviar a solicitação',
+      );
+    }
+
+    //1. Buscar pet
+    const pet = await this.petsService.findByIdForAdoption(petId);
+
+    if (!pet) {
+      throw new NotFoundException(`Pet com id "${petId}" não encontrado`);
+    }
+
+    if (pet.adoptionStatus !== 'AVAILABLE') {
+      throw new BadRequestException('Pet não está disponível para adoção');
+    }
+
+    // 2. Não pode adotar o próprio pet
+    if (pet.responsibleUserId === adopterId) {
+      throw new BadRequestException('Você não pode adotar seu próprio pet');
+    }
+
+    // 3. Validar se já existe solicitação pendente
+    const existingRequest = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        petId,
+        adopterId,
+      },
+    });
+
+    if (existingRequest) {
+      throw new BadRequestException('Você já possui uma solicitação ativa para este pet');
+    }
+
+    // 4. Criar no banco
+    // garantir que adotante e responsável existam no banco (em dev, cria mocks automaticamente)
+    await this.userPersistence.validateUser(adopterId);
+    if (pet.responsibleUserId) {
+      await this.userPersistence.validateUser(pet.responsibleUserId);
+    }
+
+    let created: AdoptionRequestRecord;
+    try {
+      created = (await this.prisma.adoptionRequest.create({
+        data: {
+          petId,
+          adopterId,
+          responsibleUserId: pet.responsibleUserId,
+          message: message ?? '',
+          status: 'PENDING',
+          adopterContactShareConsent: adopterContactShareConsent,
+          responsibleContactShareConsent: false,
+        },
+      })) as unknown as AdoptionRequestRecord;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
+      }
+      throw error;
+    }
+
+    const [mapped] = await this.mapRequestsToResponse([created]);
+
+    return {
+      message: 'Solicitação enviada com sucesso',
+      data: mapped,
     };
   }
 }

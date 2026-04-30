@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -9,10 +9,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { PetsModule } from './modules/pets/pets.module';
 import { PetHistoryModule } from './modules/pet-history/pet-history.module';
 import { AdoptionRequestsModule } from './modules/adoption-requests/adoption-requests.module';
-import { MockAuthModule } from './modules/mock-auth/mock-auth.module';
+import { MockAuthModule } from '@/modules/mock-auth';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PersonalityTraitsModule } from './modules/personality-traits/personality-traits.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuditInterceptor } from './interceptors/audit.interceptor';
 
 @Module({
   imports: [
@@ -30,6 +34,7 @@ import { PersonalityTraitsModule } from './modules/personality-traits/personalit
       ],
     }),
     PrismaModule,
+    AuditModule,
     HealthModule,
     PetsModule,
     PetHistoryModule,
@@ -38,6 +43,8 @@ import { PersonalityTraitsModule } from './modules/personality-traits/personalit
     UsersModule,
     AuthModule,
     PersonalityTraitsModule,
+    AdminModule,
+    ModerationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -45,6 +52,10 @@ import { PersonalityTraitsModule } from './modules/personality-traits/personalit
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
     },
   ],
 })

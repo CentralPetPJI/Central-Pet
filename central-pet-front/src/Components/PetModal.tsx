@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
 import type { Pet } from '@/Models/pet';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
+import { formatPetSpecies, formatState } from '@/lib/formatters';
 
 interface PetModalProps {
   petData: Pet;
@@ -11,7 +12,9 @@ interface PetModalProps {
 
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
   const routeId = getPetRouteId(petData);
-
+  const locationText = petData.city
+    ? `${petData.city}${petData.state ? `/${formatState(petData.state)}` : ''}`
+    : 'Nao informado';
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
@@ -34,7 +37,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         />
         <h2 className="text-2xl font-bold mb-2">{petData.name}</h2>
         <p className="text-gray-700 mb-1">
-          <strong>Especie:</strong> {petData.species}
+          <strong>Especie:</strong> {formatPetSpecies(petData.species)}
         </p>
         <p className="text-gray-700 mb-1">
           <strong>Características Físicas:</strong> {petData.physicalCharacteristics}
@@ -42,13 +45,13 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         <p className="text-gray-700 mb-1">
           <strong>Características Comportamentais:</strong> {petData.behavioralCharacteristics}
         </p>
-        <p className="text-gray-700">
-          <strong>Notas:</strong> {petData.notes}
+        <p className="text-gray-700 mb-1">
+          <strong>Localizacao:</strong> {locationText}
         </p>
 
         <Link
           to={routes.pets.detail.build(routeId)}
-          className="mt-6 block w-full rounded-xl bg-[#1ed6ea] py-3 text-center font-semibold text-white transition hover:bg-[#6de9f7]"
+          className="mt-6 block w-full rounded-xl bg-primary-400 py-3 text-center font-semibold text-white transition hover:bg-primary-600"
         >
           Quero adotar
         </Link>

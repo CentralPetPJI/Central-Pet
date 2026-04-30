@@ -1,50 +1,18 @@
 import { z } from 'zod';
-import dogImage from '@/assets/image/dog.png';
+import { petSpeciesOptions, petSexOptions, petSizeOptions } from '@/lib/formatters';
 
 export const petRegisterStorageKey = 'central-pet:register-form';
 
-export interface PetRegisterFormData {
-  profilePhoto: string;
-  galleryPhotos: string[];
-  name: string;
-  age: string;
-  species: string;
-  breed: string;
-  sex: string;
-  size: string;
-  microchipped: boolean;
-  tutor: string;
-  shelter: string;
-  city: string;
-  state: string;
-  contact: string;
-  vaccinated: boolean;
-  neutered: boolean;
-  dewormed: boolean;
-  needsHealthCare: boolean;
-  physicalLimitation: boolean;
-  visualLimitation: boolean;
-  hearingLimitation: boolean;
-  responsibleUserId: string;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
-  sourceName: string;
-}
-
 export const petRegisterFormSchema = z.object({
-  profilePhoto: z.string().min(1, 'Adicione a foto de perfil do pet antes de salvar.'),
-  galleryPhotos: z.array(z.string()),
+  profilePhoto: z.string('Insira a foto de perfil do pet.'),
+  galleryPhotos: z.array(z.string()).optional(),
   name: z.string().trim().min(1, 'Informe o nome do pet antes de salvar.'),
   age: z.string().trim().min(1, 'Informe a idade do pet.'),
   species: z.enum(['dog', 'cat'], { error: 'Selecione uma especie valida.' }),
   breed: z.string().trim().min(1, 'Informe a raca do pet.'),
-  sex: z.enum(['Femea', 'Macho'], { error: 'Selecione um sexo valido.' }),
-  size: z.enum(['Pequeno', 'Medio', 'Grande'], { error: 'Selecione um porte valido.' }),
+  sex: z.enum(['male', 'female'], { error: 'Selecione um sexo valido.' }),
+  size: z.enum(['small', 'medium', 'large'], { error: 'Selecione um porte valido.' }),
   microchipped: z.boolean(),
-  tutor: z.string().trim().min(1, 'Informe o tutor responsavel.'),
-  shelter: z.string().trim().min(1, 'Informe o abrigo ou origem do pet.'),
-  city: z.string().trim().min(1, 'Informe a cidade do pet.'),
-  state: z.string().trim().min(1, 'Informe o estado (UF) do pet.'),
-  contact: z.string().trim().min(1, 'Informe um contato para adocao.'),
   vaccinated: z.boolean(),
   neutered: z.boolean(),
   dewormed: z.boolean(),
@@ -52,53 +20,14 @@ export const petRegisterFormSchema = z.object({
   physicalLimitation: z.boolean(),
   visualLimitation: z.boolean(),
   hearingLimitation: z.boolean(),
-  sourceType: z.enum(['ONG', 'PESSOA_FISICA'], { error: 'Selecione o tipo de origem.' }),
-  sourceName: z.string().trim().min(1, 'Informe o nome da origem (ONG, abrigo ou pessoa física).'),
 });
 
-export const normalizePetRegisterFormData = (
-  data: Partial<PetRegisterFormData>,
-): PetRegisterFormData => ({
-  ...initialPetRegisterFormData,
-  ...data,
-  profilePhoto: data.profilePhoto || initialPetRegisterFormData.profilePhoto,
-  galleryPhotos: Array.isArray(data.galleryPhotos) ? data.galleryPhotos : [],
-});
+type PetRegisterFormSchemaData = z.infer<typeof petRegisterFormSchema>;
+
+export type PetRegisterFormData = PetRegisterFormSchemaData;
 
 export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetRegisterFormData> =>
   typeof data === 'object' && data !== null && !Array.isArray(data);
 
-// TODO: Remover os dados iniciais e deixar o formulário vazio, forçando o usuário a preencher tudo (exceto as informações iniciais como localização e contato, que podem ser pré-preenchidas com base no perfil do usuário ou na localização atual).
-export const initialPetRegisterFormData: PetRegisterFormData = {
-  profilePhoto: dogImage,
-  galleryPhotos: [],
-  name: 'Luna',
-  age: '3 anos',
-  species: 'dog',
-  breed: 'SRD',
-  sex: 'Femea',
-  size: 'Medio',
-  microchipped: true,
-  tutor: 'ONG Patas do Centro',
-  shelter: 'Abrigo Reencontro',
-  city: 'Sao Paulo',
-  state: 'SP',
-  contact: '(11) 99999-0000',
-  vaccinated: true,
-  neutered: true,
-  dewormed: true,
-  needsHealthCare: false,
-  physicalLimitation: false,
-  visualLimitation: false,
-  hearingLimitation: false,
-  responsibleUserId: '',
-  sourceType: 'ONG',
-  sourceName: 'Abrigo Reencontro',
-};
-
-export const petSpeciesOptions = [
-  { value: 'dog', label: 'Cachorro' },
-  { value: 'cat', label: 'Gato' },
-];
-export const petSexOptions = ['Femea', 'Macho'];
-export const petSizeOptions = ['Pequeno', 'Medio', 'Grande'];
+// Re-exportamos as opções para manter a compatibilidade com os componentes que importam de '@/storage/pets'
+export { petSpeciesOptions, petSexOptions, petSizeOptions };

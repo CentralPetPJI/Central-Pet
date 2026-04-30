@@ -1,7 +1,5 @@
-import type { AdoptionRequestRecord } from './adoption-request-record';
 import type { AdoptionRequestStatus } from './adoption-request-status';
 import type { PetForAdoptionRequest } from '../../pets/pets.service';
-import type { MockUser } from '@/mocks';
 
 export type ReceivedAdoptionRequestPet = {
   id: string;
@@ -10,21 +8,25 @@ export type ReceivedAdoptionRequestPet = {
   city: string;
   state: string;
   responsibleUserId: string | undefined;
-  sourceType: 'ONG' | 'PESSOA_FISICA';
+  sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName: string | null | undefined;
 };
 
-export type ReceivedAdoptionRequestAdopter = {
+export type ReceivedAdoptionRequestUser = {
   id: string;
   name: string;
   city: string;
   state: string;
+  email?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
 };
 
 export type ReceivedAdoptionRequest = {
   id: string;
   pet: ReceivedAdoptionRequestPet;
-  adopter: ReceivedAdoptionRequestAdopter;
+  adopter: ReceivedAdoptionRequestUser;
+  responsible?: ReceivedAdoptionRequestUser;
   message: string;
   adopterContactShareConsent: boolean;
   responsibleContactShareConsent: boolean;
@@ -34,19 +36,13 @@ export type ReceivedAdoptionRequest = {
   updatedAt: string;
 };
 
-type ReceivedAdoptionRequestSource = {
-  request: AdoptionRequestRecord;
-  pet: ReceivedAdoptionRequestPet;
-  adopter: ReceivedAdoptionRequestAdopter;
-};
-
 export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionRequestPet {
   return {
     id: pet.id,
     name: pet.name,
     species: pet.species,
     city: pet.city,
-    state: pet.state,
+    state: pet.state ?? '',
     responsibleUserId: pet.responsibleUserId,
     sourceType: pet.sourceType,
     sourceName: pet.sourceName,
@@ -54,34 +50,36 @@ export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionR
 }
 
 export function mapAdopterForResponse(
-  adopterId: string,
-  mockUsersById: Map<string, MockUser>,
-  persistedUsersById: Map<string, { id: string; fullName: string }>,
-): ReceivedAdoptionRequestAdopter {
-  // Treat persisted users and mock users as the same kind of entity.
-  // Prefer persisted user when available, otherwise fall back to mock seed data.
-  const persistedUser = persistedUsersById.get(adopterId);
+  userId: string,
+  persistedUsersById: Map<
+    string,
+    {
+      id: string;
+      fullName: string;
+      email?: string | null;
+      city?: string | null;
+      state?: string | null;
+      phone?: string | null;
+      mobile?: string | null;
+    }
+  >,
+  includeContact = false,
+): ReceivedAdoptionRequestUser {
+  const persistedUser = persistedUsersById.get(userId);
   if (persistedUser) {
     return {
       id: persistedUser.id,
       name: persistedUser.fullName,
-      city: '',
-      state: '',
-    };
-  }
-
-  const mockUser = mockUsersById.get(adopterId);
-  if (mockUser) {
-    return {
-      id: mockUser.id,
-      name: mockUser.fullName,
-      city: mockUser.city ?? '',
-      state: mockUser.state ?? '',
+      city: persistedUser.city ?? '',
+      state: persistedUser.state ?? '',
+      email: includeContact ? (persistedUser.email ?? null) : undefined,
+      phone: includeContact ? (persistedUser.phone ?? null) : undefined,
+      mobile: includeContact ? (persistedUser.mobile ?? null) : undefined,
     };
   }
 
   return {
-    id: adopterId,
+    id: userId,
     name: 'Usuário não encontrado',
     city: '',
     state: '',

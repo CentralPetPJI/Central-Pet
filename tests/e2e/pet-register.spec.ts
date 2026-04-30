@@ -18,14 +18,26 @@ test("cadastro cria pet e redireciona para o perfil", async ({
     page.getByRole("heading", { level: 1, name: "Cadastre o pet para adoção" }),
   ).toBeVisible();
 
-  await page.getByRole("textbox", { name: "Nome" }).fill("Rex E2E");
-  await page.getByRole("textbox", { name: "Tutor" }).fill("Teste E2E");
-  await page.getByRole("textbox", { name: "Abrigo" }).fill("Abrigo E2E");
-  await page.getByRole("textbox", { name: "Cidade" }).fill("Sao Paulo");
-  await page.getByRole("textbox", { name: "Contato" }).fill("11999999999");
+  // Preencher Foto De Perfil
+  const fileInput = page.locator('input[type="file"]').first();
+  await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
+
+  await page
+    .getByRole("textbox", { name: "Nome", exact: true })
+    .fill("Rex E2E");
+  await page
+    .getByRole("textbox", { name: "Idade", exact: true })
+    .fill("2 anos");
+  await page.getByRole("textbox", { name: "Raca", exact: true }).fill("SRD");
+
+  // Selecionar opções obrigatórias
+  await page.getByLabel("Especie").selectOption("dog");
+  await page.getByLabel("Sexo").selectOption("male");
+  await page.getByLabel("Porte").selectOption("medium");
 
   await page.getByRole("button", { name: "Salvar pet" }).click();
 
+  // Redireciona para o perfil (ID numérico amigável)
   await expect(page).toHaveURL(/\/pets\/\d+$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Rex E2E" }),

@@ -1,21 +1,19 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { SimulateAdoptionRequestDto } from '../dto/simulate-adoption-request.dto';
-import { MockUserPersistenceService } from '../../mock-auth';
+import { UserPersistenceService } from '../../users/user-persistence.service';
 import { PetsService } from '../../pets/pets.service';
 import { mapPetForResponse, mapAdopterForResponse, AdoptionRequestStatus } from '../models';
+import { AuditService } from '@/modules/audit/audit.service';
 
 @Injectable()
 export class AdoptionRequestSimulationService {
-  private readonly mockUsersById = new Map<string, MockUser>(
-    mockUsers.map((user) => [user.id, user] as const),
-  );
-
   constructor(
     private readonly prisma: PrismaService,
-    private readonly userPersistence: MockUserPersistenceService,
+    private readonly userPersistence: UserPersistenceService,
     private readonly petsService: PetsService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   validateSimulationPermission(userId: string, petResponsibleUserId: string): void {
@@ -28,7 +26,11 @@ export class AdoptionRequestSimulationService {
 
   async findAvailableMockAdopter(ownerUserId: string, adopterId?: string): Promise<MockUser> {
     if (adopterId) {
-      return this.getSimulationAdopter(ownerUserId, adopterId);
+      const mockUser = mockUsers.find((u) => u.id === adopterId);
+      if (!mockUser) {
+        throw new NotFoundException(`Usuário mock com id "${adopterId}" não encontrado`);
+      }
+      return mockUser;
     }
 
     const eligibleAdopters = mockUsers.filter(
@@ -59,43 +61,6 @@ export class AdoptionRequestSimulationService {
     );
   }
 
-  getSimulationAdopter(ownerUserId: string, adopterId?: string): MockUser {
-    if (adopterId) {
-      const mockUser = this.mockUsersById.get(adopterId);
-
-      if (!mockUser) {
-        throw new NotFoundException(`Usuário mock com id "${adopterId}" não encontrado`);
-      }
-
-      if (mockUser.role !== 'PESSOA_FISICA') {
-        throw new BadRequestException('Only mock users with role PESSOA_FISICA can adopt pets');
-      }
-
-      if (mockUser.id === ownerUserId) {
-        throw new BadRequestException('The adopter cannot be the pet owner');
-      }
-
-      return mockUser;
-    }
-
-    const eligibleAdopters = mockUsers.filter(
-      (user) => user.role === 'PESSOA_FISICA' && user.id !== ownerUserId,
-    );
-
-    if (eligibleAdopters.length === 0) {
-      throw new NotFoundException('No eligible mock adopter was found');
-    }
-
-    const randomIndex = Math.floor(Math.random() * eligibleAdopters.length);
-    const randomAdopter = eligibleAdopters[randomIndex];
-
-    if (!randomAdopter) {
-      throw new NotFoundException('No eligible mock adopter was found');
-    }
-
-    return randomAdopter;
-  }
-
   async validateSimulationPrerequisites(
     dto: SimulateAdoptionRequestDto,
     mockAdopter: MockUser,
@@ -112,10 +77,7 @@ export class AdoptionRequestSimulationService {
       );
     }
 
-    await this.userPersistence.ensurePersistedUsersExist(
-      [dto.petResponsibleUserId, mockAdopter.id],
-      this.mockUsersById,
-    );
+    await this.userPersistence.ensureUsersExist([dto.petResponsibleUserId, mockAdopter.id]);
 
     const existingRequest = await this.prisma.adoptionRequest.findFirst({
       where: {
@@ -155,10 +117,20 @@ export class AdoptionRequestSimulationService {
       },
     });
 
-    const persistedUsersById = await this.userPersistence.buildPersistedUserMap(
-      [request.adopterId],
-      this.mockUsersById,
-    );
+    // audit log: adoption request creation
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: request.adopterId,
+        action: 'CREATE_ADOPTION_REQUEST',
+        targetId: request.petId,
+        targetType: 'PET',
+        details: { requestId: request.id },
+      });
+    }
+
+    const userIds = [request.adopterId];
+    if (request.responsibleUserId) userIds.push(request.responsibleUserId);
+    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
     const petFound = await this.petsService.findByIdForAdoption(request.petId);
 
@@ -170,14 +142,23 @@ export class AdoptionRequestSimulationService {
 
     const adopterForResponse = mapAdopterForResponse(
       request.adopterId,
-      this.mockUsersById,
       persistedUsersById,
+      request.adopterContactShareConsent,
     );
+
+    const responsibleForResponse = request.responsibleUserId
+      ? mapAdopterForResponse(
+          request.responsibleUserId,
+          persistedUsersById,
+          request.responsibleContactShareConsent,
+        )
+      : undefined;
 
     const data = {
       id: request.id,
       pet: petForResponse,
       adopter: adopterForResponse,
+      responsible: responsibleForResponse,
       message: request.message,
       adopterContactShareConsent: request.adopterContactShareConsent,
       responsibleContactShareConsent: request.responsibleContactShareConsent,

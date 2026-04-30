@@ -17,6 +17,7 @@ import { AdoptionRequestsService } from './adoption-requests.service';
 import { ManageAdoptionRequestDto } from './dto/manage-adoption-request.dto';
 import { SimulateAdoptionRequestDto } from './dto/simulate-adoption-request.dto';
 import type { AdoptionRequestActionResult } from './models';
+import { CreateAdoptionRequestDto } from './dto/create-adoption-request.dto';
 
 export type { AdoptionRequestActionResult };
 
@@ -39,6 +40,11 @@ export class AdoptionRequestsController {
     // default to received
     return this.adoptionRequestsService.findReceived(responsibleUserId ?? user.id);
   }
+  @Post()
+  @UseGuards(SessionGuard)
+  async create(@Body() dto: CreateAdoptionRequestDto, @CurrentUser() user: MockUser | PublicUser) {
+    return this.adoptionRequestsService.create(user.id, dto);
+  }
 
   @Patch(':id')
   @UseGuards(SessionGuard)
@@ -57,5 +63,16 @@ export class AdoptionRequestsController {
     @CurrentUser() user: MockUser | PublicUser,
   ) {
     return this.adoptionRequestsService.simulateReceived(user.id, dto);
+  }
+
+  @Get('check')
+  @UseGuards(SessionGuard)
+  async check(@Query('petId') petId: string, @CurrentUser() user: MockUser | PublicUser) {
+    if (!petId) {
+      throw new BadRequestException('petId query parameter is required');
+    }
+
+    const exists = await this.adoptionRequestsService.hasRequest(user.id, String(petId));
+    return { exists };
   }
 }

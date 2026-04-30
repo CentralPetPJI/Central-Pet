@@ -7,12 +7,15 @@ import { NavLink } from '../Components/NavLink';
 import { UserMenu } from '../Components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { routes } from '@/routes';
-import {shouldDisplayMockUsers} from '@/lib/dev-mode';
+import { shouldDisplayMockUsers } from '@/lib/dev-mode';
 import type { MenuItem } from '@/Models/ui';
+import { SITE_NAME } from '@/lib/site-config';
 
 const roleLabelMap = {
   PESSOA_FISICA: 'Pessoa física',
   ONG: 'ONG',
+  ADMIN: 'Administrador',
+  ROOT: 'Root',
 } as const;
 
 const Header = () => {
@@ -77,7 +80,7 @@ const Header = () => {
             className="flex items-center space-x-2 rounded-md transition hover:opacity-80"
           >
             <img src={dog} className="h-auto w-8 shrink-0" alt="Logo" />
-            <p className="m-0 text-base font-medium">Pet Central</p>
+            <p className="m-0 text-base font-medium">{SITE_NAME}</p>
           </Link>
 
           {/* Navegação Desktop */}
@@ -119,7 +122,7 @@ const Header = () => {
                 </option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.fullName} • {roleLabelMap[user.role]}
+                    {user.fullName} • {roleLabelMap[user.role] ?? user.role}
                   </option>
                 ))}
               </select>
@@ -221,12 +224,13 @@ const Header = () => {
             {currentUser ? (
               <div className="space-y-2">
                 <NavLink to={routes.pets.mine.path}>🐾 Meus Pets</NavLink>
-                <NavLink to={routes.adoptionRequests.received.path}>
+                <NavLink to={routes.adoptionRequests.path}>
                   <span className="inline-flex items-center gap-2">
                     <ClipboardList className="h-4 w-4 text-cyan-700" />
                     <span>Solicitações</span>
                   </span>
                 </NavLink>
+                <NavLink to={routes.profile.path}>Perfil</NavLink>
                 <button
                   className="w-full text-left rounded-md px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
                   onClick={() => {
@@ -265,7 +269,7 @@ const Header = () => {
                     </option>
                     {users.map((user) => (
                       <option key={user.id} value={user.id}>
-                        {user.fullName} • {roleLabelMap[user.role]}
+                        {user.fullName} • {roleLabelMap[user.role] ?? user.role}
                       </option>
                     ))}
                   </select>

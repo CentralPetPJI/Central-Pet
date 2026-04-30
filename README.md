@@ -27,11 +27,13 @@ pnpm dev:docker
 
 ## 💡 O que é o Central-Pet?
 
-Uma plataforma web que facilita a adoção de animais abandonados, conectando:
+Uma plataforma web **totalmente gratuita e sem fins lucrativos** que facilita a adoção de animais abandonados, conectando:
 
 - 🏠 **Adotantes** - Pessoas buscando um pet para adotar
 - 🤲 **Protetores** - Pessoas que resgatam e cuidam temporariamente
 - 🏛️ **ONGs e Abrigos** - Organizações que acolhem animais
+
+**Atenção:** É terminantemente proibida a comercialização de animais ou serviços através da plataforma. Nosso foco é exclusivamente o bem-estar animal e a adoção responsável.
 
 ### Funcionalidades
 

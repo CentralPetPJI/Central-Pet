@@ -41,7 +41,21 @@ export function UserMenu() {
   const initials = getInitials(currentUser.fullName);
 
   // Define opções do menu
+  function isAdminRole(role: unknown): role is 'ADMIN' | 'ROOT' {
+    return role === 'ADMIN' || role === 'ROOT';
+  }
+
   const menuItems: MenuItem[] = [
+    ...(isAdminRole(currentUser.role)
+      ? [
+          {
+            label: 'Administração',
+            path: routes.admin.dashboard.path,
+            icon: <UserRound className="h-4 w-4 text-purple-600" />,
+          },
+          { divider: true as const },
+        ]
+      : []),
     {
       label: 'Meus Pets',
       path: routes.pets.mine.path,
@@ -49,7 +63,7 @@ export function UserMenu() {
     },
     {
       label: 'Solicitações',
-      path: routes.adoptionRequests.received.path,
+      path: routes.adoptionRequests.path,
       icon: <ClipboardList className="h-4 w-4 text-cyan-700" />,
       // TODO: Conectar com API para pegar contador real
       // badge: pendingRequestsCount,
@@ -57,9 +71,9 @@ export function UserMenu() {
     {
       label: 'Perfil',
       // TODO: Criar rota de perfil
-      disabled: true,
-      tooltip: 'Em breve',
-      icon: <UserRound className="h-4 w-4 text-slate-500" />,
+      disabled: false,
+      path: routes.profile.path,
+      icon: <UserRound className="h-4 w-4 text-cyan-700" />,
     },
     {
       divider: true,

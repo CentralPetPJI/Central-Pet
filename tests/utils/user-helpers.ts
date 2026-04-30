@@ -8,6 +8,8 @@ export type UsuarioE2E = {
   email: string;
   password: string;
   cpf: string;
+  city?: string;
+  state?: string;
 };
 
 export type UsuarioCriadoE2E = {
@@ -16,11 +18,18 @@ export type UsuarioCriadoE2E = {
   email: string;
   role: "PESSOA_FISICA" | "ONG";
   birthDate: string | null;
+  city: string | null;
+  state: string | null;
   cpf: string | null;
   organizationName: string | null;
   cnpj: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PerfilLocalizacaoE2E = {
+  city: string;
+  state: string;
 };
 
 /**
@@ -35,6 +44,8 @@ export function gerarUsuarioUnico(prefixo: string): UsuarioE2E {
     email: `${prefixo}.${sufixo}@example.com.br`,
     password: SENHA_PADRAO,
     cpf,
+    city: "Sao Paulo",
+    state: "SP",
   };
 }
 
@@ -45,21 +56,85 @@ export async function criarUsuarioViaApi(
   request: APIRequestContext,
   usuario: UsuarioE2E,
 ): Promise<UsuarioCriadoE2E> {
-  const resposta = await request.post(`${API_BASE_URL}/users`, {
+  const maxRetries = 3;
+  let attempt = 0;
+  let lastError: unknown = null;
+
+  while (attempt < maxRetries) {
+    try {
+      const resposta = await request.post(`${API_BASE_URL}/users`, {
+        data: {
+          fullName: usuario.fullName,
+          email: usuario.email,
+          password: usuario.password,
+          role: "PESSOA_FISICA",
+          cpf: usuario.cpf,
+          city: usuario.city,
+          state: usuario.state,
+          acceptTerms: true,
+        },
+      });
+
+      expect(resposta.ok()).toBeTruthy();
+      const payload = (await resposta.json()) as { data: UsuarioCriadoE2E };
+      return payload.data;
+    } catch (err: unknown) {
+      lastError = err;
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? (err as any).message
+          : "";
+      // Retry on transient connection errors
+      if (
+        typeof message === "string" &&
+        (message.includes("ECONNRESET") ||
+          message.includes("ECONNREFUSED") ||
+          message.includes("socket hang up"))
+      ) {
+        attempt += 1;
+        const backoff = 200 * attempt;
+        // small delay before retry
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, backoff));
+        continue;
+      }
+      // Non-transient error, rethrow
+      throw err;
+    }
+  }
+
+  // If we exhausted retries, throw last error
+  throw lastError;
+}
+
+/**
+ * Faz login via API e retorna os cookies de sessão
+ */
+export async function fazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<void> {
+  const resposta = await request.post(`${API_BASE_URL}/auth/login`, {
     data: {
-      fullName: usuario.fullName,
       email: usuario.email,
       password: usuario.password,
-      role: "PESSOA_FISICA",
-      cpf: usuario.cpf,
     },
   });
 
   expect(resposta.ok()).toBeTruthy();
-  const payload = (await resposta.json()) as { data: UsuarioCriadoE2E };
-  return payload.data;
 }
 
+/**
+   Cria usuario e faz login via API
+  */
+export async function criarUsuarioEFazerLoginViaApi(
+  request: APIRequestContext,
+  usuario: UsuarioE2E,
+): Promise<UsuarioCriadoE2E> {
+  const criado = await criarUsuarioViaApi(request, usuario);
+  await fazerLoginViaApi(request, usuario);
+  return criado;
+}
 /**
  * Faz login no frontend via UI
  */
@@ -72,6 +147,41 @@ export async function fazerLogin(
   await page.getByLabel("Senha").fill(usuario.password);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  // Aguardar redirecionamento para home após login
   await expect(page).toHaveURL("/");
+}
+
+/**
+ * Atualiza a localização (cidade/estado) do perfil do usuário via PATCH /users/me.
+ *
+ * Precondição: fazerLogin deve ser chamado antes desta função
+ * para que a sessão autenticada seja compartilhada.
+ *
+ * `@param` page - Instância da página Playwright
+ * `@param` localizacao - Objeto com city e state (padrão: São Paulo, SP)
+ */
+export async function atualizarLocalizacaoPerfil(
+  page: Page,
+  localizacao: PerfilLocalizacaoE2E = { city: "Sao Paulo", state: "SP" },
+): Promise<void> {
+  const resposta = await page.request.patch(`${API_BASE_URL}/users/me`, {
+    data: localizacao,
+  });
+
+  expect(resposta.ok()).toBeTruthy();
+
+  await page.goto("/");
+  await expect(page).toHaveURL("/");
+}
+
+export async function fazerLogout(page: Page): Promise<void> {
+  // Limpa o estado de autenticação de forma síncrona no contexto do browser
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  // Limpa cookies do contexto para garantir que sessões de backend também sejam resetadas
+  await page.context().clearCookies();
+  // Vai para a home para garantir que o estado do React seja resetado
+  await page.goto("/");
+  await page.reload();
 }

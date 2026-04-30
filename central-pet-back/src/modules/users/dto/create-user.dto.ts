@@ -1,5 +1,6 @@
 import {
-  IsDateString,
+  IsBoolean,
+  IsDate,
   IsEmail,
   IsIn,
   IsNotEmpty,
@@ -9,6 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString()
@@ -30,8 +32,12 @@ export class CreateUserDto {
   role: 'PESSOA_FISICA' | 'ONG';
 
   @IsOptional()
-  @IsDateString()
-  birthDate?: string;
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === '') return null;
+    return value as Date | null;
+  })
+  @IsDate()
+  birthDate?: Date;
 
   @IsOptional()
   @IsString()
@@ -51,4 +57,18 @@ export class CreateUserDto {
     message: 'cnpj must contain exactly 14 alphanumeric characters',
   })
   cnpj?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  state?: string;
+
+  @IsNotEmpty({ message: 'Você deve aceitar os termos de responsabilidade' })
+  @IsIn([true], { message: 'Você deve aceitar os termos de responsabilidade' })
+  acceptTerms: boolean;
 }

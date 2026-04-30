@@ -1,22 +1,19 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegisterData } from '@/Models';
 import { routes } from '@/routes';
 import { useAuth } from '@/lib/auth';
-
-type RegisterRole = RegisterData['role'];
+import { brazilianStates, formatDocumentInput, sanitizeDocument } from '@/lib/formatters';
+import { registerSchema, type RegisterFormValues } from '@/lib/validation/auth';
+import { SITE_NAME } from '@/lib/site-config';
 
 /**
  * Extrai mensagem de erro amigável de diferentes tipos de erro.
  * Fornece feedback específico para erros de cadastro.
  */
 function getErrorMessage(error: unknown): string {
-  // Erro padrão do JavaScript
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  // Erro de requisição Axios
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const axiosError = error as {
       response?: {
@@ -32,16 +29,12 @@ function getErrorMessage(error: unknown): string {
     const data = axiosError.response?.data;
 
     // Mensagens específicas por status HTTP
-    if (status === 400) {
+    if (status === 400 || status === 409) {
       const apiMessage = data?.message;
       if (apiMessage) {
         return Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage;
       }
       return 'Dados inválidos. Verifique os campos e tente novamente.';
-    }
-
-    if (status === 409) {
-      return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
     }
 
     if (status === 429) {
@@ -71,47 +64,34 @@ function getErrorMessage(error: unknown): string {
   return 'Não foi possível criar sua conta. Tente novamente.';
 }
 
-/**
- * Formata CPF: 000.000.000-00 (aceita alfanumérico)
- */
-function formatCpf(value: string): string {
-  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
-
-  if (chars.length <= 3) return chars;
-  if (chars.length <= 6) return `${chars.slice(0, 3)}.${chars.slice(3)}`;
-  if (chars.length <= 9) return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6)}`;
-
-  return `${chars.slice(0, 3)}.${chars.slice(3, 6)}.${chars.slice(6, 9)}-${chars.slice(9)}`;
-}
-
-/**
- * Formata CNPJ: 00.000.000/0000-00 (aceita alfanumérico)
- */
-function formatCnpj(value: string): string {
-  const chars = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 14);
-
-  if (chars.length <= 2) return chars;
-  if (chars.length <= 5) return `${chars.slice(0, 2)}.${chars.slice(2)}`;
-  if (chars.length <= 8) return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5)}`;
-  if (chars.length <= 12)
-    return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8)}`;
-
-  return `${chars.slice(0, 2)}.${chars.slice(2, 5)}.${chars.slice(5, 8)}/${chars.slice(8, 12)}-${chars.slice(12)}`;
-}
-
 export default function Register() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, register } = useAuth();
-  const [role, setRole] = useState<RegisterRole>('PESSOA_FISICA');
-  const [formData, setFormData] = useState({
-    fullName: '',
-    documentValue: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const { isAuthenticated, isLoading, register: authRegister } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'PESSOA_FISICA',
+      documentValue: '',
+      city: '',
+      state: '',
+      acceptTerms: false,
+    },
+  });
+
+  const role = watch('role');
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -119,56 +99,52 @@ export default function Register() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
-  };
-
+  // Format document input (CPF/CNPJ) using helper to centralize logic
   const handleDocumentChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    const formatted = role === 'ONG' ? formatCnpj(rawValue) : formatCpf(rawValue);
-    setFormData((current) => ({ ...current, documentValue: formatted }));
+    const formatted = formatDocumentInput(rawValue, role);
+    setValue('documentValue', formatted, { shouldValidate: true });
   };
 
-  const handleRoleChange = (newRole: RegisterRole) => {
-    setRole(newRole);
-    // Limpa o documento ao trocar o tipo de conta
-    setFormData((current) => ({ ...current, documentValue: '' }));
+  const handleRoleChange = (newRole: RegisterFormValues['role']) => {
+    setValue('role', newRole, { shouldValidate: true });
+    setValue('documentValue', '', { shouldValidate: true });
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (data: RegisterFormValues) => {
     setFeedback(null);
 
-    if (formData.password !== formData.confirmPassword) {
-      setFeedback('As senhas não coincidem.');
-      return;
-    }
-
-    const sanitizedDocument = formData.documentValue.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const sanitizedDocument = sanitizeDocument(data.documentValue, data.role);
+    const normalizedCity = data.city?.trim() || undefined;
+    const normalizedState = data.state?.trim() || undefined;
     const payload: RegisterData =
-      role === 'ONG'
+      data.role === 'ONG'
         ? {
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role,
-            organizationName: formData.fullName,
+            fullName: data.fullName,
+            email: data.email,
+            password: data.password,
+            role: data.role,
+            organizationName: data.fullName,
             cnpj: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
+            acceptTerms: data.acceptTerms,
           }
         : {
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role,
+            fullName: data.fullName,
+            email: data.email,
+            password: data.password,
+            role: data.role,
             cpf: sanitizedDocument,
+            city: normalizedCity,
+            state: normalizedState,
+            acceptTerms: data.acceptTerms,
           };
 
     setIsSubmitting(true);
 
     try {
-      await register(payload);
-      navigate(routes.home.path, { replace: true });
+      await authRegister(payload);
     } catch (error: unknown) {
       setFeedback(getErrorMessage(error));
     } finally {
@@ -191,36 +167,37 @@ export default function Register() {
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-2xl lg:grid-cols-[0.95fr_1.05fr]">
         <div className="order-2 p-8 sm:p-10 lg:order-1">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#4fb8c5]">
               Criar conta
             </p>
             <h2 className="mt-3 text-3xl font-extrabold text-slate-900">
-              Abra sua conta no Central-Pet
+              Abra sua conta no {SITE_NAME}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
               Preencha os dados básicos e crie sua conta gratuita.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="space-y-2">
               <label htmlFor="register-full-name" className="text-sm font-semibold text-slate-700">
                 {role === 'ONG' ? 'Nome da organização' : 'Nome completo'}
               </label>
               <input
                 id="register-full-name"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
+                {...register('fullName')}
                 type="text"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder={role === 'ONG' ? 'Nome da ONG' : 'Seu nome completo'}
                 autoComplete="name"
-                required
               />
+
+              {errors.fullName ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.fullName.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -229,15 +206,18 @@ export default function Register() {
               </label>
               <input
                 id="register-document"
-                name="documentValue"
-                value={formData.documentValue}
-                onChange={handleDocumentChange}
+                {...register('documentValue', {
+                  onChange: handleDocumentChange,
+                })}
                 type="text"
                 inputMode="text"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                className="input-standard"
                 placeholder={role === 'ONG' ? '00.000.000/0000-00' : '000.000.000-00'}
-                required
               />
+
+              {errors.documentValue ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.documentValue.message}</p>
+              ) : null}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -275,15 +255,49 @@ export default function Register() {
                 </label>
                 <input
                   id="register-email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  {...register('email')}
                   type="email"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="seu@email.com"
                   autoComplete="email"
-                  required
                 />
+
+                {errors.email ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.email.message}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="register-city" className="text-sm font-semibold text-slate-700">
+                  Cidade
+                </label>
+                <input
+                  id="register-city"
+                  {...register('city')}
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  placeholder="Sua cidade"
+                  autoComplete="address-level2"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="register-state" className="text-sm font-semibold text-slate-700">
+                  Estado
+                </label>
+                <select
+                  id="register-state"
+                  {...register('state')}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  autoComplete="address-level1"
+                >
+                  <option value="">Selecione</option>
+                  {brazilianStates.map((stateOption) => (
+                    <option key={stateOption.value} value={stateOption.value}>
+                      {stateOption.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
@@ -292,15 +306,16 @@ export default function Register() {
                 </label>
                 <input
                   id="register-password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  {...register('password')}
                   type="password"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  required
                 />
+
+                {errors.password ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.password.message}</p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -312,27 +327,50 @@ export default function Register() {
                 </label>
                 <input
                   id="register-confirm-password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  {...register('confirmPassword')}
                   type="password"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-[#6fe2f1] focus:bg-white focus:ring-2 focus:ring-[#d8f9fd]"
+                  className="input-standard"
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  required
                 />
+
+                {errors.confirmPassword ? (
+                  <p className="mt-1 text-sm text-rose-700">{errors.confirmPassword.message}</p>
+                ) : null}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  {...register('acceptTerms')}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#4fb8c5] focus:ring-[#4fb8c5]"
+                />
+                <span className="text-sm text-slate-600 leading-tight">
+                  Eu li e aceito o{' '}
+                  <Link
+                    to={routes.termsOfResponsibility.path}
+                    className="font-bold text-[#4fb8c5] hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Termo de Responsabilidade e Privacidade
+                  </Link>
+                  . Entendo que meus dados são protegidos e o compartilhamento só ocorre com meu
+                  consentimento.
+                </span>
+              </label>
+              {errors.acceptTerms ? (
+                <p className="mt-1 text-sm text-rose-700">{errors.acceptTerms.message}</p>
+              ) : null}
             </div>
 
             {feedback ? (
               <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{feedback}</p>
             ) : null}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full rounded-2xl bg-[#6fe2f1] px-4 py-3.5 text-sm font-bold text-slate-900 transition hover:bg-[#5ed8e6] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
               {isSubmitting ? 'Criando conta...' : 'Criar conta'}
             </button>
           </form>
@@ -345,7 +383,7 @@ export default function Register() {
           </div>
         </div>
 
-        <div className="order-1 flex flex-col justify-between bg-gradient-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
+        <div className="order-1 flex flex-col justify-between bg-linear-to-br from-[#6fe2f1] via-[#c9f4fa] to-white p-8 text-slate-900 sm:p-10 lg:order-2">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-slate-700">
               Junte-se a nós
@@ -354,8 +392,7 @@ export default function Register() {
               Faça parte da mudança na vida dos animais.
             </h1>
             <p className="mt-4 max-w-lg text-base text-slate-700">
-              Crie sua conta gratuita e comece a ajudar pets abandonados a encontrarem um lar cheio
-              de amor.
+              Crie sua conta gratuita e comece a ajudar pets a encontrarem um lar cheio de amor.
             </p>
           </div>
 

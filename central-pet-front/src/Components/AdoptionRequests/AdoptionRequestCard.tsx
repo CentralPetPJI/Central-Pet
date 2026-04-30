@@ -7,7 +7,7 @@ import {
   canShareContact,
   getAdoptionRequestStatusPresentation,
 } from '@/Models/adoption-request-status';
-import { formatRequestDate, getPetRouteId } from './adoption-requests-helpers';
+import { formatRequestDate, getPetRouteId } from './adoptionRequestsHelpers';
 
 type AdoptionRequestCardProps = {
   request: ReceivedAdoptionRequest;
@@ -69,6 +69,14 @@ export function AdoptionRequestCard({
               {request.adopter.city}/{request.adopter.state}
             </span>
           </p>
+          {request.adopterContactShareConsent &&
+          (request.adopter.email || request.adopter.phone || request.adopter.mobile) ? (
+            <div className="mt-2 text-sm text-slate-700">
+              {request.adopter.email ? <div>✉️ {request.adopter.email}</div> : null}
+              {request.adopter.phone ? <div>📞 {request.adopter.phone}</div> : null}
+              {request.adopter.mobile ? <div>📱 {request.adopter.mobile}</div> : null}
+            </div>
+          ) : null}
         </div>
       </div>
 
