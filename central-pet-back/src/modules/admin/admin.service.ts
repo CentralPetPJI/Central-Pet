@@ -72,6 +72,11 @@ export class AdminService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Usuário não encontrado');
 
+    // Proibir desativação do ROOT por administradores não-root
+    if (user.role === 'ROOT' && adminId !== user.id) {
+      throw new Error('Forbidden: only ROOT can modify ROOT status');
+    }
+
     const newStatus = !user.deleted;
 
     await this.prisma.$transaction(async (tx) => {
