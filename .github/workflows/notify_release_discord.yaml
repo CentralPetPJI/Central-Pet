@@ -1,3 +1,5 @@
+name: notify-release
+
 on:
   release:
     types: [published]
