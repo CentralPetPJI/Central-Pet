@@ -90,6 +90,15 @@ function dropDatabase({ user, password, host, port, database }) {
 function main() {
   console.log(`${CYAN}🔧 Script: drop-test-db${NC}`);
 
+  const hasConfirmationFlag = process.argv.includes('--yes') || process.argv.includes('--force');
+
+  if (!hasConfirmationFlag) {
+    console.error(`${RED}⚠️  AVISO: Esta operação irá DROPAR o banco de dados de teste.${NC}`);
+    console.error(`${RED}Para prosseguir, execute o script com a flag --yes ou --force:${NC}`);
+    console.error(`${CYAN}  node scripts/drop-test-db.js --yes${NC}`);
+    process.exit(1);
+  }
+
   const databaseUrl = readDatabaseUrlFromTestEnv();
   const conn = parseDatabaseUrl(databaseUrl);
 

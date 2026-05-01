@@ -15,7 +15,7 @@ describe('pet storage helpers', () => {
     expect(window.localStorage.getItem(petsStorageKey)).toBeNull();
   });
 
-  it('reconstroi o form data de um pet existente preservando a idade exibida', () => {
+  it('reconstrói o form data de um pet existente preservando a idade exibida', () => {
     const formData = buildRegisterFormDataFromPet({
       id: 7,
       name: 'Thor',

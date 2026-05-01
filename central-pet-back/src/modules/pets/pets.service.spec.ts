@@ -272,7 +272,7 @@ describe('PetsService', () => {
           return true;
         }
 
-        throw new NotFoundException(`Usuario com id "${userId}" nao encontrado`);
+        throw new NotFoundException(`Usuário com id "${userId}" não encontrado`);
       }),
       ensureUsersExist: jest.fn(async (userIds: string[]) => {
         await Promise.all(userIds.map((id) => userPersistenceMock.validateUser(id)));
@@ -312,7 +312,7 @@ describe('PetsService', () => {
     expect(result.data.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
   });
 
-  it('deve rejeitar city e state enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar city e state enviados na criação porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateCreateDto({
         ...makeCreateDto(),
@@ -322,7 +322,7 @@ describe('PetsService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('deve rejeitar tutor, shelter e contact enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar tutor, shelter e contact enviados na criação porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateCreateDto({
         ...makeCreateDto(),
@@ -340,7 +340,7 @@ describe('PetsService', () => {
     expect(prismaMock.pet.create).not.toHaveBeenCalled();
   });
 
-  it('deve rejeitar tracos de personalidade invalidos na criacao', async () => {
+  it('deve rejeitar traços de personalidade inválidos na criação', async () => {
     const dto = await validateCreateDto({
       ...makeCreateDto(),
       selectedPersonalities: ['invalid-trait'],
@@ -375,7 +375,7 @@ describe('PetsService', () => {
     expect(result.data.id).toBe(created.data.id);
   });
 
-  it('deve lancar NotFoundException quando pet nao existir em findOne', async () => {
+  it('deve lançar NotFoundException quando pet não existir em findOne', async () => {
     await expect(service.findOne('missing-id')).rejects.toThrow(NotFoundException);
   });
 
@@ -392,7 +392,7 @@ describe('PetsService', () => {
     expect(result.data.age).toBe(created.data.age);
   });
 
-  it('deve rejeitar city e state enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar city e state enviados na edição porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateUpdateDto({
         name: 'Luna Renomeada',
@@ -402,7 +402,7 @@ describe('PetsService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('deve rejeitar tutor, shelter e contact enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar tutor, shelter e contact enviados na edição porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateUpdateDto({
         name: 'Luna Renomeada',
@@ -484,7 +484,7 @@ describe('PetsService', () => {
     expect(forAdoption?.state).toBe('SP');
   });
 
-  it('deve retornar localizacao vazia quando o responsavel nao tiver city ou state', async () => {
+  it('deve retornar localização vazia quando o responsável não tiver city ou state', async () => {
     userRecords.set(mockUserIds.RAFAEL_LIMA, {
       ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
       city: null,

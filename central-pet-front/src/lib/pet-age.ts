@@ -25,8 +25,7 @@ const petAgeCategoryFromLabelMap = Object.fromEntries(
 ) as Record<string, PetAgeCategory>;
 
 export const isPetAgeCategory = (value: string | undefined | null): value is PetAgeCategory =>
-  typeof value === 'string' &&
-  (petAgeCategoryValues as readonly string[]).includes(value.trim().toUpperCase());
+  typeof value === 'string' && (petAgeCategoryValues as readonly string[]).includes(value);
 
 export const normalizePetAgeCategory = (
   value: string | undefined | null,

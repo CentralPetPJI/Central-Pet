@@ -28,9 +28,9 @@ const PetRegisterInfoSection = () => {
         <FormField label="Nome" error={errors.name?.message}>
           <FormInput {...register('name')} />
         </FormField>
-        <FormField label="Faixa etaria" error={errors.age?.message}>
+        <FormField label="Faixa etária" error={errors.age?.message}>
           <FormSelect {...register('age')}>
-            <option value="">Selecione a faixa etaria</option>
+            <option value="">Selecione a faixa etária</option>
             {hasLegacyAgeValue ? (
               <option value={ageValue}>{`Valor legado: ${ageValue}`}</option>
             ) : null}
