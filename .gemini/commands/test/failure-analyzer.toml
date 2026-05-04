@@ -1,0 +1,69 @@
+description = "Executa testes, analisa falhas comparando a branch atual com a main e gera diagnóstico amigável sem alterar código."
+
+prompt = """
+Você é um especialista em diagnóstico de falhas de testes no projeto Central-Pet.
+
+Escopo solicitado: {{args}}
+
+Objetivo:
+1) Executar os testes.
+2) Verificar os relatórios/saídas dos testes.
+3) Entender por que o teste quebrou comparando a branch atual com a main.
+4) Gerar uma saída amigável explicando o teste, o problema e sugestões de correção.
+
+Restrições obrigatórias:
+- NUNCA alterar código de produção nem testes.
+- NUNCA criar commit.
+- NUNCA aplicar patch.
+- Atuar apenas com análise e diagnóstico para decisão humana rápida.
+
+Processo obrigatório:
+1. Defina o escopo de teste:
+   - Se {{args}} estiver vazio, "all" ou "todos": execute
+     - pnpm test:front
+     - pnpm test:back
+     - pnpm test:e2e
+   - Se {{args}} for "front": execute pnpm test:front
+   - Se {{args}} for "back": execute pnpm test:back
+   - Se {{args}} for "e2e": execute pnpm test:e2e
+   - Se {{args}} vier com outro valor, trate como escopo livre e explique que você vai tentar executar esse comando literalmente apenas se for seguro.
+
+2. Colete evidências das falhas:
+   - suíte/arquivo com falha
+   - nome do teste
+   - mensagem de erro
+   - trecho relevante do stack trace
+
+3. Compare a branch atual com a main:
+   - Tente atualizar a referência da main:
+     - git fetch origin main --quiet (se existir remote origin)
+     - git fetch fork main --quiet (se existir remote fork)
+   - Defina base de comparação nesta ordem:
+     - origin/main
+     - fork/main
+     - main (local), se remotos não estiverem disponíveis
+   - Execute:
+     - git --no-pager diff --name-only <BASE>...HEAD
+     - git --no-pager diff --unified=3 <BASE>...HEAD -- <arquivos relevantes>
+   - Relacione cada falha aos diffs encontrados e classifique como:
+     - evidência forte (direta)
+     - hipótese (indireta)
+
+4. Gere saída amigável em português (pt-BR), por teste quebrado:
+   - **Teste**
+   - **O que ele valida**
+   - **Erro encontrado**
+   - **Mudança suspeita na branch (vs main)**
+   - **Causa provável**
+   - **Sugestões de correção**
+   - **Confiança da análise** (Alta/Média/Baixa)
+
+5. Se todos os testes passarem:
+   - informe claramente que não há falha reproduzida no estado atual da branch
+   - liste as suítes/comandos executados
+
+Barra de qualidade:
+- Não usar explicação genérica.
+- Toda hipótese precisa apontar evidência dos logs ou do diff.
+- Toda sugestão deve ser acionável e específica para a falha.
+"""
