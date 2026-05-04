@@ -31,7 +31,7 @@ type PrismaPetRecord = {
   responsibleUserId: string | null;
   sourceType: 'ONG' | 'PESSOA_FISICA' | null;
   sourceName: string | null;
-  status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
+  status: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
   deleted: boolean;
   createdAt: Date;
   updatedAt: Date;

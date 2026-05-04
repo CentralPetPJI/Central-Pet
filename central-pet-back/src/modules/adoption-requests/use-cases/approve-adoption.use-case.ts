@@ -75,7 +75,7 @@ export class ApproveAdoptionUseCase {
       const _updatedPet = await tx.pet.update({
         where: {
           id: updatedReq.petId,
-          status: { in: ['AVAILABLE', 'PENDING_ADOPTION'] },
+          status: { in: ['AVAILABLE'] },
           responsibleUserId: currentRequest.responsibleUserId,
         },
         data: { responsibleUserId: updatedReq.adopterId, status: 'ADOPTED' },
@@ -92,7 +92,6 @@ export class ApproveAdoptionUseCase {
         },
       });
 
-      // audit log: adoption approved
       if (this.auditService) {
         await this.auditService.createWithTx(tx, {
           userId: responsibleUserId,
@@ -102,7 +101,6 @@ export class ApproveAdoptionUseCase {
           details: { petId: updatedReq.petId, adopterId: updatedReq.adopterId },
         });
 
-        // audit log: pet responsibility transferred
         await this.auditService.createWithTx(tx, {
           userId: responsibleUserId,
           action: 'TRANSFER_PET',

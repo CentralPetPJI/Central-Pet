@@ -38,7 +38,7 @@ describe('Pagina Meus Pets', () => {
             breed: 'Bengal',
             city: 'Campinas',
             state: 'SP',
-            adoptionStatus: 'IN_PROCESS',
+            adoptionStatus: 'AVAILABLE',
             responsibleUserId: '33333333-3333-3333-3333-333333333333',
           },
         ],
@@ -60,7 +60,7 @@ describe('Pagina Meus Pets', () => {
         responsibleUserId: '33333333-3333-3333-3333-333333333333',
       },
     });
-    expect(screen.getByText('Em processo')).toBeInTheDocument();
+    expect(screen.getByText('Disponivel')).toBeInTheDocument();
   });
 
   it('nao exibe pets de outro usuario quando backend retorna lista mista', async () => {
@@ -71,7 +71,7 @@ describe('Pagina Meus Pets', () => {
             id: '4',
             name: 'Pringles',
             species: 'CAT',
-            adoptionStatus: 'IN_PROCESS',
+            adoptionStatus: 'AVAILABLE',
             responsibleUserId: '33333333-3333-3333-3333-333333333333',
           },
           {

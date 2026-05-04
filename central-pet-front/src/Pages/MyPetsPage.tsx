@@ -9,10 +9,9 @@ import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
 import type { PetApiResponse, PetListItem } from '@/Models/pet';
 
 const statusLabelMap: Record<string, string> = {
-  AVAILABLE: 'Disponivel',
-  IN_PROCESS: 'Em processo',
+  AVAILABLE: 'Disponível',
   ADOPTED: 'Adotado',
-  UNAVAILABLE: 'Indisponivel',
+  UNAVAILABLE: 'Indisponível',
 };
 
 /**
