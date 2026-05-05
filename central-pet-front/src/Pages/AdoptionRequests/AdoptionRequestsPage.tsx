@@ -50,6 +50,16 @@ export default function AdoptionRequestsPage() {
     [allRequests],
   );
 
+  const receivedPendingCount = useMemo(
+    () => received.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length,
+    [received.requests],
+  );
+
+  const sentPendingCount = useMemo(
+    () => sent.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length,
+    [sent.requests],
+  );
+
   const filteredAndSortedRequests = useMemo(() => {
     const filtered =
       statusFilter === 'all' ? allRequests : allRequests.filter((r) => r.status === statusFilter);
@@ -85,10 +95,9 @@ export default function AdoptionRequestsPage() {
           }`}
         >
           Recebidas
-          {received.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length >
-            0 && (
+          {receivedPendingCount > 0 && (
             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-              {received.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length}
+              {receivedPendingCount}
             </span>
           )}
         </button>
@@ -102,9 +111,9 @@ export default function AdoptionRequestsPage() {
           }`}
         >
           Enviadas
-          {sent.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length > 0 && (
+          {sentPendingCount > 0 && (
             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-              {sent.requests.filter((r) => r.status === AdoptionRequestStatus.PENDING).length}
+              {sentPendingCount}
             </span>
           )}
         </button>
