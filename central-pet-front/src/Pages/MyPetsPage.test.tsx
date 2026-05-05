@@ -60,7 +60,7 @@ describe('Pagina Meus Pets', () => {
         responsibleUserId: '33333333-3333-3333-3333-333333333333',
       },
     });
-    expect(screen.getByText('Disponivel')).toBeInTheDocument();
+    expect(screen.getByText('Disponível')).toBeInTheDocument();
   });
 
   it('nao exibe pets de outro usuario quando backend retorna lista mista', async () => {
