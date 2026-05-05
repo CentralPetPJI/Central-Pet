@@ -2,6 +2,23 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, vi } from 'vitest';
 
+const IntersectionObserverMock = vi.fn(
+  class {
+    disconnect = vi.fn();
+    observe = vi.fn();
+    takeRecords = vi.fn();
+    unobserve = vi.fn();
+  },
+);
+
+const ResizerObserverMock = vi.fn(
+  class {
+    disconnect = vi.fn();
+    observe = vi.fn();
+    unobserve = vi.fn();
+  },
+);
+
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -16,6 +33,9 @@ beforeAll(() => {
       dispatchEvent: vi.fn(),
     })),
   });
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock);
+  vi.stubGlobal('ResizeObserver', ResizerObserverMock);
 });
 
 afterEach(() => {
