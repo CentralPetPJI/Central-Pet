@@ -72,7 +72,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
                   <p className="mt-1 text-sm font-medium text-slate-500">
                     {pet.city
                       ? `${pet.city}${pet.state ? `/${formatState(pet.state)}` : ''}`
-                      : 'Localizacao nao informada'}
+                      : "Localização não informada"}
                   </p>
                   <p className="mt-2 text-sm text-gray-600 line-clamp-3">
                     {pet.physicalCharacteristics}
