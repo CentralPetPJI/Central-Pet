@@ -38,7 +38,6 @@ enum PetSize {
 
 enum PetStatus {
   AVAILABLE
-  PENDING_ADOPTION
   ADOPTED
   UNAVAILABLE
 }
@@ -226,4 +225,3 @@ model ModerationReport {
   @@index([status])
   @@index([targetId])
 }
-

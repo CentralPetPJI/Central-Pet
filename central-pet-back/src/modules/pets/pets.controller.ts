@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { FindPetsQueryDto } from './dto/find-pets-query.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import { PetOwnerGuard } from './guards/pet-owner.guard';
@@ -27,8 +28,8 @@ export class PetsController {
   }
 
   @Get()
-  findAll(@Query('responsibleUserId') responsibleUserId?: string) {
-    return this.petsService.findAll(responsibleUserId);
+  findAll(@Query() dto: FindPetsQueryDto) {
+    return this.petsService.findAll(dto.responsibleUserId, dto.adoptionStatus);
   }
 
   @Get(':id')
