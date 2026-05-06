@@ -64,4 +64,15 @@ export class AdoptionRequestsController {
   ) {
     return this.adoptionRequestsService.simulateReceived(user.id, dto);
   }
+
+  @Get('check')
+  @UseGuards(SessionGuard)
+  async check(@Query('petId') petId: string, @CurrentUser() user: MockUser | PublicUser) {
+    if (!petId) {
+      throw new BadRequestException('petId query parameter is required');
+    }
+
+    const exists = await this.adoptionRequestsService.hasRequest(user.id, String(petId));
+    return { exists };
+  }
 }

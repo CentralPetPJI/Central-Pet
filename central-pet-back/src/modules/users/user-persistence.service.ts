@@ -99,7 +99,15 @@ export class UserPersistenceService {
     const uniqueIds = [...new Set(userIds)];
     const users = await this.prisma.user.findMany({
       where: { id: { in: uniqueIds } },
-      select: { id: true, fullName: true },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        city: true,
+        state: true,
+        phone: true,
+        mobile: true,
+      },
     });
     return new Map(users.map((u) => [u.id, u] as const));
   }

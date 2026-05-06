@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Contexto de autenticação com padrão de estratégia
  *
@@ -27,6 +26,7 @@ import { createAuthStrategy } from './strategies/factory';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { routes } from '@/routes.tsx';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {

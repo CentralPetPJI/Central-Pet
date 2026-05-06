@@ -1,0 +1,43 @@
+name: notify-release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extrair resumo da release com IA
+        id: ai-summary
+        uses: actions/ai-inference@v1
+        with:
+          prompt: |
+            Você é um assistente técnico.
+
+            A partir da descrição de uma Release, extraia:
+
+            1. Principais mudanças
+            2. Impacto para usuários
+            3. Como validar
+
+            Texto:
+            ${{ github.event.release.body }}
+
+      - name: Notificar release no Discord
+        uses: appleboy/discord-action@v1.2.0
+        with:
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+          username: "Ningo Dancer"
+          color: "#ff9900"
+          message: |
+            🚀 Nova Release publicada!
+
+            **${{ github.event.release.name }}**
+            🏷️ Tag: `${{ github.event.release.tag_name }}`
+
+            🔗 ${{ github.event.release.html_url }}

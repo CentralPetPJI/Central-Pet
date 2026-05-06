@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { mockUsers, type MockUser } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { SimulateAdoptionRequestDto } from '../dto/simulate-adoption-request.dto';
 import { UserPersistenceService } from '../../users/user-persistence.service';
 import { PetsService } from '../../pets/pets.service';
 import { mapPetForResponse, mapAdopterForResponse, AdoptionRequestStatus } from '../models';
+import { AuditService } from '@/modules/audit/audit.service';
 
 @Injectable()
 export class AdoptionRequestSimulationService {
@@ -12,6 +13,7 @@ export class AdoptionRequestSimulationService {
     private readonly prisma: PrismaService,
     private readonly userPersistence: UserPersistenceService,
     private readonly petsService: PetsService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   validateSimulationPermission(userId: string, petResponsibleUserId: string): void {
@@ -115,7 +117,20 @@ export class AdoptionRequestSimulationService {
       },
     });
 
-    const persistedUsersById = await this.userPersistence.buildUserMap([request.adopterId]);
+    // audit log: adoption request creation
+    if (this.auditService) {
+      await this.auditService.create({
+        userId: request.adopterId,
+        action: 'CREATE_ADOPTION_REQUEST',
+        targetId: request.petId,
+        targetType: 'PET',
+        details: { requestId: request.id },
+      });
+    }
+
+    const userIds = [request.adopterId];
+    if (request.responsibleUserId) userIds.push(request.responsibleUserId);
+    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
     const petFound = await this.petsService.findByIdForAdoption(request.petId);
 
@@ -125,12 +140,25 @@ export class AdoptionRequestSimulationService {
 
     const petForResponse = mapPetForResponse(petFound);
 
-    const adopterForResponse = mapAdopterForResponse(request.adopterId, persistedUsersById);
+    const adopterForResponse = mapAdopterForResponse(
+      request.adopterId,
+      persistedUsersById,
+      request.adopterContactShareConsent,
+    );
+
+    const responsibleForResponse = request.responsibleUserId
+      ? mapAdopterForResponse(
+          request.responsibleUserId,
+          persistedUsersById,
+          request.responsibleContactShareConsent,
+        )
+      : undefined;
 
     const data = {
       id: request.id,
       pet: petForResponse,
       adopter: adopterForResponse,
+      responsible: responsibleForResponse,
       message: request.message,
       adopterContactShareConsent: request.adopterContactShareConsent,
       responsibleContactShareConsent: request.responsibleContactShareConsent,

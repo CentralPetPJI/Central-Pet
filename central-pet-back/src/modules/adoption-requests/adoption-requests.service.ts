@@ -33,8 +33,15 @@ export class AdoptionRequestsService {
     requests: AdoptionRequestRecord[],
   ): Promise<ReceivedAdoptionRequest[]> {
     const adopterIds = Array.from(new Set(requests.map((r) => r.adopterId)));
-    await this.userPersistence.ensureUsersExist(adopterIds);
-    const persistedUsersById = await this.userPersistence.buildUserMap(adopterIds);
+    const responsibleIds = Array.from(
+      new Set(requests.map((r) => r.responsibleUserId).filter((id) => !!id)),
+    );
+
+    const allUserIds = Array.from(new Set([...adopterIds, ...responsibleIds]));
+    if (allUserIds.length > 0) {
+      await this.userPersistence.ensureUsersExist(allUserIds);
+    }
+    const persistedUsersById = await this.userPersistence.buildUserMap(allUserIds);
 
     const petsById = new Map<string, PetForAdoptionRequest | null>();
     await Promise.all(
@@ -52,12 +59,25 @@ export class AdoptionRequestsService {
       }
 
       const petForResponse = mapPetForResponse(petFound);
-      const adopterForResponse = mapAdopterForResponse(r.adopterId, persistedUsersById);
+      const adopterForResponse = mapAdopterForResponse(
+        r.adopterId,
+        persistedUsersById,
+        r.adopterContactShareConsent,
+      );
+
+      const responsibleForResponse = r.responsibleUserId
+        ? mapAdopterForResponse(
+            r.responsibleUserId,
+            persistedUsersById,
+            r.responsibleContactShareConsent,
+          )
+        : undefined;
 
       return {
         id: r.id,
         pet: petForResponse,
         adopter: adopterForResponse,
+        responsible: responsibleForResponse,
         message: r.message,
         adopterContactShareConsent: r.adopterContactShareConsent,
         responsibleContactShareConsent: r.responsibleContactShareConsent,
@@ -101,6 +121,20 @@ export class AdoptionRequestsService {
     };
   }
 
+  /**
+   * Verifica se existe uma solicitação pendente para um adotante em um pet específico.
+   * Retorna true se existir (PENDING ou IN_PROCESS), false caso contrário.
+   */
+  async hasRequest(adopterId: string, petId: string): Promise<boolean> {
+    const found = await this.prisma.adoptionRequest.findFirst({
+      where: {
+        adopterId,
+        petId,
+      },
+    });
+    return !!found;
+  }
+
   async simulateReceived(
     userId: string,
     dto: SimulateAdoptionRequestDto,
@@ -135,8 +169,11 @@ export class AdoptionRequestsService {
       );
     }
 
-    await this.userPersistence.ensureUsersExist([updatedReq.adopterId]);
-    const persistedUsersById = await this.userPersistence.buildUserMap([updatedReq.adopterId]);
+    // ensure both adopter and responsible user info are available for the response
+    const userIds = [updatedReq.adopterId];
+    if (updatedReq.responsibleUserId) userIds.push(updatedReq.responsibleUserId);
+    await this.userPersistence.ensureUsersExist(userIds);
+    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
 
     const petFound = await this.petsService.findByIdForAdoption(updatedReq.petId);
     if (!petFound) {
@@ -144,12 +181,25 @@ export class AdoptionRequestsService {
     }
 
     const petForResponse = mapPetForResponse(petFound);
-    const adopterForResponse = mapAdopterForResponse(updatedReq.adopterId, persistedUsersById);
+    const adopterForResponse = mapAdopterForResponse(
+      updatedReq.adopterId,
+      persistedUsersById,
+      updatedReq.adopterContactShareConsent,
+    );
+
+    const responsibleForResponse = updatedReq.responsibleUserId
+      ? mapAdopterForResponse(
+          updatedReq.responsibleUserId,
+          persistedUsersById,
+          updatedReq.responsibleContactShareConsent,
+        )
+      : undefined;
 
     const data = {
       id: updatedReq.id,
       pet: petForResponse,
       adopter: adopterForResponse,
+      responsible: responsibleForResponse,
       message: updatedReq.message,
       adopterContactShareConsent: updatedReq.adopterContactShareConsent,
       responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
@@ -208,6 +258,12 @@ export class AdoptionRequestsService {
     }
 
     // 4. Criar no banco
+    // garantir que adotante e responsável existam no banco (em dev, cria mocks automaticamente)
+    await this.userPersistence.validateUser(adopterId);
+    if (pet.responsibleUserId) {
+      await this.userPersistence.validateUser(pet.responsibleUserId);
+    }
+
     let created: AdoptionRequestRecord;
     try {
       created = (await this.prisma.adoptionRequest.create({

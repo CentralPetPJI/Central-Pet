@@ -41,7 +41,21 @@ export function UserMenu() {
   const initials = getInitials(currentUser.fullName);
 
   // Define opções do menu
+  function isAdminRole(role: unknown): role is 'ADMIN' | 'ROOT' {
+    return role === 'ADMIN' || role === 'ROOT';
+  }
+
   const menuItems: MenuItem[] = [
+    ...(isAdminRole(currentUser.role)
+      ? [
+          {
+            label: 'Administração',
+            path: routes.admin.dashboard.path,
+            icon: <UserRound className="h-4 w-4 text-purple-600" />,
+          },
+          { divider: true as const },
+        ]
+      : []),
     {
       label: 'Meus Pets',
       path: routes.pets.mine.path,

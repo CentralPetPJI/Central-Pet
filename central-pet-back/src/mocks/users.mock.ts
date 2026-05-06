@@ -7,7 +7,7 @@ export type MockUser = {
   id: string;
   fullName: string;
   email: string;
-  role: 'PESSOA_FISICA' | 'ONG';
+  role: 'PESSOA_FISICA' | 'ONG' | 'ADMIN';
   city?: string;
   state?: string;
   birthDate?: Date;
@@ -33,6 +33,7 @@ export const mockUserIds = {
   JULIANA_MARTINS: '550e8400-e29b-41d4-a716-446655440002',
   RAFAEL_LIMA: '550e8400-e29b-41d4-a716-446655440003',
   ANA_SOUZA: '550e8400-e29b-41d4-a716-446655440004',
+  ADMIN_CENTRAL_PET: '550e8400-e29b-41d4-a716-446655440005',
 } as const;
 
 export const mockUsers: MockUser[] = [
