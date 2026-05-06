@@ -44,9 +44,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
       .fill(petName);
-    await page
-      .getByRole("textbox", { name: "Idade", exact: true })
-      .fill("2 anos");
+    await page.getByLabel("Faixa etária").selectOption("ADULTO");
     await page
       .getByRole("textbox", { name: "Raca", exact: true })
       .fill("Inteligência Artificial");
@@ -99,9 +97,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
       .fill(petName);
-    await page
-      .getByRole("textbox", { name: "Idade", exact: true })
-      .fill("1 ano");
+    await page.getByLabel("Faixa etária").selectOption("JOVEM");
     await page.getByRole("textbox", { name: "Raca", exact: true }).fill("SRD");
 
     await page.getByLabel("Especie").selectOption("dog");

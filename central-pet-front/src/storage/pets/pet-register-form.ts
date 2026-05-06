@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { petSpeciesOptions, petSexOptions, petSizeOptions } from '@/lib/formatters';
+import { isPetAgeCategory, petAgeCategoryOptions, normalizePetAgeCategory } from '@/lib/pet-age';
 
 export const petRegisterStorageKey = 'central-pet:register-form';
 
@@ -7,11 +8,18 @@ export const petRegisterFormSchema = z.object({
   profilePhoto: z.string('Insira a foto de perfil do pet.'),
   galleryPhotos: z.array(z.string()).optional(),
   name: z.string().trim().min(1, 'Informe o nome do pet antes de salvar.'),
-  age: z.string().trim().min(1, 'Informe a idade do pet.'),
-  species: z.enum(['dog', 'cat'], { error: 'Selecione uma especie valida.' }),
-  breed: z.string().trim().min(1, 'Informe a raca do pet.'),
-  sex: z.enum(['male', 'female'], { error: 'Selecione um sexo valido.' }),
-  size: z.enum(['small', 'medium', 'large'], { error: 'Selecione um porte valido.' }),
+  age: z
+    .string()
+    .trim()
+    .min(1, 'Selecione a faixa etária do pet.')
+    .refine(
+      (value) => isPetAgeCategory(normalizePetAgeCategory(value) ?? ''),
+      'Selecione uma faixa etária válida.',
+    ),
+  species: z.enum(['dog', 'cat'], { error: 'Selecione uma espécie válida.' }),
+  breed: z.string().trim().min(1, 'Informe a raça do pet.'),
+  sex: z.enum(['male', 'female'], { error: 'Selecione um sexo válido.' }),
+  size: z.enum(['small', 'medium', 'large'], { error: 'Selecione um porte válido.' }),
   microchipped: z.boolean(),
   vaccinated: z.boolean(),
   neutered: z.boolean(),
@@ -30,4 +38,4 @@ export const isPetRegisterFormDataLike = (data: unknown): data is Partial<PetReg
   typeof data === 'object' && data !== null && !Array.isArray(data);
 
 // Re-exportamos as opções para manter a compatibilidade com os componentes que importam de '@/storage/pets'
-export { petSpeciesOptions, petSexOptions, petSizeOptions };
+export { petAgeCategoryOptions, petSpeciesOptions, petSexOptions, petSizeOptions };
