@@ -567,4 +567,34 @@ describe('Servico de solicitacoes de adocao', () => {
       randomSpy.mockRestore();
     }
   });
+
+  it('deve retornar nota de bloqueio e manter solicitacao visivel quando o pet estiver indisponivel', async () => {
+    const unavailablePet = petsById.get('pet-001');
+
+    if (!unavailablePet) {
+      throw new Error('Pet de teste não encontrado');
+    }
+
+    petsById.set('pet-001', {
+      ...unavailablePet,
+      name: 'Mimi',
+      adoptionStatus: 'UNAVAILABLE',
+    });
+
+    await service.simulateReceived(mockUserIds.ONG_PATAS_DO_CENTRO, {
+      petId: 'pet-001',
+      petResponsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+      adopterId: mockUserIds.RAFAEL_LIMA,
+      responsibleContactShareConsent: true,
+    });
+
+    const sent = await service.findSent(mockUserIds.RAFAEL_LIMA);
+
+    expect(sent.data).toHaveLength(1);
+    expect(sent.data[0].pet.name).toBe('Mimi');
+    expect(sent.data[0].pet.adoptionStatus).toBe('UNAVAILABLE');
+    expect(sent.data[0].blockNote).toBe(
+      'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.',
+    );
+  });
 });

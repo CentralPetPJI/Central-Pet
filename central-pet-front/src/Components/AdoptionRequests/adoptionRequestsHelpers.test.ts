@@ -19,6 +19,7 @@ function makeRequest(
       responsibleUserId: 'user-1',
       sourceType: 'PESSOA_FISICA',
       sourceName: 'Fulano',
+      adoptionStatus: 'AVAILABLE',
     },
     adopter: { id: 'a1', name: 'Adotante', city: 'SP', state: 'SP' },
     message: 'msg',

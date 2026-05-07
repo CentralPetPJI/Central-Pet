@@ -10,6 +10,7 @@ export type ReceivedAdoptionRequestPet = {
   responsibleUserId: string | undefined;
   sourceType?: 'ONG' | 'PESSOA_FISICA';
   sourceName: string | null | undefined;
+  adoptionStatus: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
 };
 
 export type ReceivedAdoptionRequestUser = {
@@ -32,6 +33,7 @@ export type ReceivedAdoptionRequest = {
   responsibleContactShareConsent: boolean;
   status: AdoptionRequestStatus;
   note?: string;
+  blockNote?: string;
   requestedAt: string;
   updatedAt: string;
 };
@@ -46,6 +48,7 @@ export function mapPetForResponse(pet: PetForAdoptionRequest): ReceivedAdoptionR
     responsibleUserId: pet.responsibleUserId,
     sourceType: pet.sourceType,
     sourceName: pet.sourceName,
+    adoptionStatus: pet.adoptionStatus,
   };
 }
 

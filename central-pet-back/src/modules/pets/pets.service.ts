@@ -392,6 +392,25 @@ export class PetsService {
       },
     });
 
+    // Cancelar solicitações pendentes do pet
+    if (this.prisma.adoptionRequest) {
+      await this.prisma.adoptionRequest
+        .updateMany({
+          where: {
+            petId: id,
+            status: { in: ['PENDING', 'CONTACT_SHARED'] },
+          },
+          data: {
+            status: 'CANCELLED',
+            note: 'Solicitação cancelada automaticamente porque o pet não está mais disponível.',
+            version: { increment: 1 },
+          },
+        })
+        .catch(() => {
+          // Ignorar erro se adoptionRequest não estiver disponível (em testes)
+        });
+    }
+
     return {
       message: 'Pet deleted successfully',
       data: this.withResponsibleLocation(

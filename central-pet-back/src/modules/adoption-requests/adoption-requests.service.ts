@@ -24,6 +24,10 @@ export class AdoptionRequestsService {
     private readonly userPersistence: UserPersistenceService,
   ) {}
 
+  private buildUnavailablePetBlockNote(): string {
+    return 'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.';
+  }
+
   /**
    * Função auxiliar para resolver adotantes, pets e mapear solicitações de adoção para o formato de resposta da API.
    * @param requests Array de registros de solicitações de adoção vindos do banco
@@ -71,16 +75,17 @@ export class AdoptionRequestsService {
           adoptionStatus: 'UNAVAILABLE',
         };
       } else if (petFound.adoptionStatus === 'UNAVAILABLE') {
-        // Pet existente mas marcado como indisponível (soft-deleted / removido): ofuscar nome, manter relação com responsável e metadados
-        petForResponseObj = {
-          ...petFound,
-          name: 'Indisponível',
-        };
+        // Pet existente mas marcado como indisponível (soft-deleted / removido): manter nome real, apenas bloquear acesso ao perfil
+        petForResponseObj = petFound;
       } else {
         petForResponseObj = petFound;
       }
 
       const petForResponse = mapPetForResponse(petForResponseObj);
+      const blockNote =
+        petForResponseObj.adoptionStatus === 'UNAVAILABLE'
+          ? this.buildUnavailablePetBlockNote()
+          : undefined;
 
       const adopterForResponse = mapAdopterForResponse(
         r.adopterId,
@@ -106,6 +111,7 @@ export class AdoptionRequestsService {
         responsibleContactShareConsent: r.responsibleContactShareConsent,
         status: r.status as unknown as AdoptionRequestStatus,
         note: r.note ?? undefined,
+        blockNote,
         requestedAt: r.requestedAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
       } as ReceivedAdoptionRequest;
@@ -225,6 +231,8 @@ export class AdoptionRequestsService {
     }
 
     const petForResponse = mapPetForResponse(petFound);
+    const blockNote =
+      petFound.adoptionStatus === 'UNAVAILABLE' ? this.buildUnavailablePetBlockNote() : undefined;
     const adopterForResponse = mapAdopterForResponse(
       updatedReq.adopterId,
       persistedUsersById,
@@ -249,6 +257,7 @@ export class AdoptionRequestsService {
       responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
       status: updatedReq.status as unknown as AdoptionRequestStatus,
       note: updatedReq.note ?? undefined,
+      blockNote,
       requestedAt: updatedReq.requestedAt.toISOString(),
       updatedAt: updatedReq.updatedAt.toISOString(),
     } as ReceivedAdoptionRequest;
