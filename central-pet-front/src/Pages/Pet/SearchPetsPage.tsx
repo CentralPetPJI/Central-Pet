@@ -1,31 +1,46 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePets } from '@/lib/pets';
-import { brazilianStates, formatPetSpecies, formatState } from '@/lib/formatters';
+import {
+  brazilianStates,
+  formatPetSpecies,
+  formatState,
+  petSexOptions,
+  petSizeOptions,
+  petSpeciesOptions,
+} from '@/lib/formatters';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
 import { routes } from '@/routes';
 
 type SearchFilterKey = 'state' | 'species' | 'sex' | 'size';
+type SpeciesFilter = Uppercase<(typeof petSpeciesOptions)[number]['value']>;
+type SexFilter = Uppercase<(typeof petSexOptions)[number]['value']>;
+type SizeFilter = Uppercase<(typeof petSizeOptions)[number]['value']>;
 
-const allowedSpecies = ['DOG', 'CAT'] as const;
-const allowedSexes = ['MALE', 'FEMALE'] as const;
-const allowedSizes = ['SMALL', 'MEDIUM', 'LARGE'] as const;
+const speciesOptions: ReadonlyArray<{ value: SpeciesFilter; label: string }> =
+  petSpeciesOptions.map((option) => ({
+    value: option.value.toUpperCase() as SpeciesFilter,
+    label: option.label,
+  }));
 
-const speciesLabelMap: Record<(typeof allowedSpecies)[number], string> = {
-  DOG: 'Cachorro',
-  CAT: 'Gato',
-};
+const sexOptions: ReadonlyArray<{ value: SexFilter; label: string }> = petSexOptions.map(
+  (option) => ({
+    value: option.value.toUpperCase() as SexFilter,
+    label: option.label,
+  }),
+);
 
-const sexLabelMap: Record<(typeof allowedSexes)[number], string> = {
-  MALE: 'Macho',
-  FEMALE: 'Fêmea',
-};
+const sizeOptions: ReadonlyArray<{ value: SizeFilter; label: string }> = petSizeOptions.map(
+  (option) => ({
+    value: option.value.toUpperCase() as SizeFilter,
+    label: option.label,
+  }),
+);
 
-const sizeLabelMap: Record<(typeof allowedSizes)[number], string> = {
-  SMALL: 'Pequeno',
-  MEDIUM: 'Médio',
-  LARGE: 'Grande',
-};
+const hasOption = <T extends string>(
+  options: ReadonlyArray<{ value: T }>,
+  value: string,
+): value is T => options.some((option) => option.value === value);
 
 export default function SearchPetsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,15 +54,9 @@ export default function SearchPetsPage() {
     () => ({
       adoptionStatus: 'AVAILABLE' as const,
       state: selectedState || undefined,
-      species: allowedSpecies.includes(selectedSpecies as (typeof allowedSpecies)[number])
-        ? (selectedSpecies as (typeof allowedSpecies)[number])
-        : undefined,
-      sex: allowedSexes.includes(selectedSex as (typeof allowedSexes)[number])
-        ? (selectedSex as (typeof allowedSexes)[number])
-        : undefined,
-      size: allowedSizes.includes(selectedSize as (typeof allowedSizes)[number])
-        ? (selectedSize as (typeof allowedSizes)[number])
-        : undefined,
+      species: hasOption(speciesOptions, selectedSpecies) ? selectedSpecies : undefined,
+      sex: hasOption(sexOptions, selectedSex) ? selectedSex : undefined,
+      size: hasOption(sizeOptions, selectedSize) ? selectedSize : undefined,
     }),
     [selectedSize, selectedSex, selectedSpecies, selectedState],
   );
@@ -104,9 +113,9 @@ export default function SearchPetsPage() {
             className="rounded-xl border border-slate-300 px-3 py-2"
           >
             <option value="">Todas</option>
-            {allowedSpecies.map((species) => (
-              <option key={species} value={species}>
-                {speciesLabelMap[species]}
+            {speciesOptions.map((speciesOption) => (
+              <option key={speciesOption.value} value={speciesOption.value}>
+                {speciesOption.label}
               </option>
             ))}
           </select>
@@ -121,9 +130,9 @@ export default function SearchPetsPage() {
             className="rounded-xl border border-slate-300 px-3 py-2"
           >
             <option value="">Todos</option>
-            {allowedSizes.map((size) => (
-              <option key={size} value={size}>
-                {sizeLabelMap[size]}
+            {sizeOptions.map((sizeOption) => (
+              <option key={sizeOption.value} value={sizeOption.value}>
+                {sizeOption.label}
               </option>
             ))}
           </select>
@@ -138,9 +147,9 @@ export default function SearchPetsPage() {
             className="rounded-xl border border-slate-300 px-3 py-2"
           >
             <option value="">Todos</option>
-            {allowedSexes.map((sex) => (
-              <option key={sex} value={sex}>
-                {sexLabelMap[sex]}
+            {sexOptions.map((sexOption) => (
+              <option key={sexOption.value} value={sexOption.value}>
+                {sexOption.label}
               </option>
             ))}
           </select>
