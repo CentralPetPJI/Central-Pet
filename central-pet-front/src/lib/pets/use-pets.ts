@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { Pet, PetApiResponse } from '@/Models/pet';
 import { mapApiResponseToPet, ensureAllPublicIds } from '@/storage/pets/pet-helpers';
+import {
+  petPersonalityOptions,
+  type PetPersonalityApiOption,
+} from '@/storage/pets/pet-personality-options';
 
 interface UsePetsResult {
   pets: Pet[];
@@ -23,10 +27,16 @@ export const usePets = (): UsePetsResult => {
     setError(null);
 
     try {
-      const response = await api.get<{ data: PetApiResponse[] }>('/pets');
+      const [response, personalityResponse] = await Promise.all([
+        api.get<{ data: PetApiResponse[] }>('/pets'),
+        api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
+      ]);
+      const personalityOptions = personalityResponse?.data.data ?? petPersonalityOptions;
 
       ensureAllPublicIds(response.data.data);
-      const backendPets = response.data.data.map(mapApiResponseToPet);
+      const backendPets = response.data.data.map((pet) =>
+        mapApiResponseToPet(pet, personalityOptions),
+      );
       setPets(backendPets);
     } catch (err) {
       setPets([]);

@@ -6,6 +6,7 @@ import {
   saveBatchPublicIdMappings,
 } from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
+import { petPersonalityOptions, type PetPersonalityApiOption } from './pet-personality-options';
 
 /**
  * Sincroniza multiplos pets do backend em batch
@@ -20,13 +21,40 @@ export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
  * Converte PetApiResponse do backend para formato Pet do frontend
  * Usa IDs publicos sequenciais para URLs amigaveis
  */
-export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
+const localPersonalityTitleById = new Map(
+  petPersonalityOptions.map((option) => [option.id, option.title] as const),
+);
+
+const formatSelectedPersonalities = (
+  selectedPersonalities: string[],
+  personalityOptions: PetPersonalityApiOption[] = petPersonalityOptions,
+): string => {
+  if (selectedPersonalities.length === 0) {
+    return 'Perfil comportamental nao informado';
+  }
+
+  const titleById = new Map(personalityOptions.map((option) => [option.id, option.title] as const));
+
+  return selectedPersonalities
+    .map(
+      (personalityId) =>
+        titleById.get(personalityId) ??
+        localPersonalityTitleById.get(personalityId) ??
+        personalityId,
+    )
+    .join(', ');
+};
+
+export const mapApiResponseToPet = (
+  apiPet: PetApiResponse,
+  personalityOptions?: PetPersonalityApiOption[],
+): Pet => {
   const publicId = ensurePublicId(apiPet.id, apiPet.name);
 
-  const personalityText =
-    apiPet.selectedPersonalities.length > 0
-      ? apiPet.selectedPersonalities.join(', ')
-      : 'Perfil comportamental nao informado';
+  const personalityText = formatSelectedPersonalities(
+    apiPet.selectedPersonalities,
+    personalityOptions,
+  );
 
   const sex = formatPetSex(apiPet.sex) || 'Nao informado';
   const size = formatPetSize(apiPet.size) || 'Nao informado';
