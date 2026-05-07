@@ -46,8 +46,9 @@ describe('pet-register-payload', () => {
     expect(isProfileLocationComplete({ city: '', state: 'SP' })).toBe(false);
   });
 
-  it('remove personalidade conflitante ao selecionar uma nova opcao', () => {
-    expect(resolvePersonalitySelection(['calm', 'friendly'], 'energetic', petPersonalityOptions))
-      .toEqual(['friendly', 'energetic']);
+  it('remove personalidade conflitante ao selecionar uma nova opção', () => {
+    expect(
+      resolvePersonalitySelection(['calm', 'friendly'], 'energetic', petPersonalityOptions),
+    ).toEqual(['friendly', 'energetic']);
   });
 });
