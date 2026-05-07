@@ -5,6 +5,7 @@ import MyPetsPage from '@/Pages/MyPetsPage';
 import AdoptionRequestsPage from '@/Pages/AdoptionRequests/AdoptionRequestsPage';
 import PetPersonalityRegisterPage from '@/Pages/Pet/PetPersonalityRegisterPage.tsx';
 import PetPersonalityProfilePage from '@/Pages/Pet/PetPersonalityProfilePage.tsx';
+import SearchPetsPage from '@/Pages/Pet/SearchPetsPage.tsx';
 import Login from '@/Pages/Login/Login';
 import Register from '@/Pages/Register/Register';
 import ProfilePage from '@/Pages/Profile/ProfilePage';
@@ -74,6 +75,10 @@ export const routes = {
     ),
   } satisfies AppRoute,
   pets: {
+    search: {
+      path: '/buscar-pets',
+      element: <SearchPetsPage />,
+    } satisfies AppRoute,
     new: {
       path: '/pets/new',
       element: (

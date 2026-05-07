@@ -48,7 +48,7 @@ export interface PetApiResponse {
   selectedPersonalities: string[];
   responsibleUserId: string;
   responsibleUser?: UserProfile;
-  adoptionStatus?: string;
+  adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
   sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
   createdAt: string;
