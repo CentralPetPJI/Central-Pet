@@ -1,0 +1,83 @@
+enum PetSpecies {
+  DOG
+  CAT
+}
+
+enum PetSex {
+  FEMALE
+  MALE
+}
+
+enum PetSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum PetStatus {
+  AVAILABLE
+  ADOPTED
+  UNAVAILABLE
+}
+
+enum PetHistoryEventType {
+  CREATED
+  TRANSFERRED
+  ADOPTION_APPROVED
+  RETURNED
+  UPDATED
+}
+
+model Pet {
+  id                        String            @id @default(uuid())
+  name                      String
+  ageText                   String
+  species                   PetSpecies
+  breed                     String
+  sex                       PetSex
+  size                      PetSize
+  profilePhoto              String
+  galleryPhotosJson         String?
+  microchipped              Boolean           @default(false)
+  vaccinated                Boolean           @default(false)
+  neutered                  Boolean           @default(false)
+  dewormed                  Boolean           @default(false)
+  needsHealthCare           Boolean           @default(false)
+  physicalLimitation        Boolean           @default(false)
+  visualLimitation          Boolean           @default(false)
+  hearingLimitation         Boolean           @default(false)
+  selectedPersonalitiesJson String            @default("[]")
+  responsibleUserId         String
+  sourceType                UserRole
+  sourceName                String
+  status                    PetStatus         @default(AVAILABLE)
+  deleted                   Boolean           @default(false)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  responsibleUser           User?             @relation("ResponsibleUserPets", fields: [responsibleUserId], references: [id], onDelete: Restrict)
+  adoptionRequests          AdoptionRequest[]
+  history                   PetHistory[]
+
+  @@index([status])
+  @@index([species])
+  @@index([responsibleUserId])
+  @@index([deleted])
+}
+
+model PetHistory {
+  id                String              @id @default(uuid())
+  petId             String
+  eventType         PetHistoryEventType
+  description       String
+  fromResponsible   String?
+  toResponsible     String?
+  performedByUserId String?
+  createdAt         DateTime            @default(now())
+  pet               Pet                 @relation(fields: [petId], references: [id], onDelete: Restrict)
+  performedByUser   User?               @relation("PerformedPetHistory", fields: [performedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([petId])
+  @@index([performedByUserId])
+  @@index([eventType])
+  @@index([createdAt])
+}
