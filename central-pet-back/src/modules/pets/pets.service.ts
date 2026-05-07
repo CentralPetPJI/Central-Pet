@@ -196,10 +196,17 @@ export class PetsService {
     };
   }
 
-  async findAll(responsibleUserId?: string) {
+  async findAll(
+    responsibleUserId?: string,
+    adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE',
+  ) {
     await this.ensureMockPetsSeededIfEnabled();
 
-    const where = responsibleUserId ? { responsibleUserId, deleted: false } : { deleted: false };
+    const where = {
+      deleted: false,
+      ...(responsibleUserId ? { responsibleUserId } : {}),
+      ...(adoptionStatus ? { status: adoptionStatus } : {}),
+    };
 
     const pets = await this.prisma.pet.findMany({
       where,

@@ -2,8 +2,8 @@ import { BadRequestException, NotFoundException, ValidationPipe } from '@nestjs/
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mockUserIds } from '@/mocks';
 import { PrismaService } from '@/prisma/prisma.service';
-import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
+import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
@@ -31,7 +31,7 @@ type PrismaPetRecord = {
   responsibleUserId: string | null;
   sourceType: 'ONG' | 'PESSOA_FISICA' | null;
   sourceName: string | null;
-  status: 'AVAILABLE' | 'PENDING_ADOPTION' | 'ADOPTED' | 'UNAVAILABLE';
+  status: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
   deleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -73,7 +73,7 @@ describe('PetsService', () => {
     profilePhoto: 'data:image/png;base64,abc',
     galleryPhotos: ['data:image/png;base64,def'],
     name: 'Luna',
-    age: '3 anos',
+    age: 'ADULTO',
     species: 'dog',
     breed: 'SRD',
     sex: 'female',
@@ -184,9 +184,13 @@ describe('PetsService', () => {
               throw new Error('Record not found');
             }
 
+            const sanitizedData = Object.fromEntries(
+              Object.entries(args.data).filter(([, value]) => value !== undefined),
+            ) as Partial<Omit<PrismaPetRecord, 'id' | 'createdAt'>>;
+
             const updated: PrismaPetRecord = {
               ...records[index],
-              ...args.data,
+              ...sanitizedData,
               updatedAt: new Date('2026-04-10T00:10:00.000Z'),
             };
 
@@ -259,13 +263,11 @@ describe('PetsService', () => {
       getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
     } as unknown as PersonalityTraitsService;
 
-    // Provide a lightweight UserPersistenceService mock that uses the prismaMock helpers
     const userPersistenceMock = {
       validateUser: jest.fn(async (userId: string) => {
-        // If the test's prisma mock already knows the user, return true
         const found = prismaMock.user.findUnique({ where: { id: userId } });
         if (found) return true;
-        // Only upsert when the id is one of the project's mockUserIds (replicates UserPersistenceService behavior)
+
         const knownMockIds = Object.values(mockUserIds) as string[];
         if (knownMockIds.includes(userId) && typeof prismaMock.user.upsert === 'function') {
           await prismaMock.user.upsert({
@@ -275,6 +277,7 @@ describe('PetsService', () => {
           });
           return true;
         }
+
         throw new NotFoundException(`Usuário com id "${userId}" não encontrado`);
       }),
       ensureUsersExist: jest.fn(async (userIds: string[]) => {
@@ -315,7 +318,7 @@ describe('PetsService', () => {
     expect(result.data.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
   });
 
-  it('deve rejeitar city e state enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar city e state enviados na criação porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateCreateDto({
         ...makeCreateDto(),
@@ -325,7 +328,7 @@ describe('PetsService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('deve rejeitar tutor, shelter e contact enviados na criacao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar tutor, shelter e contact enviados na criação porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateCreateDto({
         ...makeCreateDto(),
@@ -392,9 +395,10 @@ describe('PetsService', () => {
     expect(result.data.name).toBe('Luna Renomeada');
     expect(result.data.size).toBe('large');
     expect(result.data.species).toBe(created.data.species);
+    expect(result.data.age).toBe(created.data.age);
   });
 
-  it('deve rejeitar city e state enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar city e state enviados na edição porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateUpdateDto({
         name: 'Luna Renomeada',
@@ -404,7 +408,7 @@ describe('PetsService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('deve rejeitar tutor, shelter e contact enviados na edicao porque nao fazem parte do DTO do pet', async () => {
+  it('deve rejeitar tutor, shelter e contact enviados na edição porque não fazem parte do DTO do pet', async () => {
     await expect(
       validateUpdateDto({
         name: 'Luna Renomeada',
@@ -438,7 +442,7 @@ describe('PetsService', () => {
       profilePhoto: '',
       galleryPhotosJson: '[]',
       name: 'Sem Dono',
-      ageText: '1 ano',
+      ageText: 'ADULTO',
       species: 'DOG',
       breed: 'SRD',
       sex: 'MALE',
@@ -486,7 +490,7 @@ describe('PetsService', () => {
     expect(forAdoption?.state).toBe('SP');
   });
 
-  it('deve retornar localizacao vazia quando o responsavel nao tiver city ou state', async () => {
+  it('deve retornar localização vazia quando o responsável não tiver city ou state', async () => {
     userRecords.set(mockUserIds.RAFAEL_LIMA, {
       ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
       city: null,
