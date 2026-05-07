@@ -23,7 +23,7 @@ export class PersonalityTraitsService {
       id: trait.id,
       title: trait.title,
       description: trait.description,
-      conflictsWith: this.parseConflicts(trait.conflictsWithJson),
+      conflictsWith: this.toStringArray(trait.conflictsWithJson),
     }));
   }
 
@@ -32,13 +32,8 @@ export class PersonalityTraitsService {
     return traits.map((trait) => trait.id);
   }
 
-  private parseConflicts(value: string): string[] {
-    try {
-      const parsed: unknown = JSON.parse(value);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter((item): item is string => typeof item === 'string');
-    } catch {
-      return [];
-    }
+  private toStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item): item is string => typeof item === 'string');
   }
 }

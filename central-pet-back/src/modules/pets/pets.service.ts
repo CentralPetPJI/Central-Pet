@@ -173,7 +173,7 @@ export class PetsService {
     const createdPet = await this.prisma.pet.create({
       data: {
         profilePhoto: createPetDto.profilePhoto,
-        galleryPhotosJson: JSON.stringify(createPetDto.galleryPhotos ?? []),
+        galleryPhotosJson: createPetDto.galleryPhotos ?? [],
         name: createPetDto.name,
         ageText: createPetDto.age,
         species: PetMapper.mapSpeciesToPersistence(createPetDto.species),
@@ -188,7 +188,7 @@ export class PetsService {
         physicalLimitation: createPetDto.physicalLimitation,
         visualLimitation: createPetDto.visualLimitation,
         hearingLimitation: createPetDto.hearingLimitation,
-        selectedPersonalitiesJson: JSON.stringify(selectedPersonalities),
+        selectedPersonalitiesJson: selectedPersonalities,
         responsibleUserId,
         sourceType: PetMapper.mapSourceTypeToPersistence(responsibleMetadata.sourceType),
         sourceName: responsibleMetadata.sourceName,
@@ -343,10 +343,7 @@ export class PetsService {
       where: { id },
       data: {
         profilePhoto: updatePetDto.profilePhoto,
-        galleryPhotosJson:
-          updatePetDto.galleryPhotos !== undefined
-            ? JSON.stringify(updatePetDto.galleryPhotos)
-            : undefined,
+        galleryPhotosJson: updatePetDto.galleryPhotos,
         name: updatePetDto.name,
         ageText: updatePetDto.age,
         species:
@@ -370,10 +367,7 @@ export class PetsService {
         physicalLimitation: updatePetDto.physicalLimitation,
         visualLimitation: updatePetDto.visualLimitation,
         hearingLimitation: updatePetDto.hearingLimitation,
-        selectedPersonalitiesJson:
-          updatePetDto.selectedPersonalities !== undefined
-            ? JSON.stringify(updatePetDto.selectedPersonalities)
-            : undefined,
+        selectedPersonalitiesJson: updatePetDto.selectedPersonalities,
       },
     });
 

@@ -12,7 +12,7 @@ import { PetSeedService } from './pet-seed.service';
 type PrismaPetRecord = {
   id: string;
   profilePhoto: string;
-  galleryPhotosJson: string | null;
+  galleryPhotosJson: unknown[] | null;
   name: string;
   ageText: string;
   species: 'DOG' | 'CAT';
@@ -27,7 +27,7 @@ type PrismaPetRecord = {
   physicalLimitation: boolean;
   visualLimitation: boolean;
   hearingLimitation: boolean;
-  selectedPersonalitiesJson: string;
+  selectedPersonalitiesJson: unknown[];
   responsibleUserId: string | null;
   sourceType: 'ONG' | 'PESSOA_FISICA' | null;
   sourceName: string | null;
@@ -465,7 +465,7 @@ describe('PetsService', () => {
     records.push({
       id: 'pet-no-owner',
       profilePhoto: '',
-      galleryPhotosJson: '[]',
+      galleryPhotosJson: [],
       name: 'Sem Dono',
       ageText: 'ADULTO',
       species: 'DOG',
@@ -480,7 +480,7 @@ describe('PetsService', () => {
       physicalLimitation: false,
       visualLimitation: false,
       hearingLimitation: false,
-      selectedPersonalitiesJson: '[]',
+      selectedPersonalitiesJson: [],
       responsibleUserId: null as unknown as string,
       sourceType: null as unknown as 'ONG',
       sourceName: null as unknown as string,

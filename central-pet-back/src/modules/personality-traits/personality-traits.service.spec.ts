@@ -10,43 +10,43 @@ describe('PersonalityTraitsService', () => {
           id: 'playful',
           title: 'Brincalhão',
           description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
-          conflictsWithJson: '[]',
+          conflictsWithJson: [],
         },
         {
           id: 'calm',
           title: 'Calmo',
           description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
-          conflictsWithJson: '["energetic"]',
+          conflictsWithJson: ['energetic'],
         },
         {
           id: 'energetic',
           title: 'Agitado',
           description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
-          conflictsWithJson: '["calm"]',
+          conflictsWithJson: ['calm'],
         },
         {
           id: 'protective',
           title: 'Protetor',
           description: 'Se apega rápido à família e fica sempre atento ao redor.',
-          conflictsWithJson: '[]',
+          conflictsWithJson: [],
         },
         {
           id: 'curious',
           title: 'Curioso',
           description: 'Explora cantos novos, cheira tudo e gosta de novidades.',
-          conflictsWithJson: '[]',
+          conflictsWithJson: [],
         },
         {
           id: 'independent',
           title: 'Independente',
           description: 'Gosta de autonomia e costuma decidir o próprio ritmo.',
-          conflictsWithJson: '[]',
+          conflictsWithJson: [],
         },
         {
           id: 'friendly',
           title: 'Sociável',
           description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
-          conflictsWithJson: '["shy"]',
+          conflictsWithJson: ['shy'],
         },
       ],
     },
@@ -84,7 +84,7 @@ describe('PersonalityTraitsService', () => {
     expect(Array.isArray(first.conflictsWith)).toBe(true);
   });
 
-  it('deve converter conflitos armazenados em JSON', async () => {
+  it('deve retornar conflitos armazenados como JSON', async () => {
     const traits = await service.getAllTraits();
 
     expect(traits.find((trait) => trait.id === 'calm')?.conflictsWith).toEqual(['energetic']);

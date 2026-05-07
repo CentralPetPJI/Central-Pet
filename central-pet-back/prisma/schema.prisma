@@ -112,7 +112,7 @@ model Pet {
   sex                PetSex
   size               PetSize
   profilePhoto       String
-  galleryPhotosJson  String?
+  galleryPhotosJson  Json?
   microchipped       Boolean            @default(false)
   vaccinated         Boolean            @default(false)
   neutered           Boolean            @default(false)
@@ -121,7 +121,7 @@ model Pet {
   physicalLimitation Boolean            @default(false)
   visualLimitation   Boolean            @default(false)
   hearingLimitation  Boolean            @default(false)
-  selectedPersonalitiesJson String         @default("[]")
+  selectedPersonalitiesJson Json           @default("[]")
   responsibleUserId  String
   sourceType         UserRole
   sourceName         String
@@ -144,7 +144,7 @@ model PersonalityTrait {
   id                String   @id
   title             String
   description       String
-  conflictsWithJson String   @default("[]")
+  conflictsWithJson Json     @default("[]")
   sortOrder         Int      @default(0)
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
