@@ -88,7 +88,7 @@ _Architecture analysis: 2026-04-04_
 
 **Prisma Schema Entry:**
 
-- Location: `central-pet-back/prisma/schema.prisma`
+- Location: `central-pet-back/prisma/schema/`
 - Triggers: `npm run prisma:generate`, `postinstall`
 - Responsibilities: Define generator/datasource configuration and generated client output path
 

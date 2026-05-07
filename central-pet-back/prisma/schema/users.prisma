@@ -1,0 +1,49 @@
+enum UserRole {
+  ROOT
+  ADMIN
+  PESSOA_FISICA
+  ONG
+}
+
+model User {
+  id                          String             @id @default(uuid())
+  fullName                    String
+  email                       String             @unique
+  role                        UserRole
+  birthDate                   DateTime?          @db.Date
+  cpf                         String?            @unique
+  organizationName            String?
+  cnpj                        String?            @unique
+  city                        String?
+  state                       String?
+  phone                       String?
+  mobile                      String?
+  instagram                   String?
+  facebook                    String?
+  website                     String?
+  foundedAt                   DateTime?          @db.Date
+  passwordHash                String
+  acceptedTermsAt             DateTime?
+  acceptedTermsVersion        String?
+  mustChangePassword          Boolean            @default(false)
+  deleted                     Boolean            @default(false)
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+  sessions                    Session[]
+  responsiblePets             Pet[]              @relation("ResponsibleUserPets")
+  responsibleAdoptionRequests AdoptionRequest[]  @relation("ResponsibleUserAdoptionRequests")
+  adopterAdoptionRequests     AdoptionRequest[]  @relation("AdopterAdoptionRequests")
+  performedPetHistory         PetHistory[]       @relation("PerformedPetHistory")
+  auditLogs                   AuditLog[]         @relation("UserAuditLogs")
+  reports                     ModerationReport[] @relation("UserReports")
+  resolvedReports             ModerationReport[] @relation("AdminResolvedReports")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+}

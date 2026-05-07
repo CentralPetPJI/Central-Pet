@@ -52,7 +52,7 @@ Central-Pet is a monorepo consisting of:
 
 ### Database Migrations
 
-1. Modify `central-pet-back/prisma/schema.prisma`.
+1. Modify arquivos em `central-pet-back/prisma/schema/`.
 2. Run `cd central-pet-back && pnpm prisma migrate dev --name <name>`.
 3. Update relevant DTOs and Services.
 

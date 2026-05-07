@@ -7,7 +7,7 @@
 - TypeScript is the main application language in `central-pet-front/src/`, `central-pet-back/src/`, and `tests/e2e/`.
 - JavaScript appears in build and lint configs such as `central-pet-front/eslint.config.js`, `tests/eslint.config.js`, and the root `package.json`.
 - YAML is used for workspace and container setup in `pnpm-workspace.yaml`, `docker-compose.dev.yml`, `docker-compose.prod.yml`, and `docker-compose.prod.prebuilt.yml`.
-- Prisma schema code lives in `central-pet-back/prisma/schema.prisma`.
+- Prisma schema code lives in `central-pet-back/prisma/schema/`.
 - CSS is split across `central-pet-front/src/index.css`, `central-pet-front/src/App.css`, and component/layout styles.
 
 ## Runtime
