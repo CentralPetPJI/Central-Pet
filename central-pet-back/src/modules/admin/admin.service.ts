@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { ModerationStatus, ModerationTargetType } from '../../../generated/prisma/client';
 
@@ -108,6 +108,12 @@ export class AdminService {
     const pet = await this.prisma.pet.findUnique({ where: { id: petId } });
     if (!pet) throw new NotFoundException('Pet não encontrado');
 
+    if (pet.status === 'ADOPTED') {
+      throw new BadRequestException(
+        'Não é possível bloquear/desbloquear um pet que já foi adotado.',
+      );
+    }
+
     const shouldDelete = !pet.deleted;
 
     await this.prisma.$transaction(async (tx) => {
@@ -116,20 +122,9 @@ export class AdminService {
           reason: 'Pet bloqueado por admin',
         });
       } else {
-        await tx.pet.update({
-          where: { id: petId },
-          data: { deleted: false, status: 'AVAILABLE' },
+        await this.petsService.reactivatePetTransactional(tx, petId, adminId, {
+          reason: 'Pet desbloqueado por admin',
         });
-
-        if (this.auditService) {
-          await this.auditService.createWithTx(tx, {
-            userId: adminId,
-            action: 'REACTIVATE_PET',
-            targetId: petId,
-            targetType: 'PET',
-            details: { previousStatus: pet.deleted, newStatus: false },
-          });
-        }
       }
     });
 
