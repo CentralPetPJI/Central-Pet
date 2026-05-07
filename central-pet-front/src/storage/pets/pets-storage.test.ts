@@ -15,13 +15,13 @@ describe('pet storage helpers', () => {
     expect(window.localStorage.getItem(petsStorageKey)).toBeNull();
   });
 
-  it('reconstrói o form data de um pet existente', () => {
+  it('reconstrói o form data de um pet existente preservando a idade exibida', () => {
     const formData = buildRegisterFormDataFromPet({
       id: 7,
       name: 'Thor',
       species: 'dog',
       photo: 'https://example.com/thor.png',
-      physicalCharacteristics: 'SRD, 3 anos, Femea, porte Grande',
+      physicalCharacteristics: 'SRD, Filhote, Femea, porte Grande',
       behavioralCharacteristics: 'Curioso',
       notes: 'Tutor: ONG Patas do Centro.',
       responsibleUserId: 'user-3',
@@ -33,6 +33,7 @@ describe('pet storage helpers', () => {
       name: 'Thor',
       species: 'dog',
       profilePhoto: 'https://example.com/thor.png',
+      age: 'Filhote',
       sex: 'male',
       size: 'medium',
     });

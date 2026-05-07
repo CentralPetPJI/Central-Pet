@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const isWindows = process.platform === "win32";
+const pnpmCommand = isWindows ? "pnpm.cmd" : "pnpm";
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -11,7 +14,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "pnpm dev:back:test",
+      command: `${pnpmCommand} dev:back:test`,
       url: "http://localhost:3001/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

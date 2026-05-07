@@ -32,7 +32,7 @@ export class PetMapper {
       responsibleUserId: pet.responsibleUserId,
       sourceType: pet.sourceType as PetSourceType | undefined,
       sourceName: pet.sourceName,
-      adoptionStatus: this.mapStatusToResponse(pet.status),
+      adoptionStatus: pet.status,
       createdAt: pet.createdAt.toISOString(),
       updatedAt: pet.updatedAt.toISOString(),
     };
@@ -77,7 +77,6 @@ export class PetMapper {
   }
 
   private static mapStatusToResponse(status: PrismaPetStatus): PetAdoptionStatus {
-    if (status === PrismaPetStatus.PENDING_ADOPTION) return 'IN_PROCESS';
     return status as PetAdoptionStatus;
   }
 

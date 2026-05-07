@@ -73,8 +73,14 @@ function dropDatabase({ user, password, host, port, database }) {
   try {
     // Use DROP DATABASE IF EXISTS para ser idempotente
     execSync(
-      `PGPASSWORD='${password}' psql -h ${host} -p ${port} -U ${user} -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS \"${database}\""`,
-      { stdio: 'inherit' },
+      `psql -h ${host} -p ${port} -U ${user} -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS \\"${database}\\""`,
+      {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          PGPASSWORD: password,
+        },
+      },
     );
   } catch (e) {
     fail(`Erro ao dropar o banco ${database}: ${e.message}`);
@@ -83,6 +89,15 @@ function dropDatabase({ user, password, host, port, database }) {
 
 function main() {
   console.log(`${CYAN}🔧 Script: drop-test-db${NC}`);
+
+  const hasConfirmationFlag = process.argv.includes('--yes') || process.argv.includes('--force');
+
+  if (!hasConfirmationFlag) {
+    console.error(`${RED}⚠️  AVISO: Esta operação irá DROPAR o banco de dados de teste.${NC}`);
+    console.error(`${RED}Para prosseguir, execute o script com a flag --yes ou --force:${NC}`);
+    console.error(`${CYAN}  node scripts/drop-test-db.js --yes${NC}`);
+    process.exit(1);
+  }
 
   const databaseUrl = readDatabaseUrlFromTestEnv();
   const conn = parseDatabaseUrl(databaseUrl);

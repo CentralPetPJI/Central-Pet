@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import { SpeciesValues, SexValues, SizeValues } from '../constants';
+import { PetAgeCategoryValues, SpeciesValues, SexValues, SizeValues } from '../constants';
 
 export class CreatePetDto {
   @IsString()
@@ -31,6 +31,7 @@ export class CreatePetDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsIn([...PetAgeCategoryValues])
   age: string;
 
   @IsString()

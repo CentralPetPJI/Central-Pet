@@ -258,9 +258,9 @@ describe('Servico de solicitacoes de adocao', () => {
             status:
               pet.adoptionStatus === 'ADOPTED'
                 ? 'ADOPTED'
-                : pet.adoptionStatus === 'IN_PROCESS'
-                  ? 'PENDING_ADOPTION'
-                  : pet.adoptionStatus,
+                : pet.adoptionStatus === 'UNAVAILABLE'
+                  ? 'UNAVAILABLE'
+                  : 'AVAILABLE',
           };
         }),
         upsert: jest.fn(

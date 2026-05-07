@@ -5,17 +5,22 @@ import FormInput from '@/Components/Form/FormInput';
 import FormSection from '@/Components/Form/FormSection';
 import FormSelect from '@/Components/Form/FormSelect';
 import {
+  petAgeCategoryOptions,
   petSizeOptions,
   petSexOptions,
   petSpeciesOptions,
   type PetRegisterFormData,
 } from '@/storage/pets';
+import { isPetAgeCategory } from '@/lib/pet-age';
 
 const PetRegisterInfoSection = () => {
   const {
     register,
+    watch,
     formState: { errors },
   } = useFormContext<PetRegisterFormData>();
+  const ageValue = watch('age');
+  const hasLegacyAgeValue = Boolean(ageValue) && !isPetAgeCategory(ageValue);
 
   return (
     <FormSection accentClassName="text-cyan-700" eyebrow="Informacoes" title="Dados basicos do pet">
@@ -23,8 +28,18 @@ const PetRegisterInfoSection = () => {
         <FormField label="Nome" error={errors.name?.message}>
           <FormInput {...register('name')} />
         </FormField>
-        <FormField label="Idade" error={errors.age?.message}>
-          <FormInput {...register('age')} />
+        <FormField label="Faixa etária" error={errors.age?.message}>
+          <FormSelect {...register('age')}>
+            <option value="">Selecione a faixa etária</option>
+            {hasLegacyAgeValue ? (
+              <option value={ageValue}>{`Valor legado: ${ageValue}`}</option>
+            ) : null}
+            {petAgeCategoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.description}
+              </option>
+            ))}
+          </FormSelect>
         </FormField>
         <FormField label="Raca" error={errors.breed?.message}>
           <FormInput {...register('breed')} />

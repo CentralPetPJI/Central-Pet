@@ -9,6 +9,7 @@ export {
   type PetProfileRecord,
 } from './pets-storage';
 export {
+  petAgeCategoryOptions,
   isPetRegisterFormDataLike,
   petRegisterFormSchema,
   petRegisterStorageKey,

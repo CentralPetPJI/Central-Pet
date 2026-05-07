@@ -14,6 +14,8 @@ export interface Pet {
   responsibleUserId: string;
   sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
   sourceName: string;
+  adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
+  deleted?: boolean;
 }
 
 export interface Photo {
