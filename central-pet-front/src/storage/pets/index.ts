@@ -19,8 +19,10 @@ export {
   type PetRegisterFormData,
 } from './pet-register-form';
 export {
+  mergePetPersonalityOptionsWithIcons,
   petPersonalityOptions,
   petPersonalityStorageKey,
+  type PetPersonalityApiOption,
   type PetPersonalityOption,
 } from './pet-personality-options';
 export { getPetRouteId, isBackendPet, mapApiResponseToPet, resolveBackendId } from './pet-helpers';

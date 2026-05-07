@@ -54,7 +54,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.getByLabel("Porte").selectOption("medium");
 
     await page.getByRole("button", { name: /Curioso/i }).click();
-    await page.getByRole("button", { name: /Sociavel/i }).click();
+    await page.getByRole("button", { name: /Sociável/i }).click();
     await page.getByRole("button", { name: "Salvar pet" }).click();
 
     await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });

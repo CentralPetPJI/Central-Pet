@@ -260,7 +260,32 @@ describe('PetsService', () => {
     };
 
     const personalityTraitsMock = {
-      getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
+      getAllTraits: jest.fn(async () => [
+        {
+          id: 'playful',
+          title: 'Brincalhão',
+          description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
+          conflictsWith: [],
+        },
+        {
+          id: 'friendly',
+          title: 'Sociável',
+          description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
+          conflictsWith: [],
+        },
+        {
+          id: 'calm',
+          title: 'Calmo',
+          description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+          conflictsWith: ['energetic'],
+        },
+        {
+          id: 'energetic',
+          title: 'Agitado',
+          description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
+          conflictsWith: ['calm'],
+        },
+      ]),
     } as unknown as PersonalityTraitsService;
 
     const userPersistenceMock = {
