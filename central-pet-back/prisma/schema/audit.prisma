@@ -1,0 +1,14 @@
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  targetId   String?
+  targetType String?
+  details    Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
