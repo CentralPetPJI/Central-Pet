@@ -73,8 +73,7 @@ export class UpdatePetDto {
   sourceName?: string;
 
   @ValidateIf((_, value) => value !== undefined)
-  @IsString()
-  @IsNotEmpty()
+  @IsBoolean()
   vaccinated?: boolean;
 
   @ValidateIf((_, value) => value !== undefined)
