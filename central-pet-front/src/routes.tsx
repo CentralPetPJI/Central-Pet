@@ -76,7 +76,7 @@ export const routes = {
   } satisfies AppRoute,
   pets: {
     search: {
-      path: '/buscar-pets',
+      path: '/pets',
       element: <SearchPetsPage />,
     } satisfies AppRoute,
     new: {

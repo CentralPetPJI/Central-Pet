@@ -86,14 +86,18 @@ test.describe("busca de pets", () => {
     await page.getByRole("button", { name: "Pets" }).click();
     await page.getByRole("link", { name: "Procurar" }).click();
 
-    await expect(page).toHaveURL("/buscar-pets");
+    await expect(page).toHaveURL("/pets");
 
     await page.getByLabel("Espécie").selectOption("CAT");
     await page.getByLabel("Porte").selectOption("SMALL");
 
     await expect(page).toHaveURL(/species=CAT/);
     await expect(page).toHaveURL(/size=SMALL/);
-    await expect(page.getByRole("heading", { name: nomeGatoPequeno })).toBeVisible();
-    await expect(page.getByRole("heading", { name: nomeCachorroGrande })).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: nomeGatoPequeno }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: nomeCachorroGrande }),
+    ).toHaveCount(0);
   });
 });
