@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { ModerationStatus, PetStatus } from '../../../generated/prisma/client';
+import {
+  ModerationStatus,
+  PetStatus,
+  ModerationTargetType,
+} from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
 import { AdminCreateUserDto } from '@/modules/users/dto/admin-create-user.dto';
@@ -226,8 +230,11 @@ export class AdminService {
         });
       }
 
-      // if approved and it's a pet report and admin requested blocking, block pet and audit that
-      if (status === ModerationStatus.APPROVED && blockPet && report.targetType === 'PET') {
+      if (
+        status === ModerationStatus.APPROVED &&
+        blockPet &&
+        report.targetType === ModerationTargetType.PET
+      ) {
         const pet = await tx.pet.findUnique({ where: { id: report.targetId } });
         if (pet && !pet.deleted) {
           await tx.pet.update({

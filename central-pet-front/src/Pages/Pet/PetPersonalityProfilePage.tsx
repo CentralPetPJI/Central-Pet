@@ -18,6 +18,7 @@ import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
 import AdoptionRequestArea from '@/Pages/Pet/AdoptionRequestArea.tsx';
 import { AlertTriangle } from 'lucide-react';
+import ReportPetModal from '@/Components/Moderation/ReportPetModal';
 
 const PetPersonalityProfilePage = () => {
   const { petId } = useParams();
@@ -31,6 +32,7 @@ const PetPersonalityProfilePage = () => {
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Limpar a mensagem após 3 segundos
   useEffect(() => {
@@ -104,27 +106,23 @@ const PetPersonalityProfilePage = () => {
     selectedPersonalities.includes(option.id),
   );
 
-  const handleReport = async () => {
+  const handleReportClick = () => {
     if (!currentUser) {
       navigate(routes.login.path);
       return;
     }
-    {
-      /*TODO: Criar modal em vez de um prompt */
-    }
-    const reason = window.prompt('Por que você deseja denunciar este pet?');
-    if (!reason) alert('Descreva o motivo da denúncia.');
+    setIsReportModalOpen(true);
+  };
 
-    try {
-      await api.post('/moderation/reports', {
-        targetType: 'PET',
-        targetId: resolveBackendId(petId!),
-        reason,
-      });
-      alert('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
-    } catch (_error) {
-      alert('Erro ao enviar denúncia.');
-    }
+  const handleReportConfirm = async (reason: string) => {
+    if (!petId) return;
+
+    await api.post('/moderation/reports', {
+      targetType: 'PET',
+      targetId: resolveBackendId(petId),
+      reason,
+    });
+    setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
   };
 
   // TODO: Isso deve vir do back, talvez ;)
@@ -206,13 +204,15 @@ const PetPersonalityProfilePage = () => {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                onClick={handleReport}
-                className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Denunciar conteúdo impróprio
-              </button>
+              {!isOwner && (
+                <button
+                  onClick={handleReportClick}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Denunciar conteúdo impróprio
+                </button>
+              )}
             </div>
 
             <div className="mt-8 space-y-3">
@@ -227,6 +227,13 @@ const PetPersonalityProfilePage = () => {
           </div>
         </div>
       ) : null}
+
+      <ReportPetModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onConfirm={handleReportConfirm}
+        petName={formData.name}
+      />
     </section>
   );
 };

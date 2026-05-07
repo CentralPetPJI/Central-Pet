@@ -5,19 +5,26 @@ enum ModerationStatus {
   DISMISSED
 }
 
+enum ModerationTargetType {
+  PET
+  USER
+  ADOPTION_REQUEST
+}
+
 model ModerationReport {
-  id           String           @id @default(uuid())
+  id           String               @id @default(uuid())
   reporterId   String
-  targetType   String
+  targetType   ModerationTargetType
   targetId     String
   reason       String
-  status       ModerationStatus @default(PENDING)
+  status       ModerationStatus     @default(PENDING)
   resolvedById String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  reporter     User             @relation("UserReports", fields: [reporterId], references: [id], onDelete: Restrict)
-  resolvedBy   User?            @relation("AdminResolvedReports", fields: [resolvedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  reporter     User                 @relation("UserReports", fields: [reporterId], references: [id], onDelete: Restrict)
+  resolvedBy   User?                @relation("AdminResolvedReports", fields: [resolvedById], references: [id], onDelete: SetNull)
 
+  @@unique([reporterId, targetType, targetId])
   @@index([reporterId])
   @@index([status])
   @@index([targetId])
