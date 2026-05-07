@@ -45,7 +45,7 @@ export class PetsController {
 
   @Delete(':id')
   @UseGuards(SessionGuard, PetOwnerGuard)
-  async remove(@Param('id') id: string) {
-    return this.petsService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+    return this.petsService.remove(id, user.id);
   }
 }

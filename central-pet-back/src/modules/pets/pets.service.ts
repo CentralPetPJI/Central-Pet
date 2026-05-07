@@ -8,6 +8,7 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
+import { Prisma } from '../../../generated/prisma/client';
 export type { PetForAdoptionRequest } from './models/pet-record';
 
 type ResponsibleLocation = {
@@ -374,17 +375,23 @@ export class PetsService {
     };
   }
 
-  async remove(id: string) {
-    const currentPet = await this.prisma.pet.findUnique({
+  async removeTransactional(
+    tx: Prisma.TransactionClient,
+    id: string,
+    performedBy?: string,
+    details?: Record<string, unknown>,
+  ) {
+    const currentPet = await tx.pet.findUnique({
       where: { id },
-      select: { id: true, deleted: true },
+      select: { id: true, deleted: true, status: true, responsibleUserId: true },
     });
 
     if (!currentPet || currentPet.deleted) {
+      // Keep behavior similar to public remove: treat as not found
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
-    const deletedPet = await this.prisma.pet.update({
+    const deletedPet = await tx.pet.update({
       where: { id },
       data: {
         deleted: true,
@@ -393,8 +400,8 @@ export class PetsService {
     });
 
     // Cancelar solicitações pendentes do pet
-    if (this.prisma.adoptionRequest) {
-      await this.prisma.adoptionRequest
+    if (tx.adoptionRequest) {
+      await tx.adoptionRequest
         .updateMany({
           where: {
             petId: id,
@@ -410,6 +417,74 @@ export class PetsService {
           // Ignorar erro se adoptionRequest não estiver disponível (em testes)
         });
     }
+
+    if (this.auditService && performedBy) {
+      await this.auditService.createWithTx(tx, {
+        userId: performedBy,
+        action: 'DEACTIVATE_PET',
+        targetId: deletedPet.id,
+        targetType: 'PET',
+        details: {
+          ...details,
+          previousStatus: currentPet.status,
+          newStatus: 'UNAVAILABLE',
+        },
+      });
+    }
+
+    return deletedPet;
+  }
+
+  async remove(id: string, performedBy?: string) {
+    if (!performedBy) {
+      const currentPet = await this.prisma.pet.findUnique({
+        where: { id },
+        select: { id: true, deleted: true, responsibleUserId: true },
+      });
+
+      if (!currentPet || currentPet.deleted) {
+        throw new NotFoundException(`Pet with id "${id}" not found`);
+      }
+
+      const deletedPet = await this.prisma.pet.update({
+        where: { id },
+        data: {
+          deleted: true,
+          status: 'UNAVAILABLE',
+        },
+      });
+
+      // Cancelar solicitações pendentes do pet
+      if (this.prisma.adoptionRequest) {
+        await this.prisma.adoptionRequest
+          .updateMany({
+            where: {
+              petId: id,
+              status: { in: ['PENDING', 'CONTACT_SHARED'] },
+            },
+            data: {
+              status: 'CANCELLED',
+              note: 'Solicitação cancelada automaticamente porque o pet não está mais disponível.',
+              version: { increment: 1 },
+            },
+          })
+          .catch(() => {
+            // Ignorar erro se adoptionRequest não estiver disponível (em testes)
+          });
+      }
+
+      return {
+        message: 'Pet deleted successfully',
+        data: this.withResponsibleLocation(
+          PetMapper.toDomain(deletedPet),
+          await this.getResponsibleLocation(deletedPet.responsibleUserId),
+        ),
+      };
+    }
+
+    const deletedPet = await this.prisma.$transaction(async (tx) => {
+      return this.removeTransactional(tx, id, performedBy);
+    });
 
     return {
       message: 'Pet deleted successfully',

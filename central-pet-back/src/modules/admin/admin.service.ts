@@ -1,14 +1,11 @@
 import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import {
-  ModerationStatus,
-  PetStatus,
-  ModerationTargetType,
-} from '../../../generated/prisma/client';
+import { ModerationStatus, ModerationTargetType } from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
 import { AdminCreateUserDto } from '@/modules/users/dto/admin-create-user.dto';
 import { AuditService } from '@/modules/audit/audit.service';
+import { PetsService } from '@/modules/pets/pets.service';
 import { generateRandomPassword } from '@/modules/auth/password.util';
 
 @Injectable()
@@ -16,6 +13,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly petsService: PetsService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
@@ -81,10 +79,10 @@ export class AdminService {
       throw new Error('Forbidden: only ROOT can modify ROOT status');
     }
 
-    const newStatus = !user.deleted;
+    const shouldDeactivate = !user.deleted;
 
     await this.prisma.$transaction(async (tx) => {
-      if (newStatus) {
+      if (shouldDeactivate) {
         // deactivate path - run full lifecycle from UsersService inside this transaction
         await this.usersService.deactivateTransactional(tx, userId);
       } else {
@@ -95,41 +93,47 @@ export class AdminService {
       if (this.auditService) {
         await this.auditService.createWithTx(tx, {
           userId: adminId,
-          action: newStatus ? 'DEACTIVATE_USER' : 'REACTIVATE_USER',
+          action: shouldDeactivate ? 'DEACTIVATE_USER' : 'REACTIVATE_USER',
           targetId: userId,
           targetType: 'USER',
-          details: { previousStatus: user.deleted, newStatus },
+          details: { previousStatus: user.deleted, newStatus: shouldDeactivate },
         });
       }
     });
 
-    return { message: `Usuário ${newStatus ? 'desativado' : 'reativado'} com sucesso` };
+    return { message: `Usuário ${shouldDeactivate ? 'desativado' : 'reativado'} com sucesso` };
   }
 
   async togglePetDeletion(petId: string, adminId: string) {
     const pet = await this.prisma.pet.findUnique({ where: { id: petId } });
     if (!pet) throw new NotFoundException('Pet não encontrado');
 
-    const newStatus = !pet.deleted;
+    const shouldDelete = !pet.deleted;
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.pet.update({
-        where: { id: petId },
-        data: { deleted: newStatus },
-      });
-
-      if (this.auditService) {
-        await this.auditService.createWithTx(tx, {
-          userId: adminId,
-          action: newStatus ? 'DEACTIVATE_PET' : 'REACTIVATE_PET',
-          targetId: petId,
-          targetType: 'PET',
-          details: { previousStatus: pet.deleted, newStatus },
+      if (shouldDelete) {
+        await this.petsService.removeTransactional(tx, petId, adminId, {
+          reason: 'Pet bloqueado por admin',
         });
+      } else {
+        await tx.pet.update({
+          where: { id: petId },
+          data: { deleted: false, status: 'AVAILABLE' },
+        });
+
+        if (this.auditService) {
+          await this.auditService.createWithTx(tx, {
+            userId: adminId,
+            action: 'REACTIVATE_PET',
+            targetId: petId,
+            targetType: 'PET',
+            details: { previousStatus: pet.deleted, newStatus: false },
+          });
+        }
       }
     });
 
-    return { message: `Pet ${newStatus ? 'bloqueado' : 'desbloqueado'} com sucesso` };
+    return { message: `Pet ${shouldDelete ? 'bloqueado' : 'desbloqueado'} com sucesso` };
   }
 
   async getPets(userId?: string, page = 1, limit = 12) {
@@ -237,25 +241,10 @@ export class AdminService {
       ) {
         const pet = await tx.pet.findUnique({ where: { id: report.targetId } });
         if (pet && !pet.deleted) {
-          await tx.pet.update({
-            where: { id: pet.id },
-            data: { deleted: true, status: PetStatus.UNAVAILABLE },
+          await this.petsService.removeTransactional(tx, pet.id, adminId, {
+            reason: 'Denúncia aprovada',
+            reportId,
           });
-
-          if (this.auditService) {
-            await this.auditService.createWithTx(tx, {
-              userId: adminId,
-              action: 'DEACTIVATE_PET',
-              targetId: pet.id,
-              targetType: 'PET',
-              details: {
-                reason: 'Report approved',
-                reportId,
-                previousStatus: pet.status,
-                newStatus: PetStatus.UNAVAILABLE,
-              },
-            });
-          }
         }
       }
     });
