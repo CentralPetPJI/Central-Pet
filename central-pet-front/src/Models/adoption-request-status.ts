@@ -3,11 +3,17 @@ export enum AdoptionRequestStatus {
   CONTACT_SHARED = 'CONTACT_SHARED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
 }
 
 type AdoptionRequestStatusPresentation = {
   label: string;
   className: string;
+};
+
+const fallbackStatusPresentation: AdoptionRequestStatusPresentation = {
+  label: 'Desconhecido',
+  className: 'bg-slate-100 text-slate-600',
 };
 
 const statusPresentationMap: Record<AdoptionRequestStatus, AdoptionRequestStatusPresentation> = {
@@ -27,12 +33,16 @@ const statusPresentationMap: Record<AdoptionRequestStatus, AdoptionRequestStatus
     label: 'Recusada',
     className: 'bg-rose-100 text-rose-800',
   },
+  [AdoptionRequestStatus.CANCELLED]: {
+    label: 'Cancelada',
+    className: 'bg-slate-100 text-slate-600',
+  },
 };
 
 export function getAdoptionRequestStatusPresentation(
-  status: AdoptionRequestStatus,
+  status: string,
 ): AdoptionRequestStatusPresentation {
-  return statusPresentationMap[status];
+  return statusPresentationMap[status as AdoptionRequestStatus] ?? fallbackStatusPresentation;
 }
 
 export function canShareContact(status: AdoptionRequestStatus): boolean {
