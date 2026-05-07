@@ -4,7 +4,31 @@ import {
   isProfileLocationComplete,
   resolvePersonalitySelection,
 } from '@/Components/PetRegister/pet-register-payload';
-import { petPersonalityOptions } from '@/storage/pets';
+import type { PetPersonalityOption } from '@/storage/pets';
+
+const personalityOptions: PetPersonalityOption[] = [
+  {
+    id: 'calm',
+    title: 'Calmo',
+    description: 'Prefere rotinas tranquilas.',
+    conflictsWith: ['energetic'],
+    iconSvg: '<svg viewBox="0 0 24 24"></svg>',
+  },
+  {
+    id: 'energetic',
+    title: 'Agitado',
+    description: 'Tem muita energia.',
+    conflictsWith: ['calm'],
+    iconSvg: '<svg viewBox="0 0 24 24"></svg>',
+  },
+  {
+    id: 'friendly',
+    title: 'Sociável',
+    description: 'Recebe bem visitas.',
+    conflictsWith: [],
+    iconSvg: '<svg viewBox="0 0 24 24"></svg>',
+  },
+];
 
 describe('pet-register-payload', () => {
   it('nao envia city nem state no payload do pet', () => {
@@ -48,7 +72,7 @@ describe('pet-register-payload', () => {
 
   it('remove personalidade conflitante ao selecionar uma nova opção', () => {
     expect(
-      resolvePersonalitySelection(['calm', 'friendly'], 'energetic', petPersonalityOptions),
+      resolvePersonalitySelection(['calm', 'friendly'], 'energetic', personalityOptions),
     ).toEqual(['friendly', 'energetic']);
   });
 });

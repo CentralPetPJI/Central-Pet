@@ -15,6 +15,7 @@ describe('Controlador de traços de personalidade', () => {
             title: 'Calmo',
             description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
             conflictsWith: ['energetic'],
+            iconSvg: '<svg viewBox="0 0 24 24"></svg>',
           },
         ],
       })),
@@ -29,5 +30,6 @@ describe('Controlador de traços de personalidade', () => {
     expect(result.message).toBe('Personality traits retrieved successfully');
     expect(Array.isArray(result.data)).toBe(true);
     expect(result.data.length).toBeGreaterThan(0);
+    expect(result.data[0]?.iconSvg).toContain('<svg');
   });
 });

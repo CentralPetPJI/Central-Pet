@@ -2,10 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { Pet, PetApiResponse } from '@/Models/pet';
 import { mapApiResponseToPet, ensureAllPublicIds } from '@/storage/pets/pet-helpers';
-import {
-  petPersonalityOptions,
-  type PetPersonalityApiOption,
-} from '@/storage/pets/pet-personality-options';
+import type { PetPersonalityApiOption } from '@/storage/pets/pet-personality-options';
 
 interface UsePetsResult {
   pets: Pet[];
@@ -31,7 +28,7 @@ export const usePets = (): UsePetsResult => {
         api.get<{ data: PetApiResponse[] }>('/pets'),
         api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
       ]);
-      const personalityOptions = personalityResponse?.data.data ?? petPersonalityOptions;
+      const personalityOptions = personalityResponse?.data.data ?? [];
 
       ensureAllPublicIds(response.data.data);
       const backendPets = response.data.data.map((pet) =>

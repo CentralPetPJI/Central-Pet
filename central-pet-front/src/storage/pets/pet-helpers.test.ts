@@ -44,15 +44,23 @@ describe('mapApiResponseToPet', () => {
         title: 'Brincalhão',
         description: 'Adora interagir.',
         conflictsWith: [],
+        iconSvg: '<svg viewBox="0 0 24 24"></svg>',
       },
       {
         id: 'friendly',
         title: 'Sociável',
         description: 'Recebe bem visitas.',
         conflictsWith: [],
+        iconSvg: '<svg viewBox="0 0 24 24"></svg>',
       },
     ]);
 
     expect(pet.behavioralCharacteristics).toBe('Brincalhão, Sociável');
+  });
+
+  it('não exibe ids em inglês quando o catálogo de personalidades não foi carregado', () => {
+    const pet = mapApiResponseToPet(makeApiPet(['playful', 'friendly']), []);
+
+    expect(pet.behavioralCharacteristics).toBe('Perfil comportamental não informado');
   });
 });

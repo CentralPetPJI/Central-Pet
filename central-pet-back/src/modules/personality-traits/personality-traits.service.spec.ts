@@ -11,42 +11,56 @@ describe('PersonalityTraitsService', () => {
           title: 'Brincalhão',
           description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
           conflictsWithJson: [],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'calm',
           title: 'Calmo',
           description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
           conflictsWithJson: ['energetic'],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'energetic',
           title: 'Agitado',
           description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
           conflictsWithJson: ['calm'],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'protective',
           title: 'Protetor',
           description: 'Se apega rápido à família e fica sempre atento ao redor.',
           conflictsWithJson: [],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'curious',
           title: 'Curioso',
           description: 'Explora cantos novos, cheira tudo e gosta de novidades.',
           conflictsWithJson: [],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'independent',
           title: 'Independente',
           description: 'Gosta de autonomia e costuma decidir o próprio ritmo.',
           conflictsWithJson: [],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
         {
           id: 'friendly',
           title: 'Sociável',
           description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
           conflictsWithJson: ['shy'],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
+        },
+        {
+          id: 'shy',
+          title: 'Tímido',
+          description: 'Prefere ambientes calmos e precisa de tempo para se adaptar a novidades.',
+          conflictsWithJson: ['friendly'],
+          iconSvg: '<svg viewBox="0 0 24 24"></svg>',
         },
       ],
     },
@@ -81,6 +95,7 @@ describe('PersonalityTraitsService', () => {
     expect(first.id).toBeDefined();
     expect(first.title).toBeDefined();
     expect(first.description).toBeDefined();
+    expect(first.iconSvg).toContain('<svg');
     expect(Array.isArray(first.conflictsWith)).toBe(true);
   });
 

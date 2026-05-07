@@ -19,8 +19,6 @@ import {
 } from '@/Components/PetRegister/pet-register-payload';
 import { ensurePublicId, resolveBackendId } from '@/storage/pets';
 import {
-  mergePetPersonalityOptionsWithIcons,
-  petPersonalityOptions,
   petPersonalityStorageKey,
   type PetPersonalityApiOption,
   type PetPersonalityOption,
@@ -39,8 +37,8 @@ interface PetRegisterFormProps {
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const [personalityOptions, setPersonalityOptions] =
-    useState<PetPersonalityOption[]>(petPersonalityOptions);
+  const [personalityOptions, setPersonalityOptions] = useState<PetPersonalityOption[]>([]);
+  const [isPersonalityOptionsLoading, setIsPersonalityOptionsLoading] = useState(true);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -62,15 +60,21 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     let isMounted = true;
 
     const loadPersonalityOptions = async () => {
+      setIsPersonalityOptionsLoading(true);
       try {
         const response = await api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits');
 
         if (isMounted) {
-          setPersonalityOptions(mergePetPersonalityOptionsWithIcons(response.data.data));
+          setPersonalityOptions(response.data.data);
         }
       } catch {
         if (isMounted) {
-          setPersonalityOptions(petPersonalityOptions);
+          setPersonalityOptions([]);
+          setSaveMessage('Não foi possível carregar as personalidades disponíveis.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsPersonalityOptionsLoading(false);
         }
       }
     };
@@ -274,6 +278,7 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             <PetRegisterHealthSection />
           </div>
           <PetRegisterBehaviorSection
+            isLoading={isPersonalityOptionsLoading}
             options={personalityOptions}
             selectedPersonalities={selectedPersonalities}
             onTogglePersonality={togglePersonality}

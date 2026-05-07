@@ -12,12 +12,7 @@ import PetProfilePersonalityList from '@/Components/PetProfile/PetProfilePersona
 import PetProfileSection from '@/Components/PetProfile/PetProfileSection';
 import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
 import type { PetApiResponse } from '@/Models/pet';
-import {
-  mergePetPersonalityOptionsWithIcons,
-  petPersonalityOptions,
-  type PetPersonalityApiOption,
-  type PetPersonalityOption,
-} from '@/storage/pets';
+import { type PetPersonalityApiOption, type PetPersonalityOption } from '@/storage/pets';
 import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
@@ -33,8 +28,7 @@ const PetPersonalityProfilePage = () => {
   const [formData, setFormData] = useState<PetRegisterFormData>();
   const [locationText, setLocationText] = useState('');
   const [petApi, setPetApi] = useState<PetApiResponse | undefined>(undefined);
-  const [personalityOptions, setPersonalityOptions] =
-    useState<PetPersonalityOption[]>(petPersonalityOptions);
+  const [personalityOptions, setPersonalityOptions] = useState<PetPersonalityOption[]>([]);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -82,9 +76,7 @@ const PetPersonalityProfilePage = () => {
         setFormData(mapPetApiResponseToRegisterFormData(petData));
         setLocationText(normalizedLocation);
         setSelectedPersonalities(petData.selectedPersonalities ?? []);
-        if (personalityResponse) {
-          setPersonalityOptions(mergePetPersonalityOptionsWithIcons(personalityResponse.data.data));
-        }
+        setPersonalityOptions(personalityResponse?.data.data ?? []);
         setPetApi(response.data.data);
       } catch {
         if (!isMounted) {
@@ -116,6 +108,10 @@ const PetPersonalityProfilePage = () => {
   const activeOptions = personalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
   );
+  const personalityEmptyMessage =
+    selectedPersonalities.length > 0 && personalityOptions.length === 0
+      ? 'Não foi possível carregar as personalidades deste pet.'
+      : undefined;
 
   const handleReport = async () => {
     if (!currentUser) {
@@ -234,7 +230,10 @@ const PetPersonalityProfilePage = () => {
               </PetProfileSection>
 
               <PetProfileSection title="Comportamento">
-                <PetProfilePersonalityList options={activeOptions} />
+                <PetProfilePersonalityList
+                  emptyMessage={personalityEmptyMessage}
+                  options={activeOptions}
+                />
               </PetProfileSection>
             </div>
           </div>

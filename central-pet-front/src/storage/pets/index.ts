@@ -19,8 +19,8 @@ export {
   type PetRegisterFormData,
 } from './pet-register-form';
 export {
-  mergePetPersonalityOptionsWithIcons,
-  petPersonalityOptions,
+  isSafePersonalityIconSvg,
+  PersonalityTraitIcon,
   petPersonalityStorageKey,
   type PetPersonalityApiOption,
   type PetPersonalityOption,

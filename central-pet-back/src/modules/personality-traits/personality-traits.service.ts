@@ -24,6 +24,7 @@ export class PersonalityTraitsService {
       title: trait.title,
       description: trait.description,
       conflictsWith: this.toStringArray(trait.conflictsWithJson),
+      iconSvg: trait.iconSvg,
     }));
   }
 

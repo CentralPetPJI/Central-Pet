@@ -3,4 +3,5 @@ export interface PersonalityTrait {
   title: string;
   description: string;
   conflictsWith: string[];
+  iconSvg: string;
 }
