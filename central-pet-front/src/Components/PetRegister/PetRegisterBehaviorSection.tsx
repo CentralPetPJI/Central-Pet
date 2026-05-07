@@ -1,13 +1,15 @@
 import FormSection from '@/Components/Form/FormSection';
 import SelectableCard from '@/Components/Form/SelectableCard';
-import { petPersonalityOptions } from '@/storage/pets';
+import { petPersonalityOptions, type PetPersonalityOption } from '@/storage/pets';
 
 interface PetRegisterBehaviorSectionProps {
+  options?: PetPersonalityOption[];
   selectedPersonalities: string[];
   onTogglePersonality: (personalityId: string) => void;
 }
 
 const PetRegisterBehaviorSection = ({
+  options = petPersonalityOptions,
   selectedPersonalities,
   onTogglePersonality,
 }: PetRegisterBehaviorSectionProps) => (
@@ -18,7 +20,7 @@ const PetRegisterBehaviorSection = ({
     title="Personalidades com icones"
   >
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {petPersonalityOptions.map((option) => (
+      {options.map((option) => (
         <SelectableCard
           key={option.id}
           description={option.description}

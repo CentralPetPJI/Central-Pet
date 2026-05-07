@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPetSubmitPayload,
   isProfileLocationComplete,
+  resolvePersonalitySelection,
 } from '@/Components/PetRegister/pet-register-payload';
+import { petPersonalityOptions } from '@/storage/pets';
 
 describe('pet-register-payload', () => {
   it('nao envia city nem state no payload do pet', () => {
@@ -42,5 +44,10 @@ describe('pet-register-payload', () => {
     expect(isProfileLocationComplete({ city: 'Campinas', state: 'SP' })).toBe(true);
     expect(isProfileLocationComplete({ city: 'Campinas', state: '' })).toBe(false);
     expect(isProfileLocationComplete({ city: '', state: 'SP' })).toBe(false);
+  });
+
+  it('remove personalidade conflitante ao selecionar uma nova opcao', () => {
+    expect(resolvePersonalitySelection(['calm', 'friendly'], 'energetic', petPersonalityOptions))
+      .toEqual(['friendly', 'energetic']);
   });
 });

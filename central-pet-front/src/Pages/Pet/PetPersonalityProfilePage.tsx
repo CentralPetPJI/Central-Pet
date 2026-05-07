@@ -12,7 +12,12 @@ import PetProfilePersonalityList from '@/Components/PetProfile/PetProfilePersona
 import PetProfileSection from '@/Components/PetProfile/PetProfileSection';
 import { mapPetApiResponseToRegisterFormData } from '@/Models/pet-mapper';
 import type { PetApiResponse } from '@/Models/pet';
-import { petPersonalityOptions } from '@/storage/pets';
+import {
+  mergePetPersonalityOptionsWithIcons,
+  petPersonalityOptions,
+  type PetPersonalityApiOption,
+  type PetPersonalityOption,
+} from '@/storage/pets';
 import { type PetRegisterFormData } from '@/storage/pets';
 import { resolveBackendId } from '@/storage/pets';
 import { routes } from '@/routes';
@@ -28,6 +33,8 @@ const PetPersonalityProfilePage = () => {
   const [formData, setFormData] = useState<PetRegisterFormData>();
   const [locationText, setLocationText] = useState('');
   const [petApi, setPetApi] = useState<PetApiResponse | undefined>(undefined);
+  const [personalityOptions, setPersonalityOptions] =
+    useState<PetPersonalityOption[]>(petPersonalityOptions);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -58,7 +65,10 @@ const PetPersonalityProfilePage = () => {
 
       try {
         const backendId = resolveBackendId(petId);
-        const response = await api.get<{ data: PetApiResponse }>(`/pets/${String(backendId)}`);
+        const [response, personalityResponse] = await Promise.all([
+          api.get<{ data: PetApiResponse }>(`/pets/${String(backendId)}`),
+          api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
+        ]);
 
         if (!isMounted) {
           return;
@@ -72,6 +82,9 @@ const PetPersonalityProfilePage = () => {
         setFormData(mapPetApiResponseToRegisterFormData(petData));
         setLocationText(normalizedLocation);
         setSelectedPersonalities(petData.selectedPersonalities ?? []);
+        if (personalityResponse) {
+          setPersonalityOptions(mergePetPersonalityOptionsWithIcons(personalityResponse.data.data));
+        }
         setPetApi(response.data.data);
       } catch {
         if (!isMounted) {
@@ -100,7 +113,7 @@ const PetPersonalityProfilePage = () => {
 
   const isOwner = Boolean(currentUser?.id && petApi && currentUser.id === petApi.responsibleUserId);
   const editPath = petId && isOwner ? routes.pets.edit.build(petId) : undefined;
-  const activeOptions = petPersonalityOptions.filter((option) =>
+  const activeOptions = personalityOptions.filter((option) =>
     selectedPersonalities.includes(option.id),
   );
 

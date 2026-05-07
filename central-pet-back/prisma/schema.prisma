@@ -140,6 +140,20 @@ model Pet {
   @@index([deleted])
 }
 
+model PersonalityTrait {
+  id                String   @id
+  title             String
+  description       String
+  conflictsWithJson String   @default("[]")
+  sortOrder         Int      @default(0)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([active])
+  @@index([sortOrder])
+}
+
 model AdoptionRequest {
   id                         String                @id @default(uuid())
   petId                      String

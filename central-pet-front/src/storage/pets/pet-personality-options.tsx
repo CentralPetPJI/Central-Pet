@@ -4,6 +4,7 @@ export interface PetPersonalityOption {
   id: string;
   title: string;
   description: string;
+  conflictsWith: string[];
   icon: ReactNode;
 }
 
@@ -14,8 +15,9 @@ const cardIconClassName = 'h-7 w-7';
 export const petPersonalityOptions: PetPersonalityOption[] = [
   {
     id: 'playful',
-    title: 'Brincalhao',
-    description: 'Adora interagir, correr e transformar qualquer momento em diversao.',
+    title: 'Brincalhão',
+    description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
+    conflictsWith: [],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -35,6 +37,7 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
     id: 'calm',
     title: 'Calmo',
     description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+    conflictsWith: ['energetic'],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -51,9 +54,27 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
     ),
   },
   {
+    id: 'energetic',
+    title: 'Agitado',
+    description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
+    conflictsWith: ['calm'],
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className={cardIconClassName}
+      >
+        <path d="m13 2-8 12h6l-1 8 8-12h-6l1-8Z" />
+      </svg>
+    ),
+  },
+  {
     id: 'protective',
     title: 'Protetor',
-    description: 'Se apega rapido a familia e fica sempre atento ao redor.',
+    description: 'Se apega rápido à família e fica sempre atento ao redor.',
+    conflictsWith: [],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -71,6 +92,7 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
     id: 'curious',
     title: 'Curioso',
     description: 'Explora cantos novos, cheira tudo e gosta de novidades.',
+    conflictsWith: [],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -88,7 +110,8 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
   {
     id: 'independent',
     title: 'Independente',
-    description: 'Gosta de autonomia e costuma decidir o proprio ritmo.',
+    description: 'Gosta de autonomia e costuma decidir o próprio ritmo.',
+    conflictsWith: [],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -105,8 +128,9 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
   },
   {
     id: 'friendly',
-    title: 'Sociavel',
+    title: 'Sociável',
     description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
+    conflictsWith: ['shy'],
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -123,4 +147,73 @@ export const petPersonalityOptions: PetPersonalityOption[] = [
       </svg>
     ),
   },
+  {
+    id: 'shy',
+    title: 'Tímido',
+    description: 'Precisa de aproximação gradual e prefere ambientes previsíveis.',
+    conflictsWith: ['friendly'],
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className={cardIconClassName}
+      >
+        <path d="M12 21a8 8 0 0 0 8-8V7l-8-4-8 4v6a8 8 0 0 0 8 8Z" />
+        <path d="M9 10h.01" />
+        <path d="M15 10h.01" />
+        <path d="M9 15c1.5-1 4.5-1 6 0" />
+      </svg>
+    ),
+  },
+  {
+    id: 'affectionate',
+    title: 'Carinhoso',
+    description: 'Busca contato, atenção e demonstra afeto com frequência.',
+    conflictsWith: [],
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className={cardIconClassName}
+      >
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'adaptable',
+    title: 'Adaptável',
+    description: 'Lida bem com mudanças de rotina e diferentes ambientes.',
+    conflictsWith: [],
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className={cardIconClassName}
+      >
+        <path d="M17 2v6h-6" />
+        <path d="M7 22v-6h6" />
+        <path d="M20 11a8 8 0 0 0-14-5l5 2" />
+        <path d="M4 13a8 8 0 0 0 14 5l-5-2" />
+      </svg>
+    ),
+  },
 ];
+
+export type PetPersonalityApiOption = Omit<PetPersonalityOption, 'icon'>;
+
+export const mergePetPersonalityOptionsWithIcons = (
+  apiOptions: PetPersonalityApiOption[],
+): PetPersonalityOption[] =>
+  apiOptions.map((option) => ({
+    ...option,
+    icon:
+      petPersonalityOptions.find((localOption) => localOption.id === option.id)?.icon ??
+      petPersonalityOptions[0].icon,
+  }));
