@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 export interface PetPersonalityOption {
   id: string;
   title: string;
@@ -10,19 +12,19 @@ export type PetPersonalityApiOption = PetPersonalityOption;
 
 export const petPersonalityStorageKey = 'central-pet:selected-personalities';
 
-const unsafeSvgPattern = /<script|on[a-z]+\s*=|foreignObject|href\s*=|xlink:href\s*=/i;
-
-export const isSafePersonalityIconSvg = (iconSvg: string): boolean =>
-  iconSvg.trim().startsWith('<svg') &&
-  iconSvg.includes('viewBox=') &&
-  !unsafeSvgPattern.test(iconSvg);
+export const sanitizePersonalityIconSvg = (iconSvg: string): string =>
+  DOMPurify.sanitize(iconSvg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+  });
 
 interface PersonalityTraitIconProps {
   iconSvg: string;
 }
 
 export const PersonalityTraitIcon = ({ iconSvg }: PersonalityTraitIconProps) => {
-  if (!isSafePersonalityIconSvg(iconSvg)) {
+  const sanitizedIconSvg = sanitizePersonalityIconSvg(iconSvg).trim();
+
+  if (!sanitizedIconSvg.startsWith('<svg')) {
     return null;
   }
 
@@ -30,7 +32,7 @@ export const PersonalityTraitIcon = ({ iconSvg }: PersonalityTraitIconProps) => 
     <span
       aria-hidden="true"
       className="inline-flex h-7 w-7 [&_svg]:h-7 [&_svg]:w-7"
-      dangerouslySetInnerHTML={{ __html: iconSvg }}
+      dangerouslySetInnerHTML={{ __html: sanitizedIconSvg }}
     />
   );
 };
