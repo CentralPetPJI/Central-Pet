@@ -37,6 +37,7 @@ export default function SearchPetsPage() {
 
   const filters = useMemo(
     () => ({
+      adoptionStatus: 'AVAILABLE' as const,
       state: selectedState || undefined,
       species: allowedSpecies.includes(selectedSpecies as (typeof allowedSpecies)[number])
         ? (selectedSpecies as (typeof allowedSpecies)[number])
@@ -175,8 +176,15 @@ export default function SearchPetsPage() {
       {!isLoading && !error && pets.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {pets.map((pet) => (
-            <article key={pet.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-              <img src={pet.photo} alt={pet.name} className="h-52 w-full rounded-2xl object-cover" />
+            <article
+              key={pet.id}
+              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <img
+                src={pet.photo}
+                alt={pet.name}
+                className="h-52 w-full rounded-2xl object-cover"
+              />
 
               <h2 className="mt-4 text-xl font-bold text-slate-900">{pet.name}</h2>
               <p className="mt-1 text-sm text-slate-600">
