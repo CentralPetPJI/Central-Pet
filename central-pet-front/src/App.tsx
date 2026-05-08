@@ -11,7 +11,9 @@ import { usePets } from '@/lib/pets';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const { pets } = usePets();
+  const { pets } = usePets({
+    adoptionStatus: 'AVAILABLE',
+  });
   const speciesCounts = useMemo(
     () =>
       pets.reduce<Record<string, number>>((counts, pet) => {
