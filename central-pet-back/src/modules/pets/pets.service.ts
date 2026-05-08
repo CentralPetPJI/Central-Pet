@@ -375,6 +375,54 @@ export class PetsService {
     };
   }
 
+  async reactivatePetTransactional(
+    tx: Prisma.TransactionClient,
+    id: string,
+    performedBy: string,
+    details?: Record<string, unknown>,
+  ) {
+    const currentPet = await tx.pet.findUnique({
+      where: { id },
+      select: { id: true, deleted: true, status: true, responsibleUserId: true },
+    });
+
+    if (!currentPet || !currentPet.deleted) {
+      // Keep behavior similar to public remove: treat as not found
+      throw new NotFoundException(`Pet com id "${id}" não encontrado ou já está ativo`);
+    }
+
+    await tx.pet.update({
+      where: { id: id },
+      data: { deleted: false, status: 'AVAILABLE' },
+    });
+
+    // Restaurar solicitações canceladas automaticamente pela moderação
+    if (tx.adoptionRequest) {
+      await tx.adoptionRequest.updateMany({
+        where: {
+          petId: id,
+          status: 'CANCELLED',
+          note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
+        },
+        data: {
+          status: 'PENDING',
+          note: null,
+          version: { increment: 1 },
+        },
+      });
+    }
+
+    if (this.auditService) {
+      await this.auditService.createWithTx(tx, {
+        userId: performedBy,
+        action: 'REACTIVATE_PET',
+        targetId: id,
+        targetType: 'PET',
+        details: { ...details },
+      });
+    }
+  }
+
   async removeTransactional(
     tx: Prisma.TransactionClient,
     id: string,
@@ -409,7 +457,7 @@ export class PetsService {
           },
           data: {
             status: 'CANCELLED',
-            note: 'Solicitação cancelada automaticamente porque o pet não está mais disponível.',
+            note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
             version: { increment: 1 },
           },
         })
@@ -464,7 +512,7 @@ export class PetsService {
             },
             data: {
               status: 'CANCELLED',
-              note: 'Solicitação cancelada automaticamente porque o pet não está mais disponível.',
+              note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
               version: { increment: 1 },
             },
           })
