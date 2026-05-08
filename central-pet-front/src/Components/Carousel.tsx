@@ -29,13 +29,8 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   );
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
-  // Filtra somente pets disponíveis (sem mostrar indisponíveis no carrossel)
-  const visiblePets = petsData.filter(
-    (p) => (p.adoptionStatus ?? 'AVAILABLE') === 'AVAILABLE' && !(p.deleted ?? false),
-  );
-
-  const shouldLoop = visiblePets.length >= MIN_PETS_FOR_LOOP;
-  const items = useMemo(() => visiblePets, [visiblePets]);
+  const shouldLoop = petsData.length >= MIN_PETS_FOR_LOOP;
+  const items = useMemo(() => petsData, [petsData]);
 
   return (
     <section className="w-full overflow-hidden px-6 py-8 select-none">
@@ -72,7 +67,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
                   <p className="mt-1 text-sm font-medium text-slate-500">
                     {pet.city
                       ? `${pet.city}${pet.state ? `/${formatState(pet.state)}` : ''}`
-                      : "Localização não informada"}
+                      : 'Localização não informada'}
                   </p>
                   <p className="mt-2 text-sm text-gray-600 line-clamp-3">
                     {pet.physicalCharacteristics}
