@@ -12,7 +12,7 @@ import { usePets } from '@/lib/pets';
 const App: React.FC = () => {
   const location = useLocation();
   const { pets } = usePets({
-    adoptionStatus: 'AVAILABLE',
+    adoptionStatus: 'AVAILABLE' as const,
   });
   const speciesCounts = useMemo(
     () =>
