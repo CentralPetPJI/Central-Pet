@@ -213,16 +213,24 @@ export class PetsService {
     };
   }
 
-  async findAll(
-    responsibleUserId?: string,
-    adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE',
-  ) {
+  async findAll(filters?: {
+    responsibleUserId?: string;
+    adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
+    state?: string;
+    species?: 'DOG' | 'CAT';
+    sex?: 'MALE' | 'FEMALE';
+    size?: 'SMALL' | 'MEDIUM' | 'LARGE';
+  }) {
     await this.ensureMockPetsSeededIfEnabled();
 
     const where = {
       deleted: false,
-      ...(responsibleUserId ? { responsibleUserId } : {}),
-      ...(adoptionStatus ? { status: adoptionStatus } : {}),
+      ...(filters?.responsibleUserId ? { responsibleUserId: filters.responsibleUserId } : {}),
+      ...(filters?.adoptionStatus ? { status: filters.adoptionStatus } : {}),
+      ...(filters?.species ? { species: filters.species } : {}),
+      ...(filters?.sex ? { sex: filters.sex } : {}),
+      ...(filters?.size ? { size: filters.size } : {}),
+      ...(filters?.state ? { responsibleUser: { state: filters.state } } : {}),
     };
 
     const pets = await this.prisma.pet.findMany({

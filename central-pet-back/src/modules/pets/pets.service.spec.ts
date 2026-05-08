@@ -150,15 +150,45 @@ describe('PetsService', () => {
           },
         ),
         findMany: jest.fn(
-          (args?: { where?: { responsibleUserId?: string; deleted?: boolean } }) => {
+          (args?: {
+            where?: {
+              responsibleUserId?: string;
+              deleted?: boolean;
+              status?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
+              species?: 'DOG' | 'CAT';
+              sex?: 'MALE' | 'FEMALE';
+              size?: 'SMALL' | 'MEDIUM' | 'LARGE';
+              responsibleUser?: { state?: string };
+            };
+          }) => {
             return records.filter((record) => {
               const matchesResponsible = args?.where?.responsibleUserId
                 ? record.responsibleUserId === args.where.responsibleUserId
                 : true;
               const matchesDeleted =
                 args?.where?.deleted !== undefined ? record.deleted === args.where.deleted : true;
+              const matchesStatus = args?.where?.status
+                ? record.status === args.where.status
+                : true;
+              const matchesSpecies = args?.where?.species
+                ? record.species === args.where.species
+                : true;
+              const matchesSex = args?.where?.sex ? record.sex === args.where.sex : true;
+              const matchesSize = args?.where?.size ? record.size === args.where.size : true;
+              const matchesState = args?.where?.responsibleUser?.state
+                ? userRecords.get(record.responsibleUserId)?.state ===
+                  args.where.responsibleUser.state
+                : true;
 
-              return matchesResponsible && matchesDeleted;
+              return (
+                matchesResponsible &&
+                matchesDeleted &&
+                matchesStatus &&
+                matchesSpecies &&
+                matchesSex &&
+                matchesSize &&
+                matchesState
+              );
             });
           },
         ),
@@ -389,11 +419,69 @@ describe('PetsService', () => {
     });
     await service.create(dto2, mockUserIds.ANA_SOUZA);
 
-    const result = await service.findAll(mockUserIds.RAFAEL_LIMA);
+    const result = await service.findAll({ responsibleUserId: mockUserIds.RAFAEL_LIMA });
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0]?.name).toBe('Luna');
     expect(result.data[0]?.responsibleUserId).toBe(mockUserIds.RAFAEL_LIMA);
+  });
+
+  it('deve listar pets filtrando por espécie, sexo e porte', async () => {
+    await service.create(
+      await validateCreateDto({
+        ...makeCreateDto(),
+        name: 'Mimi',
+        species: 'cat',
+        sex: 'female',
+        size: 'small',
+      }),
+      mockUserIds.RAFAEL_LIMA,
+    );
+    await service.create(
+      await validateCreateDto({
+        ...makeCreateDto(),
+        name: 'Thor',
+        species: 'dog',
+        sex: 'male',
+        size: 'large',
+      }),
+      mockUserIds.ANA_SOUZA,
+    );
+
+    const result = await service.findAll({
+      species: 'CAT',
+      sex: 'FEMALE',
+      size: 'SMALL',
+    });
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.name).toBe('Mimi');
+  });
+
+  it('deve listar pets filtrando por estado do responsável', async () => {
+    userRecords.set(mockUserIds.RAFAEL_LIMA, {
+      ...userRecords.get(mockUserIds.RAFAEL_LIMA)!,
+      state: 'SP',
+    });
+    userRecords.set(mockUserIds.ANA_SOUZA, {
+      ...userRecords.get(mockUserIds.ANA_SOUZA)!,
+      state: 'RJ',
+    });
+
+    await service.create(await validateCreateDto(makeCreateDto()), mockUserIds.RAFAEL_LIMA);
+    await service.create(
+      await validateCreateDto({
+        ...makeCreateDto(),
+        name: 'Nina',
+      }),
+      mockUserIds.ANA_SOUZA,
+    );
+
+    const result = await service.findAll({ state: 'RJ' });
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]?.name).toBe('Nina');
+    expect(result.data[0]?.state).toBe('RJ');
   });
 
   it('deve buscar um pet existente por id', async () => {
@@ -506,7 +594,7 @@ describe('PetsService', () => {
       state: 'SP',
     });
 
-    const listed = await service.findAll(mockUserIds.RAFAEL_LIMA);
+    const listed = await service.findAll({ responsibleUserId: mockUserIds.RAFAEL_LIMA });
     const forAdoption = await service.findByIdForAdoption(created.data.id);
 
     expect(listed.data[0]?.city).toBe('Osasco');
