@@ -29,7 +29,14 @@ export class PetsController {
 
   @Get()
   findAll(@Query() dto: FindPetsQueryDto) {
-    return this.petsService.findAll(dto.responsibleUserId, dto.adoptionStatus);
+    return this.petsService.findAll({
+      responsibleUserId: dto.responsibleUserId,
+      adoptionStatus: dto.adoptionStatus,
+      state: dto.state,
+      species: dto.species,
+      sex: dto.sex,
+      size: dto.size,
+    });
   }
 
   @Get(':id')

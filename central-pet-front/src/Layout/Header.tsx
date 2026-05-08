@@ -42,7 +42,7 @@ const Header = () => {
   const petsMenuItems: MenuItem[] = [
     {
       label: 'Procurar',
-      path: routes.home.path,
+      path: routes.pets.search.path,
       icon: <Search className="h-4 w-4 text-cyan-700" />,
     },
     {
