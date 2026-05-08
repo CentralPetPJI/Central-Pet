@@ -119,7 +119,7 @@ const PetPersonalityProfilePage = () => {
 
     await api.post('/moderation/reports', {
       targetType: 'PET',
-      targetId: resolveBackendId(petId),
+      targetId: String(resolveBackendId(petId)),
       reason,
     });
     setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');

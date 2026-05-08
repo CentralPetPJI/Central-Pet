@@ -1,14 +1,19 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ComponentProps } from 'react';
 import ReportPetModal from './ReportPetModal';
 
 describe('ReportPetModal', () => {
-  const defaultProps = {
-    isOpen: true,
-    onClose: vi.fn(),
-    onConfirm: vi.fn().mockResolvedValue(undefined),
-    petName: 'Rex',
-  };
+  let defaultProps: ComponentProps<typeof ReportPetModal>;
+
+  beforeEach(() => {
+    defaultProps = {
+      isOpen: true,
+      onClose: vi.fn<() => void>(),
+      onConfirm: vi.fn<(reason: string) => Promise<void>>().mockResolvedValue(undefined),
+      petName: 'Rex',
+    };
+  });
 
   it('deve renderizar corretamente quando aberto', () => {
     render(<ReportPetModal {...defaultProps} />);

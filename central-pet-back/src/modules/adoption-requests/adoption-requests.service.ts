@@ -74,9 +74,6 @@ export class AdoptionRequestsService {
           sourceName: undefined,
           adoptionStatus: 'UNAVAILABLE',
         };
-      } else if (petFound.adoptionStatus === 'UNAVAILABLE') {
-        // Pet existente mas marcado como indisponível (soft-deleted / removido): manter nome real, apenas bloquear acesso ao perfil
-        petForResponseObj = petFound;
       } else {
         petForResponseObj = petFound;
       }
@@ -198,73 +195,17 @@ export class AdoptionRequestsService {
       );
     }
 
-    // ensure both adopter and responsible user info are available for the response
-    const userIds = [updatedReq.adopterId];
-    if (updatedReq.responsibleUserId) userIds.push(updatedReq.responsibleUserId);
-    await this.userPersistence.ensureUsersExist(userIds);
-    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
+    const [mapped] = await this.mapRequestsToResponse([
+      updatedReq as unknown as AdoptionRequestRecord,
+    ]);
 
-    // buscar pet incluindo soft-deleted para manter solicitações existentes visíveis
-    let petFound = await this.petsService.findByIdForAdoption(updatedReq.petId, {
-      includeDeleted: true,
-    });
-
-    if (!petFound) {
-      // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
-      petFound = {
-        id: updatedReq.petId,
-        name: 'Indisponível',
-        species: 'UNKNOWN',
-        city: '',
-        state: '',
-        responsibleUserId: updatedReq.responsibleUserId,
-        sourceType: undefined,
-        sourceName: undefined,
-        adoptionStatus: 'UNAVAILABLE',
-      };
-    } else if (petFound.adoptionStatus === 'UNAVAILABLE') {
-      // Pet existente mas indisponível: ofuscar nome, manter relação com responsável
-      petFound = {
-        ...petFound,
-        name: 'Indisponível',
-      } as PetForAdoptionRequest;
+    if (!mapped) {
+      throw new NotFoundException(`Solicitação com id "${requestId}" não encontrada`);
     }
-
-    const petForResponse = mapPetForResponse(petFound);
-    const blockNote =
-      petFound.adoptionStatus === 'UNAVAILABLE' ? this.buildUnavailablePetBlockNote() : undefined;
-    const adopterForResponse = mapAdopterForResponse(
-      updatedReq.adopterId,
-      persistedUsersById,
-      updatedReq.adopterContactShareConsent,
-    );
-
-    const responsibleForResponse = updatedReq.responsibleUserId
-      ? mapAdopterForResponse(
-          updatedReq.responsibleUserId,
-          persistedUsersById,
-          updatedReq.responsibleContactShareConsent,
-        )
-      : undefined;
-
-    const data = {
-      id: updatedReq.id,
-      pet: petForResponse,
-      adopter: adopterForResponse,
-      responsible: responsibleForResponse,
-      message: updatedReq.message,
-      adopterContactShareConsent: updatedReq.adopterContactShareConsent,
-      responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
-      status: updatedReq.status as unknown as AdoptionRequestStatus,
-      note: updatedReq.note ?? undefined,
-      blockNote,
-      requestedAt: updatedReq.requestedAt.toISOString(),
-      updatedAt: updatedReq.updatedAt.toISOString(),
-    } as ReceivedAdoptionRequest;
 
     return {
       message: result.message,
-      data,
+      data: mapped,
       notification: result.notification,
     };
   }

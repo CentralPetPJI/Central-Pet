@@ -8,13 +8,16 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
-import { Prisma } from '../../../generated/prisma/client';
+import { Prisma } from '@/../generated/prisma/client';
 export type { PetForAdoptionRequest } from './models/pet-record';
 
 type ResponsibleLocation = {
   city: string;
   state: string;
 };
+
+const CANCEL_REASON_ADMIN_BLOCK =
+  'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.';
 
 type ResponsiblePetMetadata = ResponsibleLocation & {
   sourceType: 'ONG' | 'PESSOA_FISICA';
@@ -410,7 +413,7 @@ export class PetsService {
         where: {
           petId: id,
           status: 'CANCELLED',
-          note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
+          note: CANCEL_REASON_ADMIN_BLOCK,
         },
         data: {
           status: 'PENDING',
@@ -457,21 +460,17 @@ export class PetsService {
 
     // Cancelar solicitações pendentes do pet
     if (tx.adoptionRequest) {
-      await tx.adoptionRequest
-        .updateMany({
-          where: {
-            petId: id,
-            status: { in: ['PENDING', 'CONTACT_SHARED'] },
-          },
-          data: {
-            status: 'CANCELLED',
-            note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
-            version: { increment: 1 },
-          },
-        })
-        .catch(() => {
-          // Ignorar erro se adoptionRequest não estiver disponível (em testes)
-        });
+      await tx.adoptionRequest.updateMany({
+        where: {
+          petId: id,
+          status: { in: ['PENDING', 'CONTACT_SHARED'] },
+        },
+        data: {
+          status: 'CANCELLED',
+          note: CANCEL_REASON_ADMIN_BLOCK,
+          version: { increment: 1 },
+        },
+      });
     }
 
     if (this.auditService && performedBy) {
@@ -492,52 +491,6 @@ export class PetsService {
   }
 
   async remove(id: string, performedBy?: string) {
-    if (!performedBy) {
-      const currentPet = await this.prisma.pet.findUnique({
-        where: { id },
-        select: { id: true, deleted: true, responsibleUserId: true },
-      });
-
-      if (!currentPet || currentPet.deleted) {
-        throw new NotFoundException(`Pet with id "${id}" not found`);
-      }
-
-      const deletedPet = await this.prisma.pet.update({
-        where: { id },
-        data: {
-          deleted: true,
-          status: 'UNAVAILABLE',
-        },
-      });
-
-      // Cancelar solicitações pendentes do pet
-      if (this.prisma.adoptionRequest) {
-        await this.prisma.adoptionRequest
-          .updateMany({
-            where: {
-              petId: id,
-              status: { in: ['PENDING', 'CONTACT_SHARED'] },
-            },
-            data: {
-              status: 'CANCELLED',
-              note: 'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.',
-              version: { increment: 1 },
-            },
-          })
-          .catch(() => {
-            // Ignorar erro se adoptionRequest não estiver disponível (em testes)
-          });
-      }
-
-      return {
-        message: 'Pet deleted successfully',
-        data: this.withResponsibleLocation(
-          PetMapper.toDomain(deletedPet),
-          await this.getResponsibleLocation(deletedPet.responsibleUserId),
-        ),
-      };
-    }
-
     const deletedPet = await this.prisma.$transaction(async (tx) => {
       return this.removeTransactional(tx, id, performedBy);
     });

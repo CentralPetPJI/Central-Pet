@@ -14,6 +14,8 @@ describe('ModerationService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ModerationService,

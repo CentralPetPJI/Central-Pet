@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { ModerationStatus, ModerationTargetType } from '../../../generated/prisma/client';
 
@@ -76,7 +82,7 @@ export class AdminService {
 
     // Proibir desativação do ROOT por administradores não-root
     if (user.role === 'ROOT' && adminId !== user.id) {
-      throw new Error('Forbidden: only ROOT can modify ROOT status');
+      throw new ForbiddenException('Proibido: apenas ROOT pode modificar o status do ROOT');
     }
 
     const shouldDeactivate = !user.deleted;

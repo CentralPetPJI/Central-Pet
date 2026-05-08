@@ -568,7 +568,7 @@ describe('Servico de solicitacoes de adocao', () => {
     }
   });
 
-  it('deve retornar nota de bloqueio e manter solicitacao visivel quando o pet estiver indisponivel', async () => {
+  it('deve retornar nota de bloqueio e manter solicitação visível quando o pet estiver indisponível', async () => {
     const unavailablePet = petsById.get('pet-001');
 
     if (!unavailablePet) {

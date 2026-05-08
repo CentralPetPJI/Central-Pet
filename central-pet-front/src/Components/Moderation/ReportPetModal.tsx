@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface ReportPetModalProps {
@@ -12,6 +12,21 @@ const ReportPetModal: React.FC<ReportPetModalProps> = ({ isOpen, onClose, onConf
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -54,6 +69,7 @@ const ReportPetModal: React.FC<ReportPetModalProps> = ({ isOpen, onClose, onConf
           <button
             onClick={onClose}
             className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            aria-label="Fechar"
           >
             <X className="h-6 w-6" />
           </button>

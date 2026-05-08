@@ -17,7 +17,7 @@ export interface PublicIdMapping {
   slug?: string; // Opcional: nome-do-pet para URLs semânticas
 }
 
-const normalizePublicIdMappings = (
+export const normalizePublicIdMappings = (
   input: unknown,
 ): { mappings: PublicIdMapping[]; changed: boolean } => {
   if (!Array.isArray(input)) {
@@ -45,13 +45,25 @@ const normalizePublicIdMappings = (
       continue;
     }
 
-    const backendId = (item as { backendId?: unknown }).backendId;
-    const slug = (item as { slug?: unknown }).slug;
+    const rawBackendId = (item as { backendId?: unknown }).backendId;
+    const rawSlug = (item as { slug?: unknown }).slug;
+
+    const backendId =
+      typeof rawBackendId === 'string' && rawBackendId.trim().length > 0 ? rawBackendId : undefined;
+    const slug = typeof rawSlug === 'string' && rawSlug.trim().length > 0 ? rawSlug : undefined;
+
+    if (rawBackendId !== undefined && rawBackendId !== null && backendId === undefined) {
+      changed = true;
+    }
+
+    if (rawSlug !== undefined && rawSlug !== null && slug === undefined) {
+      changed = true;
+    }
 
     sanitized.push({
       publicId,
-      ...(typeof backendId === 'string' && backendId.trim().length > 0 ? { backendId } : {}),
-      ...(typeof slug === 'string' && slug.trim().length > 0 ? { slug } : {}),
+      ...(backendId ? { backendId } : {}),
+      ...(slug ? { slug } : {}),
     });
   }
 
@@ -92,9 +104,7 @@ const normalizePublicIdMappings = (
   let maxPublicId = 0;
   for (const mapping of merged) {
     maxPublicId = Math.max(maxPublicId, mapping.publicId);
-  }
 
-  for (const mapping of merged) {
     if (!usedPublicIds.has(mapping.publicId)) {
       usedPublicIds.add(mapping.publicId);
       continue;
@@ -201,6 +211,10 @@ export const updatePublicIdMapping = (publicId: number, backendId: string, slug?
 
   // Verifica se já existe outro mapeamento com este backendId
   const existingWithBackendId = mappings.find((m) => m.backendId === backendId);
+  const preservedSlug =
+    existingWithBackendId && existingWithBackendId.publicId !== publicId
+      ? existingWithBackendId.slug
+      : undefined;
   if (existingWithBackendId && existingWithBackendId.publicId !== publicId) {
     // Há duplicação: remove o mapeamento antigo e mantém o publicId atual
     const index = mappings.findIndex((m) => m.backendId === backendId);
@@ -211,11 +225,11 @@ export const updatePublicIdMapping = (publicId: number, backendId: string, slug?
   const mapping = mappings.find((m) => m.publicId === publicId);
   if (mapping) {
     mapping.backendId = backendId;
-    if (slug) {
-      mapping.slug = slug;
-    }
+    const nextSlug = slug ?? mapping.slug ?? preservedSlug;
+    if (nextSlug) mapping.slug = nextSlug;
   } else {
-    mappings.push({ publicId, backendId, ...(slug ? { slug } : {}) });
+    const nextSlug = slug ?? preservedSlug;
+    mappings.push({ publicId, backendId, ...(nextSlug ? { slug: nextSlug } : {}) });
   }
 
   window.localStorage.setItem(PUBLIC_ID_MAPPING_KEY, JSON.stringify(mappings));
@@ -231,26 +245,25 @@ export const updatePublicIdMapping = (publicId: number, backendId: string, slug?
 export const saveBatchPublicIdMappings = (backendIds: string[]): void => {
   const mappings = getPublicIdMappings();
   const existingIds = new Set(mappings.map((m) => m.backendId).filter(Boolean));
+  const localPlaceholders = mappings.filter((m) => !m.backendId);
+  let localIndex = 0;
+  let nextPublicId = getNextPublicIdFromMappings(mappings);
 
-  backendIds.forEach((backendId) => {
-    if (!existingIds.has(backendId)) {
-      // Verifica se há mapeamento local (sem backendId) que pode ser atualizado
-      // Isto evita duplicação quando um pet local é sincronizado com o backend
-      const localMapping = mappings.find((m) => !m.backendId);
+  for (const backendId of backendIds) {
+    if (existingIds.has(backendId)) continue;
 
-      if (localMapping) {
-        // Atualiza o mapeamento existente
-        localMapping.backendId = backendId;
-      } else {
-        // Cria novo mapeamento se não houver local disponível
-        const publicId = getNextPublicIdFromMappings(mappings);
-        const newMapping: PublicIdMapping = { publicId, backendId };
-        mappings.push(newMapping);
-      }
-
-      existingIds.add(backendId);
+    const placeholder = localPlaceholders[localIndex];
+    if (placeholder) {
+      placeholder.backendId = backendId;
+      localIndex += 1;
+    } else {
+      const newMapping: PublicIdMapping = { publicId: nextPublicId, backendId };
+      mappings.push(newMapping);
+      nextPublicId += 1;
     }
-  });
+
+    existingIds.add(backendId);
+  }
 
   window.localStorage.setItem(PUBLIC_ID_MAPPING_KEY, JSON.stringify(mappings));
 };

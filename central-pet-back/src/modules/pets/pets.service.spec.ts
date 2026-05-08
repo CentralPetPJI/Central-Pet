@@ -67,6 +67,7 @@ describe('PetsService', () => {
     auditLog: {
       create: jest.Mock;
     };
+    $transaction: jest.Mock;
   };
 
   const makeCreateDto = (): CreatePetDto => ({
@@ -176,7 +177,7 @@ describe('PetsService', () => {
               const matchesSex = args?.where?.sex ? record.sex === args.where.sex : true;
               const matchesSize = args?.where?.size ? record.size === args.where.size : true;
               const matchesState = args?.where?.responsibleUser?.state
-                ? userRecords.get(record.responsibleUserId)?.state ===
+                ? userRecords.get(record.responsibleUserId ?? '')?.state ===
                   args.where.responsibleUser.state
                 : true;
 
@@ -287,7 +288,11 @@ describe('PetsService', () => {
       auditLog: {
         create: jest.fn(),
       },
+      $transaction: jest.fn(),
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return
+    prismaMock.$transaction.mockImplementation((cb: any) => cb(prismaMock));
 
     const personalityTraitsMock = {
       getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
