@@ -48,6 +48,8 @@ export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
     responsibleUserId: apiPet.responsibleUserId,
     sourceType: apiPet.sourceType,
     sourceName: apiPet.sourceName,
+    adoptionStatus: apiPet.adoptionStatus ?? 'AVAILABLE',
+    deleted: apiPet.deleted,
   };
 };
 
