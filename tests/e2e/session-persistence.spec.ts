@@ -24,9 +24,6 @@ test.describe("Persistência de sessão", () => {
     await criarUsuarioViaApi(request, usuario);
     await fazerLogin(page, usuario);
 
-    // Aguarda carregamento completo
-    await page.waitForLoadState("networkidle");
-
     // Verifica que está autenticado (botão UserMenu visível)
     const userMenuButton = page.getByRole("button", {
       name: /Menu do usuário/i,
@@ -41,7 +38,6 @@ test.describe("Persistência de sessão", () => {
 
     // Faz refresh da página
     await page.reload();
-    await page.waitForLoadState("networkidle");
 
     // Verifica que ainda está autenticado
     await expect(userMenuButton).toBeVisible({ timeout: 10000 });
@@ -60,8 +56,6 @@ test.describe("Persistência de sessão", () => {
     await criarUsuarioViaApi(request, usuario);
     await fazerLogin(page, usuario);
 
-    await page.waitForLoadState("networkidle");
-
     // Espera carregar
     const userMenuButton = page.getByRole("button", {
       name: /Menu do usuário/i,
@@ -74,7 +68,6 @@ test.describe("Persistência de sessão", () => {
     // Faz 3 refreshes consecutivos
     for (let i = 0; i < 3; i++) {
       await page.reload();
-      await page.waitForLoadState("networkidle");
 
       await expect(userMenuButton).toBeVisible({ timeout: 10000 });
 
@@ -92,8 +85,6 @@ test.describe("Persistência de sessão", () => {
     await criarUsuarioViaApi(request, usuario);
     await fazerLogin(page, usuario);
 
-    await page.waitForLoadState("networkidle");
-
     // Captura usuário inicial
     const userMenuButton = page.getByRole("button", {
       name: /Menu do usuário/i,
@@ -105,14 +96,12 @@ test.describe("Persistência de sessão", () => {
 
     // Navega para página de cadastro de pet
     await page.goto("/pets/new");
-    await page.waitForLoadState("networkidle");
     await expect(
       page.getByRole("heading", { name: /Cadastre o pet/i }),
     ).toBeVisible();
 
     // Faz refresh na página de cadastro
     await page.reload();
-    await page.waitForLoadState("networkidle");
     await expect(
       page.getByRole("heading", { name: /Cadastre o pet/i }),
     ).toBeVisible();
@@ -125,7 +114,6 @@ test.describe("Persistência de sessão", () => {
 
     // Volta para home
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
 
     await expect(userMenuButton).toBeVisible({ timeout: 10000 });
     const finalButtonElement = await userMenuButton.elementHandle();
