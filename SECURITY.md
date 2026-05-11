@@ -19,7 +19,7 @@ Não reporte vulnerabilidades em issues públicas. Para evitar exposição indev
 
 Canal recomendado:
 
-- E-mail: `seguranca@centralpet.example.com`
+- E-mail: `central.pet.adote@gmail.com`
 
 O e-mail acima é fictício e deve ser substituído pelo contato oficial da equipe antes da publicação do projeto. Se o repositório estiver com GitHub Security Advisories habilitado, esse canal também pode ser usado para reportes privados.
 
