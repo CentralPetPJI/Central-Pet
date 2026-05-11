@@ -21,7 +21,7 @@ Canal recomendado:
 
 - E-mail: `central.pet.adote@gmail.com`
 
-O e-mail acima é fictício e deve ser substituído pelo contato oficial da equipe antes da publicação do projeto. Se o repositório estiver com GitHub Security Advisories habilitado, esse canal também pode ser usado para reportes privados.
+Se o repositório estiver com GitHub Security Advisories habilitado, esse canal também pode ser usado para reportes privados.
 
 Ao reportar, inclua quando possível:
 
