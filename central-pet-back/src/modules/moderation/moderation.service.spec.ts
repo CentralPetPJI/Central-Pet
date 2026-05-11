@@ -55,10 +55,12 @@ describe('ModerationService', () => {
     });
 
     it('deve lançar ConflictException se a denúncia já existir', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       prismaMock.pet.findUnique.mockResolvedValue({
         id: 'pet-1',
         responsibleUserId: 'other-user',
       } as any);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       prismaMock.moderationReport.findUnique.mockResolvedValue({ id: 'report-1' } as any);
 
       await expect(service.createReport(reporterId, dto)).rejects.toThrow(ConflictException);
@@ -70,11 +72,14 @@ describe('ModerationService', () => {
         responsibleUserId: 'other-user',
       } as any);
       prismaMock.moderationReport.findUnique.mockResolvedValue(null);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-explicit-any
       prismaMock.moderationReport.create.mockResolvedValue({ id: 'report-1' } as any);
 
       // Mock da transação para retornar o próprio prismaMock
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
-      prismaMock.$transaction.mockImplementation((cb: any) => cb(prismaMock));
+
+      prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => unknown) =>
+        cb(prismaMock),
+      );
 
       const result = await service.createReport(reporterId, dto);
 

@@ -12,8 +12,7 @@ import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from 
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-
+import { Prisma } from '../../../generated/prisma/client';
 @Injectable()
 export class AdoptionRequestsService {
   constructor(
@@ -272,7 +271,7 @@ export class AdoptionRequestsService {
         },
       })) as unknown as AdoptionRequestRecord;
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
       }
       throw error;

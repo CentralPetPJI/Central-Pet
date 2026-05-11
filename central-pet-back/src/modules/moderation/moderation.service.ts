@@ -9,8 +9,7 @@ import {
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { AuditService } from '@/modules/audit/audit.service';
-import { ModerationTargetType } from '../../../generated/prisma/client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { ModerationTargetType, Prisma } from '../../../generated/prisma/client';
 
 @Injectable()
 export class ModerationService {
@@ -60,24 +59,9 @@ export class ModerationService {
       throw new BadRequestException('Tipo de alvo de denúncia inválido');
     }
 
-    const existingReport = await this.prisma.moderationReport.findUnique({
-      where: {
-        reporterId_targetType_targetId: {
-          reporterId,
-          targetType: dto.targetType,
-          targetId: dto.targetId,
-        },
-      },
-    });
-
-    if (existingReport) {
-      throw new ConflictException('Você já denunciou este conteúdo');
-    }
-
     return this.prisma.$transaction(async (tx) => {
-      let report;
       try {
-        report = await tx.moderationReport.create({
+        const report = await tx.moderationReport.create({
           data: {
             reporterId,
             targetType: dto.targetType,
@@ -85,24 +69,23 @@ export class ModerationService {
             reason: dto.reason,
           },
         });
+        if (this.auditService) {
+          await this.auditService.createWithTx(tx, {
+            userId: reporterId,
+            action: 'CREATE_REPORT',
+            targetId: dto.targetId,
+            targetType: dto.targetType,
+            details: { reason: dto.reason, reportId: report.id },
+          });
+        }
+
+        return report;
       } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
           throw new ConflictException('Você já denunciou este conteúdo');
         }
         throw error;
       }
-
-      if (this.auditService) {
-        await this.auditService.createWithTx(tx, {
-          userId: reporterId,
-          action: 'CREATE_REPORT',
-          targetId: dto.targetId,
-          targetType: dto.targetType,
-          details: { reason: dto.reason, reportId: report.id },
-        });
-      }
-
-      return report;
     });
   }
 }

@@ -291,8 +291,9 @@ describe('PetsService', () => {
       $transaction: jest.fn(),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return
-    prismaMock.$transaction.mockImplementation((cb: any) => cb(prismaMock));
+    prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => unknown) =>
+      cb(prismaMock),
+    );
 
     const personalityTraitsMock = {
       getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),

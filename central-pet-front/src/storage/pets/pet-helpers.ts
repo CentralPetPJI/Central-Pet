@@ -6,7 +6,7 @@ import {
   saveBatchPublicIdMappings,
 } from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
-import { formatPetAge } from '@/lib/pet-age.ts';
+import { formatPetAge } from '@/lib/pet-age';
 
 /**
  * Sincroniza multiplos pets do backend em batch
