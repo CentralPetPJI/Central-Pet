@@ -6,6 +6,7 @@ import {
   saveBatchPublicIdMappings,
 } from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
+import type { PetPersonalityApiOption } from './pet-personality-options';
 import { formatPetAge } from '@/lib/pet-age';
 
 /**
@@ -21,13 +22,32 @@ export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
  * Converte PetApiResponse do backend para formato Pet do frontend
  * Usa IDs publicos sequenciais para URLs amigaveis
  */
-export const mapApiResponseToPet = (apiPet: PetApiResponse): Pet => {
+const formatSelectedPersonalities = (
+  selectedPersonalities: string[],
+  personalityOptions: PetPersonalityApiOption[] = [],
+): string => {
+  if (selectedPersonalities.length === 0) {
+    return 'Perfil comportamental não informado';
+  }
+
+  const titleById = new Map(personalityOptions.map((option) => [option.id, option.title] as const));
+  const titles = selectedPersonalities
+    .map((personalityId) => titleById.get(personalityId))
+    .filter((title): title is string => Boolean(title));
+
+  return titles.length > 0 ? titles.join(', ') : 'Perfil comportamental não informado';
+};
+
+export const mapApiResponseToPet = (
+  apiPet: PetApiResponse,
+  personalityOptions?: PetPersonalityApiOption[],
+): Pet => {
   const publicId = ensurePublicId(apiPet.id, apiPet.name);
 
-  const personalityText =
-    apiPet.selectedPersonalities.length > 0
-      ? apiPet.selectedPersonalities.join(', ')
-      : 'Perfil comportamental nao informado';
+  const personalityText = formatSelectedPersonalities(
+    apiPet.selectedPersonalities,
+    personalityOptions,
+  );
 
   const sex = formatPetSex(apiPet.sex) || 'Nao informado';
   const size = formatPetSize(apiPet.size) || 'Nao informado';

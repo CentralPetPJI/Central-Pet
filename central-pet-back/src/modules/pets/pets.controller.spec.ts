@@ -26,7 +26,7 @@ describe('Controlador de pets', () => {
         {
           provide: PersonalityTraitsService,
           useValue: {
-            getTraitIds: () => [],
+            getAllTraits: () => Promise.resolve([]),
           },
         },
         {

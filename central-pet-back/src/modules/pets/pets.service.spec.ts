@@ -12,7 +12,7 @@ import { PetSeedService } from './pet-seed.service';
 type PrismaPetRecord = {
   id: string;
   profilePhoto: string;
-  galleryPhotosJson: string | null;
+  galleryPhotosJson: unknown[] | null;
   name: string;
   ageText: string;
   species: 'DOG' | 'CAT';
@@ -27,7 +27,7 @@ type PrismaPetRecord = {
   physicalLimitation: boolean;
   visualLimitation: boolean;
   hearingLimitation: boolean;
-  selectedPersonalitiesJson: string;
+  selectedPersonalitiesJson: unknown[];
   responsibleUserId: string | null;
   sourceType: 'ONG' | 'PESSOA_FISICA' | null;
   sourceName: string | null;
@@ -296,7 +296,32 @@ describe('PetsService', () => {
     );
 
     const personalityTraitsMock = {
-      getTraitIds: jest.fn(() => ['playful', 'friendly', 'calm']),
+      getAllTraits: jest.fn(() => [
+        {
+          id: 'playful',
+          title: 'Brincalhão',
+          description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
+          conflictsWith: [],
+        },
+        {
+          id: 'friendly',
+          title: 'Sociável',
+          description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
+          conflictsWith: [],
+        },
+        {
+          id: 'calm',
+          title: 'Calmo',
+          description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+          conflictsWith: ['energetic'],
+        },
+        {
+          id: 'energetic',
+          title: 'Agitado',
+          description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
+          conflictsWith: ['calm'],
+        },
+      ]),
     } as unknown as PersonalityTraitsService;
 
     const userPersistenceMock = {
@@ -534,7 +559,7 @@ describe('PetsService', () => {
     records.push({
       id: 'pet-no-owner',
       profilePhoto: '',
-      galleryPhotosJson: '[]',
+      galleryPhotosJson: [],
       name: 'Sem Dono',
       ageText: 'ADULTO',
       species: 'DOG',
@@ -549,7 +574,7 @@ describe('PetsService', () => {
       physicalLimitation: false,
       visualLimitation: false,
       hearingLimitation: false,
-      selectedPersonalitiesJson: '[]',
+      selectedPersonalitiesJson: [],
       responsibleUserId: null as unknown as string,
       sourceType: null as unknown as 'ONG',
       sourceName: null as unknown as string,

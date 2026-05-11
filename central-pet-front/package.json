@@ -21,6 +21,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "1.15.0",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.2",
     "embla-carousel": "^8.6.0",
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-react": "^8.6.0",

@@ -131,16 +131,31 @@ export class PetsService {
     };
   }
 
-  private validateSelectedPersonalities(selectedPersonalities: string[]) {
-    const validTraitIds = this.personalityTraitsService.getTraitIds();
+  private async validateSelectedPersonalities(selectedPersonalities: string[]) {
+    const traits = await this.personalityTraitsService.getAllTraits();
+    const traitMap = new Map(traits.map((trait) => [trait.id, trait]));
 
-    const invalidTraits = selectedPersonalities.filter(
-      (traitId) => !validTraitIds.includes(traitId),
-    );
+    const invalidTraits = selectedPersonalities.filter((traitId) => !traitMap.has(traitId));
 
     if (invalidTraits.length > 0) {
       throw new BadRequestException(
         `Traits de personalidade inválidos: ${invalidTraits.join(', ')}`,
+      );
+    }
+
+    const selectedSet = new Set(selectedPersonalities);
+    const conflictingTraits = selectedPersonalities.flatMap((traitId) => {
+      const trait = traitMap.get(traitId);
+      if (!trait) return [];
+
+      return trait.conflictsWith
+        .filter((conflictId) => selectedSet.has(conflictId))
+        .map((conflictId) => `${traitId}/${conflictId}`);
+    });
+
+    if (conflictingTraits.length > 0) {
+      throw new BadRequestException(
+        `Traits de personalidade conflitantes: ${[...new Set(conflictingTraits)].join(', ')}`,
       );
     }
   }
@@ -152,7 +167,7 @@ export class PetsService {
 
   async create(createPetDto: CreatePetDto, responsibleUserId: string) {
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
-    this.validateSelectedPersonalities(selectedPersonalities);
+    await this.validateSelectedPersonalities(selectedPersonalities);
 
     await this.userPersistence.validateUser(responsibleUserId);
     const responsibleMetadata = await this.getResponsiblePetMetadata(responsibleUserId);
@@ -160,7 +175,7 @@ export class PetsService {
     const createdPet = await this.prisma.pet.create({
       data: {
         profilePhoto: createPetDto.profilePhoto,
-        galleryPhotosJson: JSON.stringify(createPetDto.galleryPhotos ?? []),
+        galleryPhotosJson: createPetDto.galleryPhotos ?? [],
         name: createPetDto.name,
         ageText: createPetDto.age,
         species: PetMapper.mapSpeciesToPersistence(createPetDto.species),
@@ -175,7 +190,7 @@ export class PetsService {
         physicalLimitation: createPetDto.physicalLimitation,
         visualLimitation: createPetDto.visualLimitation,
         hearingLimitation: createPetDto.hearingLimitation,
-        selectedPersonalitiesJson: JSON.stringify(selectedPersonalities),
+        selectedPersonalitiesJson: selectedPersonalities,
         responsibleUserId,
         sourceType: PetMapper.mapSourceTypeToPersistence(responsibleMetadata.sourceType),
         sourceName: responsibleMetadata.sourceName,
@@ -336,17 +351,14 @@ export class PetsService {
     }
 
     if (updatePetDto.selectedPersonalities !== undefined) {
-      this.validateSelectedPersonalities(updatePetDto.selectedPersonalities);
+      await this.validateSelectedPersonalities(updatePetDto.selectedPersonalities);
     }
 
     const updatedPet = await this.prisma.pet.update({
       where: { id },
       data: {
         profilePhoto: updatePetDto.profilePhoto,
-        galleryPhotosJson:
-          updatePetDto.galleryPhotos !== undefined
-            ? JSON.stringify(updatePetDto.galleryPhotos)
-            : undefined,
+        galleryPhotosJson: updatePetDto.galleryPhotos,
         name: updatePetDto.name,
         ageText: updatePetDto.age,
         species:
@@ -370,10 +382,7 @@ export class PetsService {
         physicalLimitation: updatePetDto.physicalLimitation,
         visualLimitation: updatePetDto.visualLimitation,
         hearingLimitation: updatePetDto.hearingLimitation,
-        selectedPersonalitiesJson:
-          updatePetDto.selectedPersonalities !== undefined
-            ? JSON.stringify(updatePetDto.selectedPersonalities)
-            : undefined,
+        selectedPersonalitiesJson: updatePetDto.selectedPersonalities,
       },
     });
 

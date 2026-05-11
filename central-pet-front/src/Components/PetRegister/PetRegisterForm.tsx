@@ -15,9 +15,14 @@ import PetRegisterPhotosSection from '@/Components/PetRegister/PetRegisterPhotos
 import {
   buildPetSubmitPayload,
   isProfileLocationComplete,
+  resolvePersonalitySelection,
 } from '@/Components/PetRegister/pet-register-payload';
 import { ensurePublicId, resolveBackendId } from '@/storage/pets';
-import { petPersonalityStorageKey } from '@/storage/pets';
+import {
+  petPersonalityStorageKey,
+  type PetPersonalityApiOption,
+  type PetPersonalityOption,
+} from '@/storage/pets';
 import {
   petRegisterFormSchema,
   petRegisterStorageKey,
@@ -32,6 +37,8 @@ interface PetRegisterFormProps {
 const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
   const navigate = useNavigate();
   const { currentUser, isLoading: isAuthLoading } = useAuth();
+  const [personalityOptions, setPersonalityOptions] = useState<PetPersonalityOption[]>([]);
+  const [isPersonalityOptionsLoading, setIsPersonalityOptionsLoading] = useState(true);
   const [selectedPersonalities, setSelectedPersonalities] = useState<string[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -48,6 +55,36 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
     state: currentUser?.state?.trim() ?? '',
   };
   const isResponsibleLocationMissing = !isProfileLocationComplete(responsibleLocation);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPersonalityOptions = async () => {
+      setIsPersonalityOptionsLoading(true);
+      try {
+        const response = await api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits');
+
+        if (isMounted) {
+          setPersonalityOptions(response.data.data);
+        }
+      } catch {
+        if (isMounted) {
+          setPersonalityOptions([]);
+          setSaveMessage('Não foi possível carregar as personalidades disponíveis.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsPersonalityOptionsLoading(false);
+        }
+      }
+    };
+
+    void loadPersonalityOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     window.localStorage.removeItem(petRegisterStorageKey);
@@ -97,9 +134,11 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
 
   const togglePersonality = (personalityId: string) => {
     setSelectedPersonalities((currentOptions) => {
-      const updatedOptions = currentOptions.includes(personalityId)
-        ? currentOptions.filter((optionId) => optionId !== personalityId)
-        : [...currentOptions, personalityId];
+      const updatedOptions = resolvePersonalitySelection(
+        currentOptions,
+        personalityId,
+        personalityOptions,
+      );
 
       window.localStorage.setItem(petPersonalityStorageKey, JSON.stringify(updatedOptions));
 
@@ -239,6 +278,8 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
             <PetRegisterHealthSection />
           </div>
           <PetRegisterBehaviorSection
+            isLoading={isPersonalityOptionsLoading}
+            options={personalityOptions}
             selectedPersonalities={selectedPersonalities}
             onTogglePersonality={togglePersonality}
           />
