@@ -1,13 +1,17 @@
 import FormSection from '@/Components/Form/FormSection';
 import SelectableCard from '@/Components/Form/SelectableCard';
-import { petPersonalityOptions } from '@/storage/pets';
+import { PersonalityTraitIcon, type PetPersonalityOption } from '@/storage/pets';
 
 interface PetRegisterBehaviorSectionProps {
+  isLoading?: boolean;
+  options: PetPersonalityOption[];
   selectedPersonalities: string[];
   onTogglePersonality: (personalityId: string) => void;
 }
 
 const PetRegisterBehaviorSection = ({
+  isLoading = false,
+  options,
   selectedPersonalities,
   onTogglePersonality,
 }: PetRegisterBehaviorSectionProps) => (
@@ -15,20 +19,30 @@ const PetRegisterBehaviorSection = ({
     className="mt-4"
     accentClassName="text-violet-700"
     eyebrow="Comportamentos"
-    title="Personalidades com icones"
+    title="Personalidades com ícones"
   >
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {petPersonalityOptions.map((option) => (
-        <SelectableCard
-          key={option.id}
-          description={option.description}
-          icon={option.icon}
-          isSelected={selectedPersonalities.includes(option.id)}
-          onClick={() => onTogglePersonality(option.id)}
-          title={option.title}
-        />
-      ))}
-    </div>
+    {isLoading ? (
+      <p className="rounded-2xl border border-cyan-100 bg-white p-4 text-sm text-slate-600">
+        Carregando personalidades disponíveis...
+      </p>
+    ) : options.length > 0 ? (
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {options.map((option) => (
+          <SelectableCard
+            key={option.id}
+            description={option.description}
+            icon={<PersonalityTraitIcon iconSvg={option.iconSvg} />}
+            isSelected={selectedPersonalities.includes(option.id)}
+            onClick={() => onTogglePersonality(option.id)}
+            title={option.title}
+          />
+        ))}
+      </div>
+    ) : (
+      <p className="rounded-2xl border border-cyan-100 bg-white p-4 text-sm text-slate-600">
+        Não foi possível carregar as personalidades disponíveis.
+      </p>
+    )}
   </FormSection>
 );
 

@@ -13,7 +13,7 @@ export class PetMapper {
     return {
       id: pet.id,
       profilePhoto: pet.profilePhoto,
-      galleryPhotos: this.parseJsonArray(pet.galleryPhotosJson),
+      galleryPhotos: this.toStringArray(pet.galleryPhotosJson),
       name: pet.name,
       age: pet.ageText,
       species: this.mapSpeciesToResponse(pet.species),
@@ -28,7 +28,7 @@ export class PetMapper {
       physicalLimitation: pet.physicalLimitation,
       visualLimitation: pet.visualLimitation,
       hearingLimitation: pet.hearingLimitation,
-      selectedPersonalities: this.parseJsonArray(pet.selectedPersonalitiesJson),
+      selectedPersonalities: this.toStringArray(pet.selectedPersonalitiesJson),
       responsibleUserId: pet.responsibleUserId,
       sourceType: pet.sourceType as PetSourceType | undefined,
       sourceName: pet.sourceName,
@@ -80,14 +80,8 @@ export class PetMapper {
     return status as PetAdoptionStatus;
   }
 
-  private static parseJsonArray(value: string | null): string[] {
-    if (!value) return [];
-    try {
-      const parsed: unknown = JSON.parse(value);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter((item): item is string => typeof item === 'string');
-    } catch {
-      return [];
-    }
+  private static toStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item): item is string => typeof item === 'string');
   }
 }

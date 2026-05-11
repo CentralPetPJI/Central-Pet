@@ -1,4 +1,5 @@
 import type { PetRegisterFormData } from '@/storage/pets';
+import type { PetPersonalityOption } from '@/storage/pets';
 
 export type ResponsibleLocation = {
   city?: string;
@@ -31,4 +32,21 @@ export const buildPetSubmitPayload = (
     hearingLimitation: data.hearingLimitation,
     selectedPersonalities,
   };
+};
+
+export const resolvePersonalitySelection = (
+  currentPersonalities: string[],
+  personalityId: string,
+  options: PetPersonalityOption[],
+): string[] => {
+  if (currentPersonalities.includes(personalityId)) {
+    return currentPersonalities.filter((optionId) => optionId !== personalityId);
+  }
+
+  const conflicts = options.find((option) => option.id === personalityId)?.conflictsWith ?? [];
+
+  return [
+    ...currentPersonalities.filter((optionId) => !conflicts.includes(optionId)),
+    personalityId,
+  ];
 };

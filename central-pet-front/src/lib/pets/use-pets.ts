@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { Pet, PetApiResponse } from '@/Models/pet';
 import { mapApiResponseToPet, ensureAllPublicIds } from '@/storage/pets/pet-helpers';
+import type { PetPersonalityApiOption } from '@/storage/pets/pet-personality-options';
 
 export type UsePetsFilters = {
   responsibleUserId?: string;
@@ -32,12 +33,16 @@ export const usePets = (filters?: UsePetsFilters): UsePetsResult => {
     setError(null);
 
     try {
-      const response = await api.get<{ data: PetApiResponse[] }>('/pets', {
-        params: filters,
-      });
+      const [response, personalityResponse] = await Promise.all([
+        api.get<{ data: PetApiResponse[] }>('/pets'),
+        api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
+      ]);
+      const personalityOptions = personalityResponse?.data.data ?? [];
 
       ensureAllPublicIds(response.data.data);
-      const backendPets = response.data.data.map(mapApiResponseToPet);
+      const backendPets = response.data.data.map((pet) =>
+        mapApiResponseToPet(pet, personalityOptions),
+      );
       setPets(backendPets);
     } catch (err) {
       setPets([]);
