@@ -7,6 +7,7 @@ import type {
 } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 import { AuditService } from '@/modules/audit/audit.service';
+import { Prisma } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class ShareContactUseCase {
@@ -33,21 +34,25 @@ export class ShareContactUseCase {
     }
 
     const updatedRequest = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.adoptionRequest.update({
-        where: {
-          id: requestId,
-          version: currentRequest.version,
-        },
-        data: {
-          responsibleContactShareConsent: true,
-          status: AdoptionRequestStatus.CONTACT_SHARED,
-          note: dto.note?.trim() || null,
-          version: { increment: 1 },
-        },
-      });
-
-      if (!updated) {
-        throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+      let updated: AdoptionRequestRecord;
+      try {
+        updated = await tx.adoptionRequest.update({
+          where: {
+            id: requestId,
+            version: currentRequest.version,
+          },
+          data: {
+            responsibleContactShareConsent: true,
+            status: AdoptionRequestStatus.CONTACT_SHARED,
+            note: dto.note?.trim() || null,
+            version: { increment: 1 },
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+          throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+        }
+        throw error;
       }
 
       if (this.auditService) {
