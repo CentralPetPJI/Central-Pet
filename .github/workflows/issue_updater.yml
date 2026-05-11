@@ -166,5 +166,7 @@ jobs:
 
           gh issue comment "$ISSUE_NUMBER" --body-file "$COMMENT_FILE"
 
-          # Label opcional para indicar que há sugestão pendente de revisão.
-          gh issue edit "$ISSUE_NUMBER" --add-label "revisao-ia-pendente" || true
+          # Sinaliza revisão pendente e limpa a label de entrada do fluxo.
+          gh issue edit "$ISSUE_NUMBER" \
+            --remove-label "triagem-pendente" \
+            --add-label "revisao-ia-pendente"
