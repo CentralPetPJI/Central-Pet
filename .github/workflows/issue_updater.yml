@@ -12,16 +12,37 @@ permissions:
 jobs:
   format-issue:
     # Só executa quando a label triagem-pendente é adicionada
-    # e ainda não foi formatada
+    # e ainda não existe uma sugestão pendente de revisão
     if: |
       github.event.label.name == 'triagem-pendente' &&
-      !contains(github.event.issue.labels.*.name, 'formatado-por-ia')
+      !contains(github.event.issue.labels.*.name, 'formatado-por-ia') &&
+      !contains(github.event.issue.labels.*.name, 'revisao-ia-pendente')
 
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Validar permissão de quem adicionou a label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL_ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          PERMISSION="$(gh api "repos/${REPOSITORY}/collaborators/${LABEL_ACTOR}/permission" --jq '.permission' 2>/dev/null || echo "none")"
+
+          case "$PERMISSION" in
+            admin|maintain|write|push|triage)
+              echo "Usuário autorizado a solicitar triagem com IA: ${LABEL_ACTOR} (${PERMISSION})"
+              ;;
+            *)
+              echo "Usuário sem permissão confiável para solicitar triagem com IA: ${LABEL_ACTOR} (${PERMISSION})"
+              exit 1
+              ;;
+          esac
 
       - name: Reescrever descrição com IA
         id: ai-rewrite
@@ -88,7 +109,7 @@ jobs:
             A primeira linha deve ser o título.
             Não use blocos ```markdown nem texto extra.
 
-      - name: Atualizar issue com texto reescrito (preservando anexos)
+      - name: Publicar sugestão para revisão do mantenedor
         if: steps.ai-rewrite.outputs.response != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -131,13 +152,19 @@ jobs:
             fi
           fi
 
-          # Atualiza issue
-          gh issue edit "$ISSUE_NUMBER" --title "$TITLE" --body "$BODY"
+          COMMENT_FILE="$(mktemp)"
 
-          # Labels
-          gh issue edit "$ISSUE_NUMBER" --add-label "formatado-por-ia" || true
-          gh issue edit "$ISSUE_NUMBER" --remove-label "triagem-pendente" || true
+          {
+            printf "%s\n\n" "A IA gerou a sugestão abaixo para revisão de um mantenedor."
+            printf "%s\n\n" "Por segurança, o workflow não altera automaticamente o título nem o corpo da issue com conteúdo gerado por IA."
+            printf "%s\n\n" "Revise a sugestão antes de aplicar qualquer mudança manualmente."
+            printf "## Título sugerido\n\n"
+            printf "%s\n\n" "$TITLE"
+            printf "## Corpo sugerido\n\n"
+            printf "%s\n" "$BODY"
+          } > "$COMMENT_FILE"
 
-          # Comentário automático
-          gh issue comment "$ISSUE_NUMBER" \
-            --body "Issue formatada automaticamente por IA no padrão da equipe."
+          gh issue comment "$ISSUE_NUMBER" --body-file "$COMMENT_FILE"
+
+          # Label opcional para indicar que há sugestão pendente de revisão.
+          gh issue edit "$ISSUE_NUMBER" --add-label "revisao-ia-pendente" || true
