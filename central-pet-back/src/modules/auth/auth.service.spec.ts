@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
+import type { PublicUser } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { hashPassword } from './password.util';
 import { makePrismaMock } from '@/utils/prisma-mock';
+import type { User } from '../../../generated/prisma/client';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 
@@ -46,7 +48,7 @@ describe('AuthService', () => {
     );
   });
 
-  const makePersistedUser = async (overrides = {}) => ({
+  const makePersistedUser = async (overrides: Partial<User> = {}): Promise<User> => ({
     id: 'user-1',
     fullName: 'Maria Silva',
     email: 'maria@example.com',
@@ -95,7 +97,7 @@ describe('AuthService', () => {
       deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    } as any);
+    } as PublicUser);
 
     const result = await authService.login({
       email: 'maria@example.com',
@@ -146,7 +148,7 @@ describe('AuthService', () => {
       deleted: false,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    } as any);
+    } as PublicUser);
 
     const loginResult = await authService.login({
       email: 'maria@example.com',
@@ -161,12 +163,12 @@ describe('AuthService', () => {
   describe('acceptTerms', () => {
     it('deve permitir aceitar termos se ainda não aceitos', async () => {
       const user = await makePersistedUser({ acceptedTermsAt: null, acceptedTermsVersion: null });
-      prismaMock.user.findUnique.mockResolvedValue(user as any);
+      prismaMock.user.findUnique.mockResolvedValue(user);
       prismaMock.user.update.mockResolvedValue({
         ...user,
         acceptedTermsAt: new Date(),
         acceptedTermsVersion: '1.0.0',
-      } as any);
+      });
 
       const result = await authService.acceptTerms('user-1');
 
@@ -187,12 +189,12 @@ describe('AuthService', () => {
         acceptedTermsAt: new Date('2026-01-01'),
         acceptedTermsVersion: '0.9.0',
       });
-      prismaMock.user.findUnique.mockResolvedValue(user as any);
+      prismaMock.user.findUnique.mockResolvedValue(user);
       prismaMock.user.update.mockResolvedValue({
         ...user,
         acceptedTermsAt: new Date(),
         acceptedTermsVersion: '1.0.0',
-      } as any);
+      });
 
       const result = await authService.acceptTerms('user-1');
 
@@ -221,7 +223,7 @@ describe('AuthService', () => {
         acceptedTermsAt: new Date(),
         acceptedTermsVersion: '1.0.0',
       });
-      prismaMock.user.findUnique.mockResolvedValue(user as any);
+      prismaMock.user.findUnique.mockResolvedValue(user);
 
       await expect(async () => authService.acceptTerms('user-1')).rejects.toThrow(
         BadRequestException,

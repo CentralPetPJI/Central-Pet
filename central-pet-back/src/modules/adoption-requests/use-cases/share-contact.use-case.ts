@@ -7,6 +7,7 @@ import type {
 } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 import { AuditService } from '@/modules/audit/audit.service';
+import { Prisma } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class ShareContactUseCase {
@@ -51,7 +52,7 @@ export class ShareContactUseCase {
 
     // audit log: responsible user shared contact for adoption request
     if (this.auditService) {
-      await this.auditService.createWithTx(this.prisma as any, {
+      await this.auditService.createWithTx(this.prisma as Prisma.TransactionClient, {
         userId: _responsibleUserId,
         action: 'SHARE_ADOPTION_CONTACT',
         targetId: requestId,

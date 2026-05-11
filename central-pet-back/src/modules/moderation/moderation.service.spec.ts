@@ -3,7 +3,12 @@ import { ModerationService } from './moderation.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuditService } from '@/modules/audit/audit.service';
 import { ForbiddenException, ConflictException, NotFoundException } from '@nestjs/common';
-import { ModerationTargetType } from '../../../generated/prisma/client';
+import {
+  ModerationTargetType,
+  Pet,
+  Prisma,
+  ModerationReport,
+} from '../../../generated/prisma/client';
 import { prismaMock } from '../../../singleton';
 
 describe('ModerationService', () => {
@@ -49,19 +54,25 @@ describe('ModerationService', () => {
       prismaMock.pet.findUnique.mockResolvedValue({
         id: 'pet-1',
         responsibleUserId: reporterId,
-      } as any);
+      } as Pet);
 
       await expect(service.createReport(reporterId, dto)).rejects.toThrow(ForbiddenException);
     });
 
     it('deve lançar ConflictException se a denúncia já existir', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       prismaMock.pet.findUnique.mockResolvedValue({
         id: 'pet-1',
         responsibleUserId: 'other-user',
-      } as any);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      prismaMock.moderationReport.findUnique.mockResolvedValue({ id: 'report-1' } as any);
+      } as Pet);
+      // Simula erro de unique constraint no create
+      const error = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '4.15.0',
+      });
+      prismaMock.moderationReport.create.mockRejectedValue(error);
+      prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => unknown) =>
+        cb(prismaMock),
+      );
 
       await expect(service.createReport(reporterId, dto)).rejects.toThrow(ConflictException);
     });
@@ -70,10 +81,9 @@ describe('ModerationService', () => {
       prismaMock.pet.findUnique.mockResolvedValue({
         id: 'pet-1',
         responsibleUserId: 'other-user',
-      } as any);
+      } as Pet);
       prismaMock.moderationReport.findUnique.mockResolvedValue(null);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-explicit-any
-      prismaMock.moderationReport.create.mockResolvedValue({ id: 'report-1' } as any);
+      prismaMock.moderationReport.create.mockResolvedValue({ id: 'report-1' } as ModerationReport);
 
       // Mock da transação para retornar o próprio prismaMock
 
