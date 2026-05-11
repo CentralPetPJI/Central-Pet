@@ -7,7 +7,6 @@ import type {
 } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 import { AuditService } from '@/modules/audit/audit.service';
-import { Prisma } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class ShareContactUseCase {
@@ -33,33 +32,37 @@ export class ShareContactUseCase {
       throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
     }
 
-    const updatedRequest = await this.prisma.adoptionRequest.update({
-      where: {
-        id: requestId,
-        version: currentRequest.version,
-      },
-      data: {
-        responsibleContactShareConsent: true,
-        status: AdoptionRequestStatus.CONTACT_SHARED,
-        note: dto.note?.trim() || null,
-        version: { increment: 1 },
-      },
-    });
-
-    if (!updatedRequest) {
-      throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
-    }
-
-    // audit log: responsible user shared contact for adoption request
-    if (this.auditService) {
-      await this.auditService.createWithTx(this.prisma as Prisma.TransactionClient, {
-        userId: _responsibleUserId,
-        action: 'SHARE_ADOPTION_CONTACT',
-        targetId: requestId,
-        targetType: 'ADOPTION_REQUEST',
-        details: { petId: updatedRequest.petId, adopterId: updatedRequest.adopterId },
+    const updatedRequest = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.adoptionRequest.update({
+        where: {
+          id: requestId,
+          version: currentRequest.version,
+        },
+        data: {
+          responsibleContactShareConsent: true,
+          status: AdoptionRequestStatus.CONTACT_SHARED,
+          note: dto.note?.trim() || null,
+          version: { increment: 1 },
+        },
       });
-    }
+
+      if (!updated) {
+        throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+      }
+
+      // audit log: responsible user shared contact for adoption request
+      if (this.auditService) {
+        await this.auditService.createWithTx(tx, {
+          userId: _responsibleUserId,
+          action: 'SHARE_ADOPTION_CONTACT',
+          targetId: requestId,
+          targetType: 'ADOPTION_REQUEST',
+          details: { petId: updated.petId, adopterId: updated.adopterId },
+        });
+      }
+
+      return updated;
+    });
 
     // TODO: Acredito que podemos modififcar para o manage criar a notificacao
     const notification = {
