@@ -50,7 +50,6 @@ export class ShareContactUseCase {
         throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
       }
 
-      // audit log: responsible user shared contact for adoption request
       if (this.auditService) {
         await this.auditService.createWithTx(tx, {
           userId: _responsibleUserId,
