@@ -57,7 +57,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.getByRole("button", { name: /Sociável/i }).click();
     await page.getByRole("button", { name: "Salvar pet" }).click();
 
-    await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });
+    await page.waitForURL(/\/pets\/pet_[a-z0-9]+$/, { timeout: 15000 });
     await expect(
       page.getByRole("heading", { level: 1, name: petName }),
     ).toBeVisible();
@@ -106,7 +106,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
 
     await page.getByRole("button", { name: "Salvar pet" }).click();
 
-    await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });
+    await page.waitForURL(/\/pets\/pet_[a-z0-9]+$/, { timeout: 15000 });
     await expect(
       page.getByRole("heading", { level: 1, name: petName }),
     ).toBeVisible();

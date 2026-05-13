@@ -17,7 +17,7 @@ import {
   isProfileLocationComplete,
   resolvePersonalitySelection,
 } from '@/Components/PetRegister/pet-register-payload';
-import { ensurePublicId, resolveBackendId } from '@/storage/pets';
+import { resolveBackendId } from '@/storage/pets';
 import {
   petPersonalityStorageKey,
   type PetPersonalityApiOption,
@@ -180,12 +180,10 @@ const PetRegisterForm = ({ petId }: PetRegisterFormProps) => {
         );
       }
 
-      const publicId = ensurePublicId(response.data.data.id, response.data.data.name);
-
       window.localStorage.removeItem(petRegisterStorageKey);
       window.localStorage.removeItem(petPersonalityStorageKey);
 
-      navigate(routes.pets.detail.build(publicId), {
+      navigate(routes.pets.detail.build(response.data.data.id), {
         state: {
           successMessage: isEditMode ? 'Pet atualizado com sucesso.' : 'Pet salvo com sucesso.',
         },

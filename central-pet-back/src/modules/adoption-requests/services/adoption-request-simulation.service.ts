@@ -64,7 +64,7 @@ export class AdoptionRequestSimulationService {
   async validateSimulationPrerequisites(
     dto: SimulateAdoptionRequestDto,
     mockAdopter: MockUser,
-  ): Promise<void> {
+  ): Promise<NonNullable<Awaited<ReturnType<PetsService['findByIdForAdoption']>>>> {
     const pet = await this.petsService.findByIdForAdoption(dto.petId);
 
     if (!pet) {
@@ -77,12 +77,18 @@ export class AdoptionRequestSimulationService {
       );
     }
 
-    await this.userPersistence.ensureUsersExist([dto.petResponsibleUserId, mockAdopter.id]);
+    if (pet.responsibleUserId !== dto.petResponsibleUserId) {
+      throw new BadRequestException(
+        'O responsável informado não corresponde ao responsável atual do pet.',
+      );
+    }
+
+    await this.userPersistence.ensureUsersExist([pet.responsibleUserId, mockAdopter.id]);
 
     const existingRequest = await this.prisma.adoptionRequest.findFirst({
       where: {
         adopterId: mockAdopter.id,
-        responsibleUserId: dto.petResponsibleUserId,
+        responsibleUserId: pet.responsibleUserId,
         status: { in: [AdoptionRequestStatus.PENDING, AdoptionRequestStatus.CONTACT_SHARED] },
       },
       select: { id: true },
@@ -93,6 +99,8 @@ export class AdoptionRequestSimulationService {
         'Você já possui uma solicitação para este doador. Aguarde o andamento da solicitação atual.',
       );
     }
+
+    return pet;
   }
 
   async simulateReceived(userId: string, dto: SimulateAdoptionRequestDto) {
@@ -103,12 +111,12 @@ export class AdoptionRequestSimulationService {
       dto.adopterId,
     );
 
-    await this.validateSimulationPrerequisites(dto, mockAdopter);
+    const pet = await this.validateSimulationPrerequisites(dto, mockAdopter);
 
     const request = await this.prisma.adoptionRequest.create({
       data: {
-        petId: dto.petId,
-        responsibleUserId: dto.petResponsibleUserId,
+        petId: pet.internalId,
+        responsibleUserId: pet.responsibleUserId,
         adopterId: mockAdopter.id,
         adopterContactShareConsent: dto.adopterContactShareConsent ?? false,
         responsibleContactShareConsent: dto.responsibleContactShareConsent ?? false,

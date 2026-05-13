@@ -12,6 +12,7 @@ import {
 describe('PetMapper', () => {
   const mockPrismaPet: Pet = {
     id: '1',
+    publicId: 'pet_abc123',
     name: 'Luna',
     ageText: '3 anos',
     species: PetSpecies.DOG,
@@ -42,7 +43,7 @@ describe('PetMapper', () => {
     const record = PetMapper.toDomain(mockPrismaPet);
 
     expect(record).toMatchObject({
-      id: '1',
+      id: 'pet_abc123',
       name: 'Luna',
       species: 'dog',
       sex: 'female',

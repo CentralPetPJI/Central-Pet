@@ -35,8 +35,8 @@ test("cadastro cria pet e redireciona para o perfil", async ({
 
   await page.getByRole("button", { name: "Salvar pet" }).click();
 
-  // Redireciona para o perfil (ID numérico amigável)
-  await expect(page).toHaveURL(/\/pets\/\d+$/);
+  // Redireciona para o perfil (ID público no formato pet_<slug>)
+  await expect(page).toHaveURL(/\/pets\/pet_[a-z0-9]+$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Rex E2E" }),
   ).toBeVisible();

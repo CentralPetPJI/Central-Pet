@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
-import { getPublicIdFromBackend } from '@/storage/pets';
 import { routes } from '@/routes';
 import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
 import type { PetApiResponse, PetListItem } from '@/Models/pet';
@@ -13,16 +12,6 @@ const statusLabelMap: Record<string, string> = {
   ADOPTED: 'Adotado',
   UNAVAILABLE: 'Indisponível',
 };
-
-/**
- * Retorna o ID apropriado para uso em rotas locais.
- * Se houver mapeamento (pet cadastrado via frontend), usa o publicId.
- * Caso contrário, retorna o ID do backend como está.
- */
-function getPetRouteId(backendId: string): string | number {
-  const publicId = getPublicIdFromBackend(backendId);
-  return publicId ?? backendId;
-}
 
 export default function MyPetsPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
@@ -157,7 +146,7 @@ export default function MyPetsPage() {
               </p>
 
               <Link
-                to={routes.pets.detail.build(getPetRouteId(pet.id))}
+                to={routes.pets.detail.build(pet.id)}
                 className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
               >
                 Ver perfil

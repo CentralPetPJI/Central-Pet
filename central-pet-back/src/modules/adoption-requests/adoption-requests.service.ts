@@ -151,10 +151,15 @@ export class AdoptionRequestsService {
    * Retorna true se existir, false caso contrário.
    */
   async hasRequest(adopterId: string, petId: string): Promise<boolean> {
+    const internalPetId = await this.petsService.resolveInternalId(petId);
+    if (!internalPetId) {
+      return false;
+    }
+
     const found = await this.prisma.adoptionRequest.findFirst({
       where: {
         adopterId,
-        petId,
+        petId: internalPetId,
       },
     });
     return !!found;
@@ -241,7 +246,7 @@ export class AdoptionRequestsService {
     // 3. Validar se já existe solicitação pendente
     const existingRequest = await this.prisma.adoptionRequest.findFirst({
       where: {
-        petId,
+        petId: pet.internalId,
         adopterId,
       },
     });
@@ -261,7 +266,7 @@ export class AdoptionRequestsService {
     try {
       created = (await this.prisma.adoptionRequest.create({
         data: {
-          petId,
+          petId: pet.internalId,
           adopterId,
           responsibleUserId: pet.responsibleUserId,
           message: message ?? '',

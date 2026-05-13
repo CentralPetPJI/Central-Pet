@@ -2,7 +2,7 @@ import type { AdoptionRequestStatus } from './adoption-request-status';
 import { UserProfile } from '@/Models/user.ts';
 
 export interface Pet {
-  id: number; // ID público sequencial (1, 2, 3...) - mapeado internamente para UUID do backend
+  id: string | number; // ID público gerado pelo backend para uso em URLs
   name: string;
   species: 'dog' | 'cat';
   physicalCharacteristics: string;

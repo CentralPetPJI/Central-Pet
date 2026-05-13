@@ -30,6 +30,7 @@ enum PetHistoryEventType {
 
 model Pet {
   id                        String            @id @default(uuid())
+  publicId                  String            @unique
   name                      String
   ageText                   String
   species                   PetSpecies
