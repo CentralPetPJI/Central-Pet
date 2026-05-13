@@ -172,8 +172,11 @@ export class PetsService {
     return `pet_${generatePetPublicIdSuffix()}`;
   }
 
-  async resolveInternalId(identifier: string): Promise<string | null> {
-    const byId = await this.prisma.pet.findUnique({
+  private async resolveInternalIdWithPetClient(
+    petClient: Pick<PrismaService, 'pet'>['pet'] | Prisma.TransactionClient['pet'],
+    identifier: string,
+  ): Promise<string | null> {
+    const byId = await petClient.findUnique({
       where: { id: identifier },
       select: { id: true },
     });
@@ -182,12 +185,16 @@ export class PetsService {
       return byId.id;
     }
 
-    const byPublicId = await this.prisma.pet.findUnique({
+    const byPublicId = await petClient.findUnique({
       where: { publicId: identifier },
       select: { id: true },
     });
 
     return byPublicId?.id ?? null;
+  }
+
+  async resolveInternalId(identifier: string): Promise<string | null> {
+    return this.resolveInternalIdWithPetClient(this.prisma.pet, identifier);
   }
 
   private async findPetByIdentifier(identifier: string) {
@@ -463,8 +470,9 @@ export class PetsService {
     performedBy: string,
     details?: Record<string, unknown>,
   ) {
+    const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
     const currentPet = await tx.pet.findUnique({
-      where: { id },
+      where: { id: internalId ?? id },
       select: { id: true, deleted: true, status: true, responsibleUserId: true },
     });
 
@@ -474,7 +482,7 @@ export class PetsService {
     }
 
     await tx.pet.update({
-      where: { id: id },
+      where: { id: currentPet.id },
       data: { deleted: false, status: 'AVAILABLE' },
     });
 
@@ -482,7 +490,7 @@ export class PetsService {
     if (tx.adoptionRequest) {
       await tx.adoptionRequest.updateMany({
         where: {
-          petId: id,
+          petId: currentPet.id,
           status: 'CANCELLED',
           note: CANCEL_REASON_ADMIN_BLOCK,
         },
@@ -498,7 +506,7 @@ export class PetsService {
       await this.auditService.createWithTx(tx, {
         userId: performedBy,
         action: 'REACTIVATE_PET',
-        targetId: id,
+        targetId: currentPet.id,
         targetType: 'PET',
         details: { ...details },
       });
@@ -511,8 +519,9 @@ export class PetsService {
     performedBy?: string,
     details?: Record<string, unknown>,
   ) {
+    const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
     const currentPet = await tx.pet.findUnique({
-      where: { id },
+      where: { id: internalId ?? id },
       select: { id: true, deleted: true, status: true, responsibleUserId: true },
     });
 
@@ -533,7 +542,7 @@ export class PetsService {
     if (tx.adoptionRequest) {
       await tx.adoptionRequest.updateMany({
         where: {
-          petId: id,
+          petId: currentPet.id,
           status: { in: ['PENDING', 'CONTACT_SHARED'] },
         },
         data: {
