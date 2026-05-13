@@ -58,7 +58,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     await page.getByRole("button", { name: "Salvar alteracoes" }).click();
 
     // Redirecionamento para o perfil
-    await page.waitForURL(/\/pets\/.+$/);
+    await page.waitForURL(/\/pets\/[^/]+$/);
 
     // Sucesso: nome atualizado no heading do Hero
     await expect(
@@ -82,17 +82,17 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
-      .fill("Nome que nao deve ser salvo");
+      .fill("Nome que não deve ser salvo");
 
     // Navegar de volta via botão "Ver perfil do pet" (que cancela a edição)
     await page.getByRole("button", { name: "Ver perfil do pet" }).click();
 
-    await page.waitForURL(/\/pets\/.+$/);
+    await page.waitForURL(/\/pets\/[^/]+$/);
     await expect(
       page.getByRole("heading", { level: 1, name: nomeOriginal }),
     ).toBeVisible();
     await expect(
-      page.getByText("Nome que nao deve ser salvo"),
+      page.getByText("Nome que não deve ser salvo"),
     ).not.toBeVisible();
   });
 
@@ -107,7 +107,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alteracoes" }).click();
 
-    await page.waitForURL(/\/pets\/.+$/);
+    await page.waitForURL(/\/pets\/[^/]+$/);
 
     // Sexo e Porte aparecem no perfil
     await expect(page.getByText("Fêmea", { exact: true })).toBeVisible();
@@ -133,7 +133,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alteracoes" }).click();
 
-    await page.waitForURL(/\/pets\/.+$/);
+    await page.waitForURL(/\/pets\/[^/]+$/);
 
     // No perfil, os valores são exibidos como "Sim" ou "Nao"
     const checkFact = async (label: string, expectedValue: string) => {
@@ -161,7 +161,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alteracoes" }).click();
 
-    await page.waitForURL(/\/pets\/.+$/);
+    await page.waitForURL(/\/pets\/[^/]+$/);
 
     // No perfil as personalidades aparecem em uma lista
     await expect(page.getByText("Brincalhão")).toBeVisible();
