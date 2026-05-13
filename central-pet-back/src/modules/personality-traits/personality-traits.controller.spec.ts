@@ -7,18 +7,20 @@ describe('Controlador de traços de personalidade', () => {
 
   beforeEach(() => {
     const serviceMock = {
-      findAll: jest.fn(async () => ({
-        message: 'Personality traits retrieved successfully',
-        data: [
-          {
-            id: 'calm',
-            title: 'Calmo',
-            description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
-            conflictsWith: ['energetic'],
-            iconSvg: '<svg viewBox="0 0 24 24"></svg>',
-          },
-        ],
-      })),
+      findAll: jest.fn(() =>
+        Promise.resolve({
+          message: 'Personality traits retrieved successfully',
+          data: [
+            {
+              id: 'calm',
+              title: 'Calmo',
+              description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+              conflictsWith: ['energetic'],
+              iconSvg: '<svg viewBox="0 0 24 24"></svg>',
+            },
+          ],
+        }),
+      ),
     } as unknown as PersonalityTraitsService;
 
     controller = new PersonalityTraitsController(serviceMock);

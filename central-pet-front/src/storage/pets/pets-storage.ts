@@ -6,15 +6,18 @@ export const petProfilesStorageKey = 'central-pet:pet-profiles';
 const validSpecies = new Set(['dog', 'cat']);
 
 export interface PetProfileRecord {
-  id: number;
+  id: string | number;
   formData: PetRegisterFormData;
   selectedPersonalities: string[];
 }
 
 const isPetProfileRecordLike = (
   value: unknown,
-): value is { id: number; formData?: unknown; selectedPersonalities?: unknown } =>
-  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'number';
+): value is { id: string | number; formData?: unknown; selectedPersonalities?: unknown } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'id' in value &&
+  (typeof value.id === 'string' || typeof value.id === 'number');
 
 const normalizePetProfileRecord = (value: unknown): PetProfileRecord | undefined => {
   if (!isPetProfileRecordLike(value)) {
@@ -38,7 +41,7 @@ const isPetLike = (value: unknown): value is Pet =>
   typeof value === 'object' &&
   value !== null &&
   'id' in value &&
-  typeof value.id === 'number' &&
+  (typeof value.id === 'string' || typeof value.id === 'number') &&
   'name' in value &&
   typeof value.name === 'string' &&
   'species' in value &&
@@ -110,8 +113,8 @@ export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
   return updatedPets;
 };
 
-export const getPetById = (petId: number): Pet | undefined =>
-  getStoredPets().find((pet) => pet.id === petId);
+export const getPetById = (petId: string | number): Pet | undefined =>
+  getStoredPets().find((pet) => String(pet.id) === String(petId));
 
 const normalizeTextForComparison = (value: string) =>
   value
@@ -151,7 +154,7 @@ export const buildRegisterFormDataFromPet = (pet: Pet): PetRegisterFormData => {
   };
 };
 
-export const getPetProfileById = (petId: number): PetProfileRecord | undefined => {
+export const getPetProfileById = (petId: string | number): PetProfileRecord | undefined => {
   const rawProfiles = window.localStorage.getItem(petProfilesStorageKey);
 
   if (!rawProfiles) {
@@ -170,7 +173,7 @@ export const getPetProfileById = (petId: number): PetProfileRecord | undefined =
       .map((profile) => normalizePetProfileRecord(profile))
       .filter((profile): profile is PetProfileRecord => profile !== undefined);
 
-    return normalizedProfiles.find((profile) => profile.id === petId);
+    return normalizedProfiles.find((profile) => String(profile.id) === String(petId));
   } catch {
     window.localStorage.removeItem(petProfilesStorageKey);
     return undefined;

@@ -34,7 +34,6 @@ function makeRequest(
   overrides: Partial<ReceivedAdoptionRequest> & { id: string },
 ): ReceivedAdoptionRequest {
   return {
-    id: overrides.id,
     pet: {
       id: 'pet-1',
       name: overrides.pet?.name ?? 'Pet Teste',
@@ -112,7 +111,7 @@ const cancelledRequest = makeRequest({
 describe('AdoptionRequestsPage', () => {
   beforeEach(() => {
     getMock.mockReset();
-    getMock.mockImplementation((url: string, { params }: { params: { type: string } }) => {
+    getMock.mockImplementation((_url: string, { params }: { params: { type: string } }) => {
       if (params.type === 'received') {
         return Promise.resolve({
           data: { data: [approvedRequest, pendingRequest, cancelledRequest] },
@@ -191,7 +190,7 @@ describe('AdoptionRequestsPage', () => {
   });
 
   it('exibe mensagem de vazio quando o filtro não retorna resultados', async () => {
-    getMock.mockImplementation((url: string, { params }: { params: { type: string } }) => {
+    getMock.mockImplementation((_url: string, { params }: { params: { type: string } }) => {
       if (params.type === 'received') {
         return Promise.resolve({
           data: { data: [approvedRequest] },

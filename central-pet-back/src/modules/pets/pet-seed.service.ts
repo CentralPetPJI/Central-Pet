@@ -27,6 +27,7 @@ export class PetSeedService {
         update: {},
         create: {
           id: String(pet.id),
+          publicId: String(pet.id),
           name: pet.name,
           ageText: pet.ageMonths ? `${pet.ageMonths} meses` : 'Idade não informada',
           species: PetMapper.mapSpeciesToPersistence(pet.species),

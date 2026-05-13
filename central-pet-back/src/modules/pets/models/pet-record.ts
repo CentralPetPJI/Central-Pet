@@ -40,16 +40,11 @@ export type PetResponseRecord = PetRecord & PetLocation;
 
 export type PetForAdoptionRequest = Pick<
   PetResponseRecord,
-  | 'id'
-  | 'name'
-  | 'species'
-  | 'city'
-  | 'state'
-  | 'responsibleUserId'
-  | 'sourceType'
-  | 'sourceName'
-  | 'adoptionStatus'
->;
+  'id' | 'name' | 'species' | 'city' | 'state' | 'responsibleUserId' | 'sourceType' | 'sourceName'
+> & {
+  internalId: string;
+  adoptionStatus: PetAdoptionStatus;
+};
 
 const normalizeSpecies = (species: string): string => {
   const speciesMap: Record<string, string> = {

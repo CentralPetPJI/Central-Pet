@@ -66,6 +66,7 @@ describe('Servico de solicitacoes de adocao', () => {
         'pet-001',
         {
           id: 'pet-001',
+          internalId: 'pet-001',
           name: 'Mimi',
           species: 'CAT',
           city: 'Sao Paulo',
@@ -80,6 +81,7 @@ describe('Servico de solicitacoes de adocao', () => {
         'pet-002',
         {
           id: 'pet-002',
+          internalId: 'pet-002',
           name: 'Rex',
           species: 'DOG',
           city: 'Sao Paulo',
@@ -374,6 +376,7 @@ describe('Servico de solicitacoes de adocao', () => {
     };
 
     const petsServiceMock = {
+      resolveInternalId: jest.fn((id: string) => Promise.resolve(id)),
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
       finalizeAdoption: jest.fn((id: string, newResponsibleUserId: string) => {
         const pet = petsById.get(id);

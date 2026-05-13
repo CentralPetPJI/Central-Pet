@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { customAlphabet } from 'nanoid';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuditService } from '@/modules/audit/audit.service';
 import { PersonalityTraitsService } from '../personality-traits/personality-traits.service';
@@ -8,7 +9,10 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 export type { PetForAdoptionRequest } from './models/pet-record';
+
+const generatePetPublicIdSuffix = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 12);
 
 type ResponsibleLocation = {
   city: string;
@@ -131,9 +135,7 @@ export class PetsService {
     const traits = await this.personalityTraitsService.getAllTraits();
     const traitMap = new Map(traits.map((trait) => [trait.id, trait]));
 
-    const invalidTraits = selectedPersonalities.filter(
-      (traitId) => !traitMap.has(traitId),
-    );
+    const invalidTraits = selectedPersonalities.filter((traitId) => !traitMap.has(traitId));
 
     if (invalidTraits.length > 0) {
       throw new BadRequestException(
@@ -163,6 +165,39 @@ export class PetsService {
     await this.petSeedService.ensureSeed();
   }
 
+  private generatePetPublicId(): string {
+    return `pet_${generatePetPublicIdSuffix()}`;
+  }
+
+  async resolveInternalId(identifier: string): Promise<string | null> {
+    const byId = await this.prisma.pet.findUnique({
+      where: { id: identifier },
+      select: { id: true },
+    });
+
+    if (byId) {
+      return byId.id;
+    }
+
+    const byPublicId = await this.prisma.pet.findUnique({
+      where: { publicId: identifier },
+      select: { id: true },
+    });
+
+    return byPublicId?.id ?? null;
+  }
+
+  private async findPetByIdentifier(identifier: string) {
+    const internalId = await this.resolveInternalId(identifier);
+    if (!internalId) {
+      return null;
+    }
+
+    return this.prisma.pet.findUnique({
+      where: { id: internalId },
+    });
+  }
+
   async create(createPetDto: CreatePetDto, responsibleUserId: string) {
     const selectedPersonalities = createPetDto.selectedPersonalities ?? [];
     await this.validateSelectedPersonalities(selectedPersonalities);
@@ -170,32 +205,54 @@ export class PetsService {
     await this.userPersistence.validateUser(responsibleUserId);
     const responsibleMetadata = await this.getResponsiblePetMetadata(responsibleUserId);
 
-    const createdPet = await this.prisma.pet.create({
-      data: {
-        profilePhoto: createPetDto.profilePhoto,
-        galleryPhotosJson: createPetDto.galleryPhotos ?? [],
-        name: createPetDto.name,
-        ageText: createPetDto.age,
-        species: PetMapper.mapSpeciesToPersistence(createPetDto.species),
-        breed: createPetDto.breed,
-        sex: PetMapper.mapSexToPersistence(createPetDto.sex),
-        size: PetMapper.mapSizeToPersistence(createPetDto.size),
-        microchipped: createPetDto.microchipped,
-        vaccinated: createPetDto.vaccinated,
-        neutered: createPetDto.neutered,
-        dewormed: createPetDto.dewormed,
-        needsHealthCare: createPetDto.needsHealthCare,
-        physicalLimitation: createPetDto.physicalLimitation,
-        visualLimitation: createPetDto.visualLimitation,
-        hearingLimitation: createPetDto.hearingLimitation,
-        selectedPersonalitiesJson: selectedPersonalities,
-        responsibleUserId,
-        sourceType: PetMapper.mapSourceTypeToPersistence(responsibleMetadata.sourceType),
-        sourceName: responsibleMetadata.sourceName,
-        status: 'AVAILABLE',
-        deleted: false,
-      },
-    });
+    let createdPet: Awaited<ReturnType<PrismaService['pet']['create']>> | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const publicId = this.generatePetPublicId();
+      try {
+        createdPet = await this.prisma.pet.create({
+          data: {
+            publicId,
+            profilePhoto: createPetDto.profilePhoto,
+            galleryPhotosJson: createPetDto.galleryPhotos ?? [],
+            name: createPetDto.name,
+            ageText: createPetDto.age,
+            species: PetMapper.mapSpeciesToPersistence(createPetDto.species),
+            breed: createPetDto.breed,
+            sex: PetMapper.mapSexToPersistence(createPetDto.sex),
+            size: PetMapper.mapSizeToPersistence(createPetDto.size),
+            microchipped: createPetDto.microchipped,
+            vaccinated: createPetDto.vaccinated,
+            neutered: createPetDto.neutered,
+            dewormed: createPetDto.dewormed,
+            needsHealthCare: createPetDto.needsHealthCare,
+            physicalLimitation: createPetDto.physicalLimitation,
+            visualLimitation: createPetDto.visualLimitation,
+            hearingLimitation: createPetDto.hearingLimitation,
+            selectedPersonalitiesJson: selectedPersonalities,
+            responsibleUserId,
+            sourceType: PetMapper.mapSourceTypeToPersistence(responsibleMetadata.sourceType),
+            sourceName: responsibleMetadata.sourceName,
+            status: 'AVAILABLE',
+            deleted: false,
+          },
+        });
+        break;
+      } catch (error) {
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === 'P2002' &&
+          Array.isArray(error.meta?.target) &&
+          error.meta.target.includes('publicId')
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!createdPet) {
+      throw new BadRequestException('Falha ao gerar identificador público único para o pet.');
+    }
 
     if (this.auditService) {
       await this.auditService.create({
@@ -255,9 +312,7 @@ export class PetsService {
   async findOne(id: string) {
     await this.ensureMockPetsSeededIfEnabled();
 
-    const pet = await this.prisma.pet.findUnique({
-      where: { id },
-    });
+    const pet = await this.findPetByIdentifier(id);
 
     if (!pet || pet.deleted) {
       throw new NotFoundException(`Pet com id "${id}" não encontrado`);
@@ -275,9 +330,7 @@ export class PetsService {
   async findByIdForAdoption(id: string): Promise<PetForAdoptionRequest | null> {
     await this.ensureMockPetsSeededIfEnabled();
 
-    const pet = await this.prisma.pet.findUnique({
-      where: { id },
-    });
+    const pet = await this.findPetByIdentifier(id);
 
     if (!pet || pet.deleted || !pet.responsibleUserId) {
       return null;
@@ -286,6 +339,7 @@ export class PetsService {
     const responsibleLocation = await this.getResponsibleLocation(pet.responsibleUserId);
     const petRecord = PetMapper.toDomain(pet);
     return {
+      internalId: pet.id,
       id: petRecord.id,
       name: petRecord.name,
       species: petRecord.species,
@@ -299,14 +353,18 @@ export class PetsService {
   }
 
   async finalizeAdoption(id: string, newResponsibleUserId: string) {
-    const existingPet = await this.prisma.pet.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        responsibleUserId: true,
-        deleted: true,
-      },
-    });
+    const internalId = await this.resolveInternalId(id);
+
+    const existingPet = internalId
+      ? await this.prisma.pet.findUnique({
+          where: { id: internalId },
+          select: {
+            id: true,
+            responsibleUserId: true,
+            deleted: true,
+          },
+        })
+      : null;
 
     if (!existingPet || existingPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
@@ -317,7 +375,7 @@ export class PetsService {
     }
 
     const updatedPet = await this.prisma.pet.update({
-      where: { id },
+      where: { id: existingPet.id },
       data: {
         responsibleUserId: newResponsibleUserId,
         status: 'ADOPTED',
@@ -334,10 +392,13 @@ export class PetsService {
   }
 
   async update(id: string, updatePetDto: UpdatePetDto) {
-    const currentPet = await this.prisma.pet.findUnique({
-      where: { id },
-      select: { id: true, deleted: true },
-    });
+    const internalId = await this.resolveInternalId(id);
+    const currentPet = internalId
+      ? await this.prisma.pet.findUnique({
+          where: { id: internalId },
+          select: { id: true, deleted: true },
+        })
+      : null;
 
     if (!currentPet || currentPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
@@ -348,7 +409,7 @@ export class PetsService {
     }
 
     const updatedPet = await this.prisma.pet.update({
-      where: { id },
+      where: { id: currentPet.id },
       data: {
         profilePhoto: updatePetDto.profilePhoto,
         galleryPhotosJson: updatePetDto.galleryPhotos,
@@ -389,17 +450,20 @@ export class PetsService {
   }
 
   async remove(id: string) {
-    const currentPet = await this.prisma.pet.findUnique({
-      where: { id },
-      select: { id: true, deleted: true },
-    });
+    const internalId = await this.resolveInternalId(id);
+    const currentPet = internalId
+      ? await this.prisma.pet.findUnique({
+          where: { id: internalId },
+          select: { id: true, deleted: true },
+        })
+      : null;
 
     if (!currentPet || currentPet.deleted) {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
     const deletedPet = await this.prisma.pet.update({
-      where: { id },
+      where: { id: currentPet.id },
       data: {
         deleted: true,
         status: 'UNAVAILABLE',

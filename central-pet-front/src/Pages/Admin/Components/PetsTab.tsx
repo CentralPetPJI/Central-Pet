@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Eye, EyeOff } from 'lucide-react';
 import { resolvePublicId } from '@/storage/pets/pet-helpers';
@@ -15,55 +15,51 @@ export function PetsTab() {
   const [limit] = useState<number>(12);
   const [total, setTotal] = useState<number>(0);
 
-  const fetchPets = async (userId?: string, pageNum = 1) => {
-    setLoading(true);
-    try {
-      const url = new URL('/admin/pets', window.location.origin);
-      if (userId) url.searchParams.set('userId', String(userId));
-      url.searchParams.set('page', String(pageNum));
-      url.searchParams.set('limit', String(limit));
+  const fetchPets = useCallback(
+    async (userId?: string, pageNum = 1) => {
+      setLoading(true);
+      try {
+        const url = new URL('/admin/pets', window.location.origin);
+        if (userId) url.searchParams.set('userId', String(userId));
+        url.searchParams.set('page', String(pageNum));
+        url.searchParams.set('limit', String(limit));
 
-      const response = await api.get(url.pathname + url.search);
-      const payload = response.data ?? {};
-      setPets(payload.data ?? []);
-      setTotal(payload.total ?? 0);
-      setPage(payload.page ?? pageNum);
-    } catch (_error) {
-      // verificar log dos pets
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await api.get(url.pathname + url.search);
+        const payload = response.data ?? {};
+        setPets(payload.data ?? []);
+        setTotal(payload.total ?? 0);
+        setPage(payload.page ?? pageNum);
+      } catch (_error) {
+        // verificar log dos pets
+      } finally {
+        setLoading(false);
+      }
+    },
+    [limit],
+  );
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await api.get('/admin/users');
       setUsers(response.data ?? []);
     } catch (_error) {
       //
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-    fetchPets();
   }, []);
 
   useEffect(() => {
-    // quando o filtro mudar, resetar para a página 1 e recarregar pets
-    setPage(1);
-    fetchPets(filterUserId, 1);
-  }, [filterUserId]);
+    void fetchUsers();
+  }, [fetchUsers]);
 
   useEffect(() => {
     // quando a página mudar, buscar a nova página
-    fetchPets(filterUserId, page);
-  }, [page]);
+    void fetchPets(filterUserId, page);
+  }, [fetchPets, filterUserId, page]);
 
   const toggleDeletion = async (petId: string) => {
     try {
       await api.patch(`/admin/pets/${petId}/toggle-deletion`);
-      fetchPets(filterUserId, page);
+      void fetchPets(filterUserId, page);
     } catch (_error) {
       //
     }
@@ -79,7 +75,10 @@ export function PetsTab() {
         <label className="text-sm text-gray-700">Filtrar por usuário:</label>
         <select
           value={filterUserId ?? ''}
-          onChange={(e) => setFilterUserId(e.target.value || undefined)}
+          onChange={(e) => {
+            setFilterUserId(e.target.value || undefined);
+            setPage(1);
+          }}
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Todos</option>

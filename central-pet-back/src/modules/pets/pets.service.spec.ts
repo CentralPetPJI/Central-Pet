@@ -11,6 +11,7 @@ import { PetSeedService } from './pet-seed.service';
 
 type PrismaPetRecord = {
   id: string;
+  publicId: string;
   profilePhoto: string;
   galleryPhotosJson: unknown[] | null;
   name: string;
@@ -176,8 +177,9 @@ describe('PetsService', () => {
               const matchesSex = args?.where?.sex ? record.sex === args.where.sex : true;
               const matchesSize = args?.where?.size ? record.size === args.where.size : true;
               const matchesState = args?.where?.responsibleUser?.state
-                ? userRecords.get(record.responsibleUserId)?.state ===
-                  args.where.responsibleUser.state
+                ? record.responsibleUserId !== null &&
+                  userRecords.get(record.responsibleUserId)?.state ===
+                    args.where.responsibleUser.state
                 : true;
 
               return (
@@ -192,17 +194,27 @@ describe('PetsService', () => {
             });
           },
         ),
-        findUnique: jest.fn((args: { where: { id: string }; select?: Record<string, boolean> }) => {
-          const found = records.find((record) => record.id === args.where.id) ?? null;
+        findUnique: jest.fn(
+          (args: {
+            where: { id?: string; publicId?: string };
+            select?: Record<string, boolean>;
+          }) => {
+            const found =
+              records.find((record) =>
+                args.where.id !== undefined
+                  ? record.id === args.where.id
+                  : record.publicId === args.where.publicId,
+              ) ?? null;
 
-          if (!found || !args.select) {
-            return found;
-          }
+            if (!found || !args.select) {
+              return found;
+            }
 
-          return Object.fromEntries(
-            Object.keys(args.select).map((key) => [key, found[key as keyof PrismaPetRecord]]),
-          );
-        }),
+            return Object.fromEntries(
+              Object.keys(args.select).map((key) => [key, found[key as keyof PrismaPetRecord]]),
+            );
+          },
+        ),
         update: jest.fn(
           (args: {
             where: { id: string };
@@ -290,32 +302,35 @@ describe('PetsService', () => {
     };
 
     const personalityTraitsMock = {
-      getAllTraits: jest.fn(async () => [
-        {
-          id: 'playful',
-          title: 'Brincalhão',
-          description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
-          conflictsWith: [],
-        },
-        {
-          id: 'friendly',
-          title: 'Sociável',
-          description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
-          conflictsWith: [],
-        },
-        {
-          id: 'calm',
-          title: 'Calmo',
-          description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
-          conflictsWith: ['energetic'],
-        },
-        {
-          id: 'energetic',
-          title: 'Agitado',
-          description: 'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
-          conflictsWith: ['calm'],
-        },
-      ]),
+      getAllTraits: jest.fn(() =>
+        Promise.resolve([
+          {
+            id: 'playful',
+            title: 'Brincalhão',
+            description: 'Adora interagir, correr e transformar qualquer momento em diversão.',
+            conflictsWith: [],
+          },
+          {
+            id: 'friendly',
+            title: 'Sociável',
+            description: 'Recebe bem visitas, outros pets e busca companhia com facilidade.',
+            conflictsWith: [],
+          },
+          {
+            id: 'calm',
+            title: 'Calmo',
+            description: 'Prefere rotinas tranquilas, cochilos longos e ambientes serenos.',
+            conflictsWith: ['energetic'],
+          },
+          {
+            id: 'energetic',
+            title: 'Agitado',
+            description:
+              'Tem muita energia, gosta de movimento e precisa de atividades frequentes.',
+            conflictsWith: ['calm'],
+          },
+        ]),
+      ),
     } as unknown as PersonalityTraitsService;
 
     const userPersistenceMock = {
@@ -552,6 +567,7 @@ describe('PetsService', () => {
   it('deve retornar null para adoção quando pet não tiver responsável', async () => {
     records.push({
       id: 'pet-no-owner',
+      publicId: 'pet-no-owner',
       profilePhoto: '',
       galleryPhotosJson: [],
       name: 'Sem Dono',

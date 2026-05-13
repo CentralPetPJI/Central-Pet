@@ -64,7 +64,7 @@ export class AdoptionRequestSimulationService {
   async validateSimulationPrerequisites(
     dto: SimulateAdoptionRequestDto,
     mockAdopter: MockUser,
-  ): Promise<void> {
+  ): Promise<NonNullable<Awaited<ReturnType<PetsService['findByIdForAdoption']>>>> {
     const pet = await this.petsService.findByIdForAdoption(dto.petId);
 
     if (!pet) {
@@ -93,6 +93,8 @@ export class AdoptionRequestSimulationService {
         'Você já possui uma solicitação para este doador. Aguarde o andamento da solicitação atual.',
       );
     }
+
+    return pet;
   }
 
   async simulateReceived(userId: string, dto: SimulateAdoptionRequestDto) {
@@ -103,11 +105,11 @@ export class AdoptionRequestSimulationService {
       dto.adopterId,
     );
 
-    await this.validateSimulationPrerequisites(dto, mockAdopter);
+    const pet = await this.validateSimulationPrerequisites(dto, mockAdopter);
 
     const request = await this.prisma.adoptionRequest.create({
       data: {
-        petId: dto.petId,
+        petId: pet.internalId,
         responsibleUserId: dto.petResponsibleUserId,
         adopterId: mockAdopter.id,
         adopterContactShareConsent: dto.adopterContactShareConsent ?? false,

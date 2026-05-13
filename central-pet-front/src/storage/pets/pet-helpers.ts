@@ -1,10 +1,4 @@
 import type { Pet, PetApiResponse } from '@/Models/pet';
-import {
-  ensurePublicId,
-  getBackendIdFromPublic,
-  getPublicIdFromBackend,
-  saveBatchPublicIdMappings,
-} from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
 import type { PetPersonalityApiOption } from './pet-personality-options';
 
@@ -13,8 +7,7 @@ import type { PetPersonalityApiOption } from './pet-personality-options';
  * Garante que todos recebam IDs publicos sem colisoes, mesmo entre multiplas abas
  */
 export const ensureAllPublicIds = (apiPets: PetApiResponse[]): void => {
-  const backendIds = apiPets.map((pet) => pet.id);
-  saveBatchPublicIdMappings(backendIds);
+  void apiPets;
 };
 
 /**
@@ -41,8 +34,6 @@ export const mapApiResponseToPet = (
   apiPet: PetApiResponse,
   personalityOptions?: PetPersonalityApiOption[],
 ): Pet => {
-  const publicId = ensurePublicId(apiPet.id, apiPet.name);
-
   const personalityText = formatSelectedPersonalities(
     apiPet.selectedPersonalities,
     personalityOptions,
@@ -56,7 +47,7 @@ export const mapApiResponseToPet = (
     : 'Localizacao nao informada';
 
   return {
-    id: publicId,
+    id: apiPet.id,
     name: apiPet.name,
     species: apiPet.species,
     photo: apiPet.profilePhoto,
@@ -77,31 +68,24 @@ export const mapApiResponseToPet = (
  * Retorna o ID apropriado para navegacao/rotas
  * Sempre retorna o publicId (numero sequencial)
  */
-export const getPetRouteId = (pet: Pet): number => {
-  return typeof pet.id === 'number' ? pet.id : parseInt(String(pet.id), 10);
+export const getPetRouteId = (pet: Pet): string | number => {
+  return pet.id;
 };
 
 export const resolvePublicId = (backendId: string): string | number => {
-  // Tenta buscar publicId para o backendId
-  const publicId = getPublicIdFromBackend(backendId);
-  // Se encontrou mapeamento, retorna publicId; senão retorna o próprio backendId
-  return publicId ?? backendId;
+  return backendId;
 };
 
 /**
  * Converte ID da rota (publicId) para backendId (UUID) se necessario
  */
 export const resolveBackendId = (routeId: string | number): string | number => {
-  const publicId = typeof routeId === 'string' ? parseInt(routeId, 10) : routeId;
-  const backendId = getBackendIdFromPublic(publicId);
-
-  return backendId ?? publicId;
+  return routeId;
 };
 
 /**
  * Verifica se o pet e do backend (tem mapeamento publico)
  */
 export const isBackendPet = (pet: Pet): boolean => {
-  if (typeof pet.id !== 'number') return false;
-  return getBackendIdFromPublic(pet.id) !== undefined;
+  return typeof pet.id === 'string';
 };

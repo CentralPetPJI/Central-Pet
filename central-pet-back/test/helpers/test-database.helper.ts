@@ -109,6 +109,7 @@ export class TestDatabaseHelper {
       Array.from({ length: quantity }, (_, index) =>
         this.prisma.pet.create({
           data: {
+            publicId: `pet_seed_${ownerTag}_${index + 1}`,
             name: `Pet Seed ${index + 1}`,
             ageText: '2 anos',
             species: 'DOG',
