@@ -87,7 +87,7 @@ export const getStoredPets = (): Pet[] => {
 
 export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
   const currentPets = getStoredPets();
-  const filteredPets = currentPets.filter((currentPet) => currentPet.id !== pet.id);
+  const filteredPets = currentPets.filter((currentPet) => String(currentPet.id) !== String(pet.id));
   const updatedPets = [pet, ...filteredPets];
   window.localStorage.setItem(petsStorageKey, JSON.stringify(updatedPets));
 
@@ -99,7 +99,7 @@ export const savePet = (pet: Pet, profileRecord: PetProfileRecord): Pet[] => {
       ? ((JSON.parse(rawProfiles) as PetProfileRecord[]) ?? [])
       : [];
     filteredProfiles = Array.isArray(currentProfiles)
-      ? currentProfiles.filter((profile) => profile?.id !== profileRecord.id)
+      ? currentProfiles.filter((profile) => String(profile?.id) !== String(profileRecord.id))
       : [];
   } catch {
     window.localStorage.removeItem(petProfilesStorageKey);

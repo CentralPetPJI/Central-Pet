@@ -77,12 +77,18 @@ export class AdoptionRequestSimulationService {
       );
     }
 
-    await this.userPersistence.ensureUsersExist([dto.petResponsibleUserId, mockAdopter.id]);
+    if (pet.responsibleUserId !== dto.petResponsibleUserId) {
+      throw new BadRequestException(
+        'O responsável informado não corresponde ao responsável atual do pet.',
+      );
+    }
+
+    await this.userPersistence.ensureUsersExist([pet.responsibleUserId, mockAdopter.id]);
 
     const existingRequest = await this.prisma.adoptionRequest.findFirst({
       where: {
         adopterId: mockAdopter.id,
-        responsibleUserId: dto.petResponsibleUserId,
+        responsibleUserId: pet.responsibleUserId,
         status: { in: [AdoptionRequestStatus.PENDING, AdoptionRequestStatus.CONTACT_SHARED] },
       },
       select: { id: true },
@@ -110,7 +116,7 @@ export class AdoptionRequestSimulationService {
     const request = await this.prisma.adoptionRequest.create({
       data: {
         petId: pet.internalId,
-        responsibleUserId: dto.petResponsibleUserId,
+        responsibleUserId: pet.responsibleUserId,
         adopterId: mockAdopter.id,
         adopterContactShareConsent: dto.adopterContactShareConsent ?? false,
         responsibleContactShareConsent: dto.responsibleContactShareConsent ?? false,

@@ -11,6 +11,7 @@ export function PetsTab() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filterUserId, setFilterUserId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(12);
   const [total, setTotal] = useState<number>(0);
@@ -18,19 +19,21 @@ export function PetsTab() {
   const fetchPets = useCallback(
     async (userId?: string, pageNum = 1) => {
       setLoading(true);
+      setError(null);
       try {
-        const url = new URL('/admin/pets', window.location.origin);
-        if (userId) url.searchParams.set('userId', String(userId));
-        url.searchParams.set('page', String(pageNum));
-        url.searchParams.set('limit', String(limit));
-
-        const response = await api.get(url.pathname + url.search);
+        const response = await api.get('/admin/pets', {
+          params: {
+            ...(userId ? { userId } : {}),
+            page: pageNum,
+            limit,
+          },
+        });
         const payload = response.data ?? {};
         setPets(payload.data ?? []);
         setTotal(payload.total ?? 0);
         setPage(payload.page ?? pageNum);
-      } catch (_error) {
-        // verificar log dos pets
+      } catch (_caughtError) {
+        setError('Não foi possível carregar os pets.');
       } finally {
         setLoading(false);
       }
@@ -42,8 +45,8 @@ export function PetsTab() {
     try {
       const response = await api.get('/admin/users');
       setUsers(response.data ?? []);
-    } catch (_error) {
-      //
+    } catch (_caughtError) {
+      setError('Não foi possível carregar os usuários para o filtro.');
     }
   }, []);
 
@@ -60,8 +63,8 @@ export function PetsTab() {
     try {
       await api.patch(`/admin/pets/${petId}/toggle-deletion`);
       void fetchPets(filterUserId, page);
-    } catch (_error) {
-      //
+    } catch (_caughtError) {
+      setError('Não foi possível atualizar o status do pet.');
     }
   };
 
@@ -71,6 +74,11 @@ export function PetsTab() {
 
   return (
     <div>
+      {error ? (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
       <div className="mb-4 flex items-center gap-4">
         <label className="text-sm text-gray-700">Filtrar por usuário:</label>
         <select

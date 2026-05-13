@@ -376,7 +376,7 @@ describe('Servico de solicitacoes de adocao', () => {
     };
 
     const petsServiceMock = {
-      resolveInternalId: jest.fn((id: string) => Promise.resolve(id)),
+      resolveInternalId: jest.fn((id: string) => Promise.resolve(petsById.has(id) ? id : null)),
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
       finalizeAdoption: jest.fn((id: string, newResponsibleUserId: string) => {
         const pet = petsById.get(id);
@@ -569,5 +569,30 @@ describe('Servico de solicitacoes de adocao', () => {
     } finally {
       randomSpy.mockRestore();
     }
+  });
+
+  it('deve retornar false no hasRequest quando nao houver resolucao de petId', async () => {
+    const hasRequest = await service.hasRequest(mockUserIds.RAFAEL_LIMA, 'pet-nao-existe');
+
+    expect(hasRequest).toBe(false);
+  });
+
+  it('deve considerar petId resolvido ao verificar hasRequest', async () => {
+    records.push({
+      id: 'req-existente',
+      petId: 'pet-001',
+      responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+      adopterId: mockUserIds.RAFAEL_LIMA,
+      adopterContactShareConsent: true,
+      message: 'Mensagem',
+      status: AdoptionRequestStatus.PENDING,
+      note: null,
+      requestedAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const hasRequest = await service.hasRequest(mockUserIds.RAFAEL_LIMA, 'pet-001');
+
+    expect(hasRequest).toBe(true);
   });
 });

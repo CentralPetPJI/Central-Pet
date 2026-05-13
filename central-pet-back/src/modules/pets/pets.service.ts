@@ -9,7 +9,7 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { Prisma } from '../../../generated/prisma/client';
 export type { PetForAdoptionRequest } from './models/pet-record';
 
 const generatePetPublicIdSuffix = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 12);
@@ -239,7 +239,7 @@ export class PetsService {
         break;
       } catch (error) {
         if (
-          error instanceof PrismaClientKnownRequestError &&
+          error instanceof Prisma.PrismaClientKnownRequestError &&
           error.code === 'P2002' &&
           Array.isArray(error.meta?.target) &&
           error.meta.target.includes('publicId')
