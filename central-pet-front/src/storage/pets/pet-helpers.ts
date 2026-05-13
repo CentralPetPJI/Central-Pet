@@ -7,6 +7,7 @@ import {
 } from './public-id-mapping';
 import { formatPetSex, formatPetSize } from '@/lib/formatters';
 import type { PetPersonalityApiOption } from './pet-personality-options';
+import { formatPetAge } from '@/lib/pet-age';
 
 /**
  * Sincroniza multiplos pets do backend em batch
@@ -50,7 +51,9 @@ export const mapApiResponseToPet = (
 
   const sex = formatPetSex(apiPet.sex) || 'Nao informado';
   const size = formatPetSize(apiPet.size) || 'Nao informado';
-  const physicalText = [apiPet.breed, apiPet.age, sex, `porte ${size}`].filter(Boolean).join(', ');
+  const physicalText = [apiPet.breed, formatPetAge(apiPet.age), sex, `Porte ${size}`]
+    .filter(Boolean)
+    .join(', ');
   const locationText = apiPet.city
     ? `${apiPet.city}${apiPet.state ? `/${apiPet.state}` : ''}`
     : 'Localizacao nao informada';

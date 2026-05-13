@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizePersonalityIconSvg } from './pet-personality-options';
+import { sanitizePersonalityIconSvg } from './pet-personality-sanitizer';
 
 describe('sanitizePersonalityIconSvg', () => {
   it('mantem SVG valido e remove conteudo inseguro antes da renderizacao', () => {

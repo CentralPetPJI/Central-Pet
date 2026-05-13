@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify';
+import { sanitizePersonalityIconSvg } from './pet-personality-sanitizer';
 
 export interface PetPersonalityOption {
   id: string;
@@ -11,11 +11,6 @@ export interface PetPersonalityOption {
 export type PetPersonalityApiOption = PetPersonalityOption;
 
 export const petPersonalityStorageKey = 'central-pet:selected-personalities';
-
-export const sanitizePersonalityIconSvg = (iconSvg: string): string =>
-  DOMPurify.sanitize(iconSvg, {
-    USE_PROFILES: { svg: true, svgFilters: true },
-  });
 
 interface PersonalityTraitIconProps {
   iconSvg: string;

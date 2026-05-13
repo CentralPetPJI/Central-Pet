@@ -21,10 +21,10 @@ export {
 export {
   PersonalityTraitIcon,
   petPersonalityStorageKey,
-  sanitizePersonalityIconSvg,
   type PetPersonalityApiOption,
   type PetPersonalityOption,
 } from './pet-personality-options';
+export { sanitizePersonalityIconSvg } from './pet-personality-sanitizer';
 export { getPetRouteId, isBackendPet, mapApiResponseToPet, resolveBackendId } from './pet-helpers';
 export {
   ensurePublicId,

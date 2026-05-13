@@ -7,6 +7,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { makePrismaMock } from '@/utils/prisma-mock';
 import { UserPersistenceService } from '@/modules/users/user-persistence.service';
 import { hashPassword, verifyPassword } from '../auth/password.util';
+import type { User } from '../../../generated/prisma/client';
 
 jest.mock('../auth/password.util');
 
@@ -127,8 +128,7 @@ describe('UsersService', () => {
       prismaMock.user.findUnique.mockResolvedValue({
         id: userId,
         passwordHash,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as User);
       (verifyPassword as jest.Mock).mockReset();
       (hashPassword as jest.Mock).mockReset();
     });

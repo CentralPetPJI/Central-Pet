@@ -77,6 +77,7 @@ export interface ReceivedAdoptionRequest {
     responsibleUserId: string;
     sourceType: 'ONG' | 'PESSOA_FISICA' | 'ADMIN';
     sourceName: string;
+    adoptionStatus: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
   };
   adopter: {
     id: string;
@@ -101,6 +102,7 @@ export interface ReceivedAdoptionRequest {
   adopterContactShareConsent: boolean;
   status: AdoptionRequestStatus;
   note?: string;
+  blockNote?: string;
   requestedAt: string;
   updatedAt: string;
 }

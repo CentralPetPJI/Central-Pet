@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdoptionRequestsPage from '@/Pages/AdoptionRequests/AdoptionRequestsPage';
@@ -33,8 +33,8 @@ vi.mock('@/storage/pets', () => ({
 function makeRequest(
   overrides: Partial<ReceivedAdoptionRequest> & { id: string },
 ): ReceivedAdoptionRequest {
-  return {
-    id: overrides.id,
+  const baseRequest: ReceivedAdoptionRequest = {
+    id: 'req-base',
     pet: {
       id: 'pet-1',
       name: overrides.pet?.name ?? 'Pet Teste',
@@ -44,6 +44,7 @@ function makeRequest(
       responsibleUserId: 'user-1',
       sourceType: 'PESSOA_FISICA',
       sourceName: 'Fulano',
+      adoptionStatus: 'AVAILABLE',
     },
     adopter: {
       id: 'adopter-1',
@@ -57,7 +58,12 @@ function makeRequest(
     status: overrides.status ?? AdoptionRequestStatus.PENDING,
     requestedAt: overrides.requestedAt ?? '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
+  };
+
+  return {
+    ...baseRequest,
     ...overrides,
+    id: overrides.id,
   };
 }
 
@@ -72,6 +78,7 @@ const pendingRequest = makeRequest({
     responsibleUserId: 'user-1',
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Fulano',
+    adoptionStatus: 'AVAILABLE',
   },
   status: AdoptionRequestStatus.PENDING,
   requestedAt: '2025-03-01T10:00:00Z',
@@ -88,6 +95,7 @@ const approvedRequest = makeRequest({
     responsibleUserId: 'user-1',
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Fulano',
+    adoptionStatus: 'AVAILABLE',
   },
   status: AdoptionRequestStatus.APPROVED,
   requestedAt: '2025-02-01T10:00:00Z',
@@ -104,15 +112,18 @@ const cancelledRequest = makeRequest({
     responsibleUserId: 'user-1',
     sourceType: 'PESSOA_FISICA',
     sourceName: 'Fulano',
+    adoptionStatus: 'UNAVAILABLE',
   },
   status: AdoptionRequestStatus.CANCELLED,
+  blockNote:
+    'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.',
   requestedAt: '2025-01-01T10:00:00Z',
 });
 
 describe('AdoptionRequestsPage', () => {
   beforeEach(() => {
     getMock.mockReset();
-    getMock.mockImplementation((url: string, { params }: { params: { type: string } }) => {
+    getMock.mockImplementation((_url: string, { params }: { params: { type: string } }) => {
       if (params.type === 'received') {
         return Promise.resolve({
           data: { data: [approvedRequest, pendingRequest, cancelledRequest] },
@@ -190,8 +201,32 @@ describe('AdoptionRequestsPage', () => {
     expect(screen.getByText('Cancelada')).toBeInTheDocument();
   });
 
+  it('mostra bloqueio e remove acesso ao perfil quando o pet está indisponível', async () => {
+    render(
+      <MemoryRouter>
+        <AdoptionRequestsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Bolinha')).toBeInTheDocument();
+    });
+
+    const unavailableCard = screen.getByText('Bolinha').closest('article');
+    expect(unavailableCard).not.toBeNull();
+    expect(
+      within(unavailableCard as HTMLElement).getByText(/Bloqueio do pet:/i),
+    ).toBeInTheDocument();
+    expect(
+      within(unavailableCard as HTMLElement).getByText('Perfil indisponível'),
+    ).toBeInTheDocument();
+    expect(
+      within(unavailableCard as HTMLElement).queryByRole('link', { name: /Ver perfil do pet/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('exibe mensagem de vazio quando o filtro não retorna resultados', async () => {
-    getMock.mockImplementation((url: string, { params }: { params: { type: string } }) => {
+    getMock.mockImplementation((_url: string, { params }: { params: { type: string } }) => {
       if (params.type === 'received') {
         return Promise.resolve({
           data: { data: [approvedRequest] },

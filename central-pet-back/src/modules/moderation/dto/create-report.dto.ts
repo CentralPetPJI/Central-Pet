@@ -1,10 +1,10 @@
-import { IsString, IsNotEmpty, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { ModerationTargetType } from '../../../../generated/prisma/client';
 
 export class CreateReportDto {
-  @IsString()
+  @IsEnum(ModerationTargetType)
   @IsNotEmpty()
-  @IsIn(['PET', 'USER'])
-  targetType: string;
+  targetType: ModerationTargetType;
 
   @IsString()
   @IsNotEmpty()

@@ -34,7 +34,7 @@ export const usePets = (filters?: UsePetsFilters): UsePetsResult => {
 
     try {
       const [response, personalityResponse] = await Promise.all([
-        api.get<{ data: PetApiResponse[] }>('/pets'),
+        api.get<{ data: PetApiResponse[] }>('/pets', { params: filters }),
         api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
       ]);
       const personalityOptions = personalityResponse?.data.data ?? [];

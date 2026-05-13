@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
 import { routes } from '@/routes';
@@ -6,7 +6,14 @@ import { usePets } from '@/lib/pets';
 import { SITE_NAME } from '@/lib/site-config';
 
 const MainPage: React.FC = () => {
-  const { pets, isLoading, error } = usePets();
+  const filters = useMemo(
+    () => ({
+      adoptionStatus: 'AVAILABLE' as const,
+    }),
+    [],
+  );
+
+  const { pets, isLoading, error } = usePets(filters);
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">

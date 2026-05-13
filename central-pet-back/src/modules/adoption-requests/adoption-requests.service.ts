@@ -12,8 +12,7 @@ import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from 
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-
+import { Prisma } from '../../../generated/prisma/client';
 @Injectable()
 export class AdoptionRequestsService {
   constructor(
@@ -23,6 +22,10 @@ export class AdoptionRequestsService {
     private readonly petsService: PetsService,
     private readonly userPersistence: UserPersistenceService,
   ) {}
+
+  private buildUnavailablePetBlockNote(): string {
+    return 'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.';
+  }
 
   /**
    * Função auxiliar para resolver adotantes, pets e mapear solicitações de adoção para o formato de resposta da API.
@@ -44,21 +47,42 @@ export class AdoptionRequestsService {
     const persistedUsersById = await this.userPersistence.buildUserMap(allUserIds);
 
     const petsById = new Map<string, PetForAdoptionRequest | null>();
+    // Buscar pets incluindo soft-deleted para que solicitações existentes continuem visíveis
     await Promise.all(
       requests.map(async (r) => {
-        const pet = await this.petsService.findByIdForAdoption(r.petId);
+        const pet = await this.petsService.findByIdForAdoption(r.petId, { includeDeleted: true });
         petsById.set(r.petId, pet ?? null);
       }),
     );
 
     return requests.map((r) => {
       const petFound = petsById.get(r.petId);
+
+      let petForResponseObj: PetForAdoptionRequest;
+
       if (!petFound) {
-        // Solicitação deve sempre referenciar um pet existente; falha rápida para expor problemas de integridade de dados.
-        throw new NotFoundException(`Pet com id "${r.petId}" não encontrado`);
+        // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
+        petForResponseObj = {
+          id: r.petId,
+          name: 'Indisponível',
+          species: 'UNKNOWN',
+          city: '',
+          state: '',
+          responsibleUserId: r.responsibleUserId ?? undefined,
+          sourceType: undefined,
+          sourceName: undefined,
+          adoptionStatus: 'UNAVAILABLE',
+        };
+      } else {
+        petForResponseObj = petFound;
       }
 
-      const petForResponse = mapPetForResponse(petFound);
+      const petForResponse = mapPetForResponse(petForResponseObj);
+      const blockNote =
+        petForResponseObj.adoptionStatus === 'UNAVAILABLE'
+          ? this.buildUnavailablePetBlockNote()
+          : undefined;
+
       const adopterForResponse = mapAdopterForResponse(
         r.adopterId,
         persistedUsersById,
@@ -83,6 +107,7 @@ export class AdoptionRequestsService {
         responsibleContactShareConsent: r.responsibleContactShareConsent,
         status: r.status as unknown as AdoptionRequestStatus,
         note: r.note ?? undefined,
+        blockNote,
         requestedAt: r.requestedAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
       } as ReceivedAdoptionRequest;
@@ -169,49 +194,17 @@ export class AdoptionRequestsService {
       );
     }
 
-    // ensure both adopter and responsible user info are available for the response
-    const userIds = [updatedReq.adopterId];
-    if (updatedReq.responsibleUserId) userIds.push(updatedReq.responsibleUserId);
-    await this.userPersistence.ensureUsersExist(userIds);
-    const persistedUsersById = await this.userPersistence.buildUserMap(userIds);
+    const [mapped] = await this.mapRequestsToResponse([
+      updatedReq as unknown as AdoptionRequestRecord,
+    ]);
 
-    const petFound = await this.petsService.findByIdForAdoption(updatedReq.petId);
-    if (!petFound) {
-      throw new NotFoundException(`Pet com id "${updatedReq.petId}" não encontrado`);
+    if (!mapped) {
+      throw new NotFoundException(`Solicitação com id "${requestId}" não encontrada`);
     }
-
-    const petForResponse = mapPetForResponse(petFound);
-    const adopterForResponse = mapAdopterForResponse(
-      updatedReq.adopterId,
-      persistedUsersById,
-      updatedReq.adopterContactShareConsent,
-    );
-
-    const responsibleForResponse = updatedReq.responsibleUserId
-      ? mapAdopterForResponse(
-          updatedReq.responsibleUserId,
-          persistedUsersById,
-          updatedReq.responsibleContactShareConsent,
-        )
-      : undefined;
-
-    const data = {
-      id: updatedReq.id,
-      pet: petForResponse,
-      adopter: adopterForResponse,
-      responsible: responsibleForResponse,
-      message: updatedReq.message,
-      adopterContactShareConsent: updatedReq.adopterContactShareConsent,
-      responsibleContactShareConsent: updatedReq.responsibleContactShareConsent,
-      status: updatedReq.status as unknown as AdoptionRequestStatus,
-      note: updatedReq.note ?? undefined,
-      requestedAt: updatedReq.requestedAt.toISOString(),
-      updatedAt: updatedReq.updatedAt.toISOString(),
-    } as ReceivedAdoptionRequest;
 
     return {
       message: result.message,
-      data,
+      data: mapped,
       notification: result.notification,
     };
   }
@@ -278,7 +271,7 @@ export class AdoptionRequestsService {
         },
       })) as unknown as AdoptionRequestRecord;
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Você já possui uma solicitação pendente para este pet');
       }
       throw error;

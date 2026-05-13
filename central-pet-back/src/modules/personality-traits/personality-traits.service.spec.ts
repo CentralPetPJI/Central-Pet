@@ -5,7 +5,7 @@ import { PersonalityTraitsService } from './personality-traits.service';
 describe('PersonalityTraitsService', () => {
   const prismaMock = {
     personalityTrait: {
-      findMany: async () => [
+      findMany: () => [
         {
           id: 'playful',
           title: 'Brincalhão',

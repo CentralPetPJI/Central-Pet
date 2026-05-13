@@ -7,7 +7,7 @@ describe('Controlador de traços de personalidade', () => {
 
   beforeEach(() => {
     const serviceMock = {
-      findAll: jest.fn(async () => ({
+      findAll: jest.fn(() => ({
         message: 'Personality traits retrieved successfully',
         data: [
           {

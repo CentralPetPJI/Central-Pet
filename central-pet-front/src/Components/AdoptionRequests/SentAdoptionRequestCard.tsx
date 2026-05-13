@@ -11,6 +11,7 @@ type SentAdoptionRequestCardProps = {
 
 export function SentAdoptionRequestCard({ request }: SentAdoptionRequestCardProps) {
   const statusPresentation = getAdoptionRequestStatusPresentation(request.status);
+  const isPetUnavailable = request.pet.adoptionStatus === 'UNAVAILABLE';
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -77,16 +78,29 @@ export function SentAdoptionRequestCard({ request }: SentAdoptionRequestCardProp
               {request.note}
             </p>
           ) : null}
+          {request.blockNote ? (
+            <p className="mt-3 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-800 ring-1 ring-amber-200">
+              <span className="font-semibold">Bloqueio do pet: </span>
+              {request.blockNote}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-3">
-          <Link
-            to={`/pets/${getPetRouteId(request.pet.id)}`}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-          >
-            <PawPrint className="h-4 w-4 text-cyan-700" />
-            Ver perfil do pet
-          </Link>
+          {isPetUnavailable ? (
+            <span className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+              <PawPrint className="h-4 w-4 text-amber-700" />
+              Perfil indisponível
+            </span>
+          ) : (
+            <Link
+              to={`/pets/${getPetRouteId(request.pet.id)}`}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+            >
+              <PawPrint className="h-4 w-4 text-cyan-700" />
+              Ver perfil do pet
+            </Link>
+          )}
         </div>
       </div>
     </article>
