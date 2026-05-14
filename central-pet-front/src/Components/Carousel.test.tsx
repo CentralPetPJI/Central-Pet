@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Carousel from '@/Components/Carousel';
 import type { Pet } from '@/Models/pet';
+import * as authModule from '@/lib/auth-context';
 
 const petsStub: Pet[] = [
   {
@@ -28,10 +29,18 @@ describe('Carousel', () => {
       vi.fn(() => 1),
     );
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(authModule, 'useAuth').mockReturnValue({
+      currentUser: { id: 'user-2' },
+      isLoading: false,
+      users: [],
+      selectUser: vi.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('abre o modal com os dados do pet ao clicar no card', () => {
