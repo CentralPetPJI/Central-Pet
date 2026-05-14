@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PetModal from '@/Components/PetModal';
 import type { Pet } from '@/Models/pet';
+import * as authModule from '@/lib/auth-context';
 
 const petStub: Pet = {
   id: 42,
@@ -20,7 +21,17 @@ const petStub: Pet = {
 };
 
 describe('PetModal', () => {
-  it('renderiza o CTA para o perfil completo do pet', () => {
+  beforeEach(() => {
+    vi.spyOn(authModule, 'useAuth').mockReturnValue({
+      currentUser: { id: 'user-1' },
+      isLoading: false,
+      users: [],
+      selectUser: vi.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  });
+
+  it('renderiza "Quero adotar" quando o usuário não é o dono', () => {
     render(
       <MemoryRouter>
         <PetModal petData={petStub} onClick={vi.fn()} />
@@ -33,5 +44,26 @@ describe('PetModal', () => {
     expect(cta).toHaveAttribute('href', '/pets/42');
     expect(screen.getByText(/Campinas\//i)).toBeInTheDocument();
     expect(screen.queryByText(/Notas:/i)).not.toBeInTheDocument();
+  });
+
+  it('renderiza "Ver Perfil" quando o usuário é o dono do pet', () => {
+    vi.spyOn(authModule, 'useAuth').mockReturnValue({
+      currentUser: { id: 'user-2' },
+      isLoading: false,
+      users: [],
+      selectUser: vi.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <PetModal petData={petStub} onClick={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    const cta = screen.getByRole('link', { name: 'Ver Perfil' });
+
+    expect(cta).toBeInTheDocument();
+    expect(cta).toHaveAttribute('href', '/pets/42');
   });
 });

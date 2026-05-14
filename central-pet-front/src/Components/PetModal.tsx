@@ -4,6 +4,7 @@ import { routes } from '@/routes';
 import type { Pet } from '@/Models/pet';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
 import { formatPetSpecies, formatState } from '@/lib/formatters';
+import { useAuth } from '@/lib/auth-context';
 
 interface PetModalProps {
   petData: Pet;
@@ -11,6 +12,7 @@ interface PetModalProps {
 }
 
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
+  const { currentUser } = useAuth();
   const routeId = getPetRouteId(petData);
   const locationText = petData.city
     ? `${petData.city}${petData.state ? `/${formatState(petData.state)}` : ''}`
@@ -53,7 +55,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
           to={routes.pets.detail.build(routeId)}
           className="mt-6 block w-full rounded-xl bg-primary-400 py-3 text-center font-semibold text-white transition hover:bg-primary-600"
         >
-          Quero adotar
+          {currentUser?.id === petData.responsibleUserId ? 'Ver Perfil' : 'Quero adotar'}
         </Link>
       </div>
     </div>
