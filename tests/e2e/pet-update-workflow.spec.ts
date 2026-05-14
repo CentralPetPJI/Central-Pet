@@ -200,7 +200,6 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
   test("deve adicionar e remover fotos da galeria", async ({ page }) => {
     await page.goto(`/pets/${petId}/edit`);
 
-    // Mock de uma imagem base64 pequena (pixel vermelho transparente)
     // Adicionar foto na galeria
     const galleryInput = page.locator('input[type="file"][multiple]');
     await galleryInput.setInputFiles(obterImagemFixtureParaUpload());

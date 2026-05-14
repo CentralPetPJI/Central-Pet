@@ -13,12 +13,17 @@ ALTER TABLE "ModerationReport" ADD COLUMN "targetType_new" "ModerationTargetType
 
 -- Backfill (Step 2: Backfill from existing data)
 UPDATE "ModerationReport"
-SET "targetType_new" = CAST("targetType" AS text)::"ModerationTargetType";
+SET "targetType_new" = CASE 
+    WHEN LOWER(TRIM("targetType")) IN ('pet', 'pets') THEN 'PET'::"ModerationTargetType"
+    WHEN LOWER(TRIM("targetType")) IN ('user', 'users') THEN 'USER'::"ModerationTargetType"
+    WHEN LOWER(TRIM("targetType")) IN ('adoption_request', 'adoptionrequest', 'adoption') THEN 'ADOPTION_REQUEST'::"ModerationTargetType"
+    ELSE NULL
+END;
 
 -- Deduplication (Step 3: Remove potential duplicates that would violate uniqueness)
 DELETE FROM "ModerationReport" a
 USING "ModerationReport" b
-WHERE a.id < b.id
+WHERE a.id > b.id
   AND a."reporterId" = b."reporterId"
   AND a."targetId" = b."targetId"
   AND a."targetType" = b."targetType";

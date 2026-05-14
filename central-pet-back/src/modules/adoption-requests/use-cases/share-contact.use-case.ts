@@ -73,14 +73,14 @@ export class ShareContactUseCase {
     });
 
     const pet = await this.petsService.findOne(updatedRequest.petId);
-    const petPublicId = pet.data.id;
 
+    const petName = pet.data.name || 'pet';
     const notification = {
       id: `${requestId}-notification-contact-shared`,
       requestId,
       recipientId: updatedRequest.adopterId,
       type: 'CONTACT_SHARED' as const,
-      message: `O tutor compartilhou o contato referente ao pet ${petPublicId}.`,
+      message: `O tutor compartilhou o contato referente ao pet ${petName}.`,
       createdAt: updatedRequest.updatedAt.toISOString(),
     };
 
