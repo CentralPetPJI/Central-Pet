@@ -7,7 +7,7 @@ import {
   canShareContact,
   getAdoptionRequestStatusPresentation,
 } from '@/Models/adoption-request-status';
-import { formatRequestDate, getPetRouteId } from './adoptionRequestsHelpers';
+import { formatRequestDate } from './adoptionRequestsHelpers';
 
 type AdoptionRequestCardProps = {
   request: ReceivedAdoptionRequest;
@@ -117,7 +117,7 @@ export function AdoptionRequestCard({
             </span>
           ) : (
             <Link
-              to={`/pets/${getPetRouteId(request.pet.id)}`}
+              to={`/pets/${request.pet.id}`}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
             >
               <PawPrint className="h-4 w-4 text-cyan-700" />

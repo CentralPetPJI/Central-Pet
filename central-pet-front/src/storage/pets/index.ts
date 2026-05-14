@@ -19,12 +19,12 @@ export {
   type PetRegisterFormData,
 } from './pet-register-form';
 export {
-  PersonalityTraitIcon,
   petPersonalityStorageKey,
   type PetPersonalityApiOption,
   type PetPersonalityOption,
 } from './pet-personality-options';
 export { sanitizePersonalityIconSvg } from './pet-personality-sanitizer';
+export { PersonalityTraitIcon } from './personality-trait-icon';
 export { getPetRouteId, isBackendPet, mapApiResponseToPet, resolveBackendId } from './pet-helpers';
 export {
   ensurePublicId,

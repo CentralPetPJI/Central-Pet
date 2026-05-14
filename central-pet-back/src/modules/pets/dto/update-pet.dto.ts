@@ -22,7 +22,6 @@ export class UpdatePetDto {
   @ArrayMaxSize(10)
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  @MaxLength(5000, { each: true })
   galleryPhotos?: string[];
 
   @ValidateIf((_, value) => value !== undefined)

@@ -128,12 +128,20 @@ const PetPersonalityProfilePage = () => {
   const handleReportConfirm = async (reason: string) => {
     if (!petId) return;
 
-    await api.post('/moderation/reports', {
-      targetType: 'PET',
-      targetId: String(resolveBackendId(petId)),
-      reason,
-    });
-    setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
+    try {
+      await api.post('/moderation/reports', {
+        targetType: 'PET',
+        targetId: String(resolveBackendId(petId)),
+        reason,
+      });
+      setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Erro ao enviar denúncia. Tente novamente.';
+      setDisplayMessage(`Falha na denúncia: ${msg}`);
+    } finally {
+      setIsReportModalOpen(false);
+    }
   };
 
   const handleDeletePet = async () => {
@@ -165,13 +173,13 @@ const PetPersonalityProfilePage = () => {
     { label: 'Vacinado', value: formData.vaccinated },
     { label: 'Castrado', value: formData.neutered },
     { label: 'Vermifugado', value: formData.dewormed },
-    { label: 'Necessita de cuidados de saude', value: formData.needsHealthCare },
+    { label: 'Necessita de cuidados de saúde', value: formData.needsHealthCare },
     { label: 'Limitacao fisica', value: formData.physicalLimitation },
     { label: 'Limitacao visual', value: formData.visualLimitation },
     { label: 'Limitacao auditiva', value: formData.hearingLimitation },
   ].map((item) => ({
     ...item,
-    value: item.value ? 'Sim' : 'Nao',
+    value: item.value ? 'Sim' : 'Não',
   }));
 
   return (

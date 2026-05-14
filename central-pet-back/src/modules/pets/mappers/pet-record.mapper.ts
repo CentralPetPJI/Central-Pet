@@ -11,7 +11,7 @@ import {
 export class PetMapper {
   static toDomain(pet: PrismaPet): PetRecord {
     return {
-      id: pet.id,
+      id: pet.publicId,
       profilePhoto: pet.profilePhoto,
       galleryPhotos: this.toStringArray(pet.galleryPhotosJson),
       name: pet.name,

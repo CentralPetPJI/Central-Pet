@@ -26,6 +26,11 @@ Central-Pet is a monorepo consisting of:
 
 ### Coding Conventions
 
+- **Language**: The project's primary language is **Brazilian Portuguese**.
+  - All **comments, test descriptions, user-facing error messages, and UI strings** MUST be written in Brazilian Portuguese.
+  - **NEVER** remove accents or special characters (ã, é, ç, etc.) from Portuguese strings.
+  - Code identifiers (functions, variables, types, etc.) MUST remain in **English** for technical consistency.
+  - Refer to [AGENTS.md](./AGENTS.md) for detailed agent-specific guidelines and language mandates.
 - **Naming**:
   - Components/Pages: `PascalCase.tsx`
   - Helpers/Modules: `camelCase.ts`
@@ -75,6 +80,7 @@ Central-Pet is a monorepo consisting of:
 ## 📚 Reference Documentation
 
 - [README.md](./README.md) - Project overview.
+- [AGENTS.md](./AGENTS.md) - Specialized guidelines for AI agents and language conventions.
 - [QUICK_START.md](./QUICK_START.md) - Setup instructions.
 - [FAQ.md](./FAQ.md) - Troubleshooting.
 - [.planning/codebase/](./.planning/codebase/) - Deep architectural mappings.

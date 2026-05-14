@@ -91,7 +91,12 @@ export class TestDatabaseHelper {
     }
 
     const ownerId = responsibleUserId ?? randomUUID();
-    const ownerTag = ownerId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) || 'seedowner';
+    const ownerTag =
+      ownerId
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 12) || 'seedowner';
+    const seedRunTag = Date.now().toString(36);
 
     await this.prisma.user.upsert({
       where: { id: ownerId },
@@ -109,6 +114,7 @@ export class TestDatabaseHelper {
       Array.from({ length: quantity }, (_, index) =>
         this.prisma.pet.create({
           data: {
+            publicId: `pet_${ownerTag}${seedRunTag}${(index + 1).toString(36)}`,
             name: `Pet Seed ${index + 1}`,
             ageText: '2 anos',
             species: 'DOG',
