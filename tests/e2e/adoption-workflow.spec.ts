@@ -102,7 +102,7 @@ test.describe.serial("Fluxo de Adoção", () => {
 
     const petCard = page.locator("h3").filter({ hasText: pet.name }).first();
     await petCard.click({ force: true });
-    await page.getByRole("link", { name: "Quero adotar" }).click();
+    await page.getByRole("link", { name: "Ver Perfil" }).click();
 
     await expect(page.locator("h1")).toHaveText(pet.name);
     await expect(
