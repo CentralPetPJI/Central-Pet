@@ -33,7 +33,7 @@ const PetRegisterActions = ({
           disabled={isSaveDisabled}
           className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isEditMode ? 'Salvar alteracoes' : 'Salvar pet'}
+          {isEditMode ? 'Salvar alterações' : 'Salvar pet'}
         </button>
         {petId ? (
           <button

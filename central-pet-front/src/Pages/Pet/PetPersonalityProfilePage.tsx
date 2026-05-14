@@ -139,13 +139,13 @@ const PetPersonalityProfilePage = () => {
     { label: 'Vacinado', value: formData.vaccinated },
     { label: 'Castrado', value: formData.neutered },
     { label: 'Vermifugado', value: formData.dewormed },
-    { label: 'Necessita de cuidados de saude', value: formData.needsHealthCare },
+    { label: 'Necessita de cuidados de saúde', value: formData.needsHealthCare },
     { label: 'Limitacao fisica', value: formData.physicalLimitation },
     { label: 'Limitacao visual', value: formData.visualLimitation },
     { label: 'Limitacao auditiva', value: formData.hearingLimitation },
   ].map((item) => ({
     ...item,
-    value: item.value ? 'Sim' : 'Nao',
+    value: item.value ? 'Sim' : 'Não',
   }));
 
   return (

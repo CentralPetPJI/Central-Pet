@@ -11,7 +11,7 @@ const healthFields = [
   ['physicalLimitation', 'Limitacao fisica'],
   ['visualLimitation', 'Limitacao visual'],
   ['hearingLimitation', 'Limitacao auditiva'],
-  ['needsHealthCare', 'Necessita de cuidados de saude'],
+  ['needsHealthCare', 'Necessita de cuidados de saúde'],
 ] as const;
 
 // TODO: validar a disposição dos checkbox para a quantidade correta de itens (maior que atual talvez)
