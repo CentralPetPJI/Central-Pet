@@ -3,13 +3,9 @@ import { ModerationService } from './moderation.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuditService } from '@/modules/audit/audit.service';
 import { ForbiddenException, ConflictException, NotFoundException } from '@nestjs/common';
-import {
-  ModerationTargetType,
-  Pet,
-  Prisma,
-  ModerationReport,
-} from '../../../generated/prisma/client';
+import { Pet, Prisma, ModerationReport } from '../../../generated/prisma/client';
 import { prismaMock } from '../../../singleton';
+import { ModerationTargetType } from './moderation-target-type';
 
 describe('ModerationService', () => {
   let service: ModerationService;

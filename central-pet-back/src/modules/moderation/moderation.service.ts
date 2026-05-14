@@ -9,7 +9,8 @@ import {
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { AuditService } from '@/modules/audit/audit.service';
-import { ModerationTargetType, Prisma } from '../../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
+import { ModerationTargetType } from './moderation-target-type';
 
 @Injectable()
 export class ModerationService {
