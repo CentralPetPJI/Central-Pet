@@ -63,6 +63,7 @@ export class AdoptionRequestsService {
       if (!petFound) {
         // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
         petForResponseObj = {
+          internalId: r.petId,
           id: r.petId,
           name: 'Indisponível',
           species: 'UNKNOWN',

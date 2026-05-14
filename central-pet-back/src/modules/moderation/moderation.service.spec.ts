@@ -66,8 +66,8 @@ describe('ModerationService', () => {
         clientVersion: '4.15.0',
       });
       prismaMock.moderationReport.create.mockRejectedValue(error);
-      prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => unknown) =>
-        cb(prismaMock),
+      prismaMock.$transaction.mockImplementation(
+        async (cb: (tx: typeof prismaMock) => Promise<unknown>) => cb(prismaMock),
       );
 
       await expect(service.createReport(reporterId, dto)).rejects.toThrow(ConflictException);
@@ -83,8 +83,8 @@ describe('ModerationService', () => {
 
       // Mock da transação para retornar o próprio prismaMock
 
-      prismaMock.$transaction.mockImplementation((cb: (tx: typeof prismaMock) => unknown) =>
-        cb(prismaMock),
+      prismaMock.$transaction.mockImplementation(
+        async (cb: (tx: typeof prismaMock) => Promise<unknown>) => cb(prismaMock),
       );
 
       const result = await service.createReport(reporterId, dto);
