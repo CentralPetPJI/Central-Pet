@@ -121,21 +121,20 @@ export class AdminService {
       );
     }
 
-    const shouldDelete = !pet.deleted;
-
     await this.prisma.$transaction(async (tx) => {
-      if (shouldDelete) {
-        await this.petsService.removeTransactional(tx, petId, adminId, {
-          reason: 'Pet bloqueado por admin',
+      if (pet.deleted) {
+        await this.petsService.reactivatePetTransactional(tx, petId, adminId, {
+          reason: 'Pet reativado por admin',
         });
       } else {
-        await this.petsService.reactivatePetTransactional(tx, petId, adminId, {
-          reason: 'Pet desbloqueado por admin',
+        await this.petsService.removeTransactional(tx, petId, adminId, {
+          isAdmin: true,
+          reason: 'Pet removido por admin',
         });
       }
     });
 
-    return { message: `Pet ${shouldDelete ? 'bloqueado' : 'desbloqueado'} com sucesso` };
+    return { message: `Pet ${pet.deleted ? 'reativado' : 'removido'} com sucesso` };
   }
 
   async getPets(userId?: string, page = 1, limit = 12) {
@@ -244,6 +243,7 @@ export class AdminService {
         const pet = await tx.pet.findUnique({ where: { id: report.targetId } });
         if (pet && !pet.deleted) {
           await this.petsService.removeTransactional(tx, pet.id, adminId, {
+            isAdmin: true,
             reason: 'Denúncia aprovada',
             reportId,
           });
