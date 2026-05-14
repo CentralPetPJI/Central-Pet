@@ -1,4 +1,4 @@
-import { sanitizePersonalityIconSvg } from '@/storage/pets/pet-personality-options';
+import { sanitizePersonalityIconSvg } from './pet-personality-sanitizer';
 
 interface PersonalityTraitIconProps {
   iconSvg: string;
