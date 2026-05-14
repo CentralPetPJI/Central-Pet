@@ -601,7 +601,7 @@ describe('Servico de solicitacoes de adocao', () => {
     );
   });
 
-  it('deve retornar false no hasRequest quando nao houver resolucao de petId', async () => {
+  it('deve retornar false no hasRequest quando não houver resolução de petId', async () => {
     const hasRequest = await service.hasRequest(mockUserIds.RAFAEL_LIMA, 'pet-nao-existe');
 
     expect(hasRequest).toBe(false);

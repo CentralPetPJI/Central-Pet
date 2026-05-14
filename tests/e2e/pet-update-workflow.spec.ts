@@ -52,10 +52,10 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
       .fill(novoNome);
     await page.getByLabel("Faixa etária").selectOption("FILHOTE");
     await page
-      .getByRole("textbox", { name: "Raca", exact: true })
+      .getByRole("textbox", { name: "Raça", exact: true })
       .fill("Golden Retriever");
 
-    await page.getByRole("button", { name: "Salvar alteracoes" }).click();
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     // Redirecionamento para o perfil
     await page.waitForURL(/\/pets\/[^/]+$/);
@@ -101,11 +101,11 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
   }) => {
     await page.goto(`/pets/${petId}/edit`);
 
-    await page.getByLabel("Especie").selectOption("cat");
+    await page.getByLabel("Espécie").selectOption("cat");
     await page.getByLabel("Sexo").selectOption("female");
     await page.getByLabel("Porte").selectOption("large");
 
-    await page.getByRole("button", { name: "Salvar alteracoes" }).click();
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     await page.waitForURL(/\/pets\/[^/]+$/);
 
@@ -129,13 +129,13 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     await page.getByLabel("Vacinado").uncheck();
     await page.getByLabel("Castrado").check();
     await page.getByLabel("Vermifugado").check();
-    await page.getByLabel("Necessita de cuidados de saude").check();
+    await page.getByLabel("Necessita de cuidados de saúde").check();
 
-    await page.getByRole("button", { name: "Salvar alteracoes" }).click();
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     await page.waitForURL(/\/pets\/[^/]+$/);
 
-    // No perfil, os valores são exibidos como "Sim" ou "Nao"
+    // No perfil, os valores são exibidos como "Sim" ou "Não"
     const checkFact = async (label: string, expectedValue: string) => {
       const factLabel = page.getByText(label, { exact: true });
       const factValue = factLabel.locator("xpath=../p[2]");
@@ -143,10 +143,10 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
       await expect(factValue).toHaveText(expectedValue, { timeout: 10000 });
     };
 
-    await checkFact("Vacinado", "Nao");
+    await checkFact("Vacinado", "Não");
     await checkFact("Castrado", "Sim");
     await checkFact("Vermifugado", "Sim");
-    await checkFact("Necessita de cuidados de saude", "Sim");
+    await checkFact("Necessita de cuidados de saúde", "Sim");
   });
 
   test("deve atualizar traços de personalidade e comportamento", async ({
@@ -159,7 +159,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     await page.getByRole("button", { name: /Protetor/i }).click();
     await page.getByRole("button", { name: /Sociável/i }).click();
 
-    await page.getByRole("button", { name: "Salvar alteracoes" }).click();
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     await page.waitForURL(/\/pets\/[^/]+$/);
 
