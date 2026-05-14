@@ -29,6 +29,8 @@ export default function MyPetsPage() {
   const [pets, setPets] = useState<PetListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -91,6 +93,26 @@ export default function MyPetsPage() {
     };
   }, [currentUser?.id, isAuthLoading]);
 
+  const handleDeletePet = async (pet: PetListItem) => {
+    const confirmed = window.confirm(`Tem certeza que deseja excluir o pet "${pet.name}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteErrorMessage(null);
+    setDeletingPetId(pet.id);
+
+    try {
+      await api.delete(`/pets/${pet.id}`);
+      setPets((previousPets) => previousPets.filter((item) => item.id !== pet.id));
+    } catch {
+      setDeleteErrorMessage('Não foi possível excluir o pet. Tente novamente.');
+    } finally {
+      setDeletingPetId(null);
+    }
+  };
+
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">
       <div className="mb-6 flex flex-col gap-3 rounded-3xl bg-linear-to-r from-emerald-50 via-white to-cyan-50 p-5 shadow-sm ring-1 ring-slate-200 lg:flex-row lg:items-end lg:justify-between">
@@ -118,6 +140,12 @@ export default function MyPetsPage() {
       {!isLoading && errorMessage ? (
         <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-700 shadow-sm">
           {errorMessage}
+        </div>
+      ) : null}
+
+      {!isLoading && !errorMessage && deleteErrorMessage ? (
+        <div className="mb-4 rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-700 shadow-sm">
+          {deleteErrorMessage}
         </div>
       ) : null}
 
@@ -156,12 +184,22 @@ export default function MyPetsPage() {
                 {pet.state ? `/${pet.state}` : ''}
               </p>
 
-              <Link
-                to={routes.pets.detail.build(getPetRouteId(pet.id))}
-                className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-              >
-                Ver perfil
-              </Link>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link
+                  to={routes.pets.detail.build(getPetRouteId(pet.id))}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                >
+                  Ver perfil
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void handleDeletePet(pet)}
+                  disabled={deletingPetId === pet.id}
+                  className="inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {deletingPetId === pet.id ? 'Excluindo...' : 'Excluir pet'}
+                </button>
+              </div>
             </article>
           ))}
         </div>
