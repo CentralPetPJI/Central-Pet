@@ -126,12 +126,20 @@ const PetPersonalityProfilePage = () => {
   const handleReportConfirm = async (reason: string) => {
     if (!petId) return;
 
-    await api.post('/moderation/reports', {
-      targetType: 'PET',
-      targetId: String(resolveBackendId(petId)),
-      reason,
-    });
-    setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
+    try {
+      await api.post('/moderation/reports', {
+        targetType: 'PET',
+        targetId: String(resolveBackendId(petId)),
+        reason,
+      });
+      setDisplayMessage('Denúncia enviada com sucesso. Nossa equipe irá analisar.');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Erro ao enviar denúncia. Tente novamente.';
+      setDisplayMessage(`Falha na denúncia: ${msg}`);
+    } finally {
+      setIsReportModalOpen(false);
+    }
   };
 
   // TODO: Isso deve vir do back, talvez ;)

@@ -378,6 +378,11 @@ describe('Servico de solicitacoes de adocao', () => {
     const petsServiceMock = {
       resolveInternalId: jest.fn((id: string) => Promise.resolve(petsById.has(id) ? id : null)),
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
+      findAllForAdoptionInternal: jest.fn((filters: { ids: string[] }) => {
+        return Promise.resolve(
+          filters.ids.map((id) => petsById.get(id)).filter((p): p is PetForAdoptionRequest => !!p),
+        );
+      }),
       finalizeAdoption: jest.fn((id: string, newResponsibleUserId: string) => {
         const pet = petsById.get(id);
 

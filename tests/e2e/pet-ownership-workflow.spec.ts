@@ -4,6 +4,7 @@ import {
   fazerLogin,
   gerarUsuarioUnico,
 } from "../utils/user-helpers";
+import { obterImagemFixtureParaUpload } from "../utils/file-fixtures";
 
 /**
  * Teste E2E: fluxo crítico de cadastro e visualização de pets.
@@ -39,7 +40,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const petName = `Claude E2E ${timestamp}`;
 
     const fileInput = page.locator('input[type="file"]').first();
-    await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
+    await fileInput.setInputFiles(obterImagemFixtureParaUpload());
 
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
@@ -92,7 +93,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const petName = `No Duplicate ${timestamp}`;
 
     const fileInput = page.locator('input[type="file"]').first();
-    await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
+    await fileInput.setInputFiles(obterImagemFixtureParaUpload());
 
     await page
       .getByRole("textbox", { name: "Nome", exact: true })

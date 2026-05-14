@@ -5,6 +5,7 @@ import {
   gerarUsuarioUnico,
 } from "../utils/user-helpers";
 import { criarPetsViaApi, softDeletePetsViaApi } from "../utils/pet-helpers";
+import { obterImagemFixtureParaUpload } from "../utils/file-fixtures";
 
 /**
  * Teste E2E: fluxo de atualização de pets.
@@ -58,7 +59,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     // Redirecionamento para o perfil
-    await page.waitForURL(/\/pets\/[^/]+$/);
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
 
     // Sucesso: nome atualizado no heading do Hero
     await expect(
@@ -87,7 +88,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     // Navegar de volta via botão "Ver perfil do pet" (que cancela a edição)
     await page.getByRole("button", { name: "Ver perfil do pet" }).click();
 
-    await page.waitForURL(/\/pets\/[^/]+$/);
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
     await expect(
       page.getByRole("heading", { level: 1, name: nomeOriginal }),
     ).toBeVisible();
@@ -107,7 +108,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alterações" }).click();
 
-    await page.waitForURL(/\/pets\/[^/]+$/);
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
 
     // Sexo e Porte aparecem no perfil
     await expect(page.getByText("Fêmea", { exact: true })).toBeVisible();
@@ -133,7 +134,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alterações" }).click();
 
-    await page.waitForURL(/\/pets\/[^/]+$/);
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
 
     // No perfil, os valores são exibidos como "Sim" ou "Não"
     const checkFact = async (label: string, expectedValue: string) => {
@@ -161,7 +162,7 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
 
     await page.getByRole("button", { name: "Salvar alterações" }).click();
 
-    await page.waitForURL(/\/pets\/[^/]+$/);
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
 
     // No perfil as personalidades aparecem em uma lista
     await expect(page.getByText("Brincalhão")).toBeVisible();
@@ -194,5 +195,42 @@ test.describe("Fluxo de Atualização de Pets - Seções", () => {
     // Botão "Editar cadastro" na galeria não deve ser visível
     const editButton = page.getByRole("link", { name: "Editar cadastro" });
     await expect(editButton).not.toBeVisible();
+  });
+
+  test("deve adicionar e remover fotos da galeria", async ({ page }) => {
+    await page.goto(`/pets/${petId}/edit`);
+
+    // Mock de uma imagem base64 pequena (pixel vermelho transparente)
+    // Adicionar foto na galeria
+    const galleryInput = page.locator('input[type="file"][multiple]');
+    await galleryInput.setInputFiles(obterImagemFixtureParaUpload());
+
+    // Verificar se a foto aparece no formulário (botão Remover foto)
+    await expect(
+      page.getByRole("button", { name: "Remover foto" }),
+    ).toBeVisible();
+
+    // Salvar alterações
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
+
+    // Verificar se a foto aparece no perfil
+    await expect(page.getByAltText(/Foto descritiva 1 de/)).toBeVisible();
+
+    // Voltar para edição e remover a foto
+    await page.goto(`/pets/${petId}/edit`);
+    await page.getByRole("button", { name: "Remover foto" }).click();
+    await expect(
+      page.getByText("Nenhuma foto descritiva adicionada."),
+    ).toBeVisible();
+
+    // Salvar novamente
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
+    await page.waitForURL(/^\/pets\/pet_[^/]+$/);
+
+    // Verificar que a galeria está vazia no perfil
+    await expect(
+      page.getByText("Nenhuma foto descritiva adicionada."),
+    ).toBeVisible();
   });
 });

@@ -1,4 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { customAlphabet } from 'nanoid';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuditService } from '@/modules/audit/audit.service';
@@ -29,6 +37,8 @@ type ResponsiblePetMetadata = ResponsibleLocation & {
 
 @Injectable()
 export class PetsService {
+  private readonly logger = new Logger(PetsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly personalityTraitsService: PersonalityTraitsService,
@@ -99,57 +109,43 @@ export class PetsService {
     });
 
     if (!responsibleUser || responsibleUser.deleted) {
-      throw new NotFoundException(`Usuário com id "${responsibleUserId}" não encontrado`);
-    }
-
-    if (
-      responsibleUser.role &&
-      responsibleUser.role !== 'ONG' &&
-      responsibleUser.role !== 'PESSOA_FISICA'
-    ) {
-      throw new BadRequestException(
-        'Apenas ONGs e pessoas físicas podem ser responsáveis por pets.',
-      );
+      throw new BadRequestException('Usuário responsável não encontrado ou inativo.');
     }
 
     return {
       city: responsibleUser.city ?? '',
       state: responsibleUser.state ?? '',
-      sourceType: responsibleUser.role,
+      sourceType: responsibleUser.role === 'ONG' ? 'ONG' : 'PESSOA_FISICA',
       sourceName:
         responsibleUser.role === 'ONG'
-          ? (responsibleUser.organizationName ?? responsibleUser.fullName)
+          ? responsibleUser.organizationName || responsibleUser.fullName
           : responsibleUser.fullName,
     };
   }
 
-  private withResponsibleLocation(
-    pet: PetRecord,
-    responsibleLocation: ResponsibleLocation,
-  ): PetResponseRecord {
+  private withResponsibleLocation<T extends PetRecord | PetResponseRecord>(
+    pet: T,
+    location: ResponsibleLocation,
+  ): T & ResponsibleLocation {
     return {
       ...pet,
-      city: responsibleLocation.city,
-      state: responsibleLocation.state,
+      city: location.city,
+      state: location.state,
     };
   }
 
   private async validateSelectedPersonalities(selectedPersonalities: string[]) {
+    if (selectedPersonalities.length === 0) return;
+
     const traits = await this.personalityTraitsService.getAllTraits();
-    const traitMap = new Map(traits.map((trait) => [trait.id, trait]));
-
-    const invalidTraits = selectedPersonalities.filter((traitId) => !traitMap.has(traitId));
-
-    if (invalidTraits.length > 0) {
-      throw new BadRequestException(
-        `Traits de personalidade inválidos: ${invalidTraits.join(', ')}`,
-      );
-    }
-
+    const traitMap = new Map(traits.map((t) => [t.id, t]));
     const selectedSet = new Set(selectedPersonalities);
+
     const conflictingTraits = selectedPersonalities.flatMap((traitId) => {
       const trait = traitMap.get(traitId);
-      if (!trait) return [];
+      if (!trait) {
+        throw new BadRequestException(`Traço de personalidade inválido: ${traitId}`);
+      }
 
       return trait.conflictsWith
         .filter((conflictId) => selectedSet.has(conflictId))
@@ -176,25 +172,63 @@ export class PetsService {
     petClient: Pick<PrismaService, 'pet'>['pet'] | Prisma.TransactionClient['pet'],
     identifier: string,
   ): Promise<string | null> {
+    if (identifier.startsWith('pet_')) {
+      const byPublicId = await petClient.findUnique({
+        where: { publicId: identifier },
+        select: { id: true },
+      });
+      return byPublicId?.id ?? null;
+    }
+
     const byId = await petClient.findUnique({
       where: { id: identifier },
       select: { id: true },
     });
 
-    if (byId) {
-      return byId.id;
-    }
-
-    const byPublicId = await petClient.findUnique({
-      where: { publicId: identifier },
-      select: { id: true },
-    });
-
-    return byPublicId?.id ?? null;
+    return byId?.id ?? null;
   }
 
   async resolveInternalId(identifier: string): Promise<string | null> {
     return this.resolveInternalIdWithPetClient(this.prisma.pet, identifier);
+  }
+
+  async findAllForAdoptionInternal(filters: {
+    ids: string[];
+    includeDeleted?: boolean;
+  }): Promise<PetForAdoptionRequest[]> {
+    await this.ensureMockPetsSeededIfEnabled();
+
+    const pets = await this.prisma.pet.findMany({
+      where: {
+        id: { in: filters.ids },
+        ...(filters.includeDeleted ? {} : { deleted: false }),
+      },
+      include: {
+        responsibleUser: {
+          select: {
+            city: true,
+            state: true,
+          },
+        },
+      },
+    });
+
+    return pets.map((pet) => {
+      const petRecord = PetMapper.toDomain(pet);
+      const location = this.normalizeResponsibleLocation(pet.responsibleUser ?? undefined);
+      return {
+        internalId: pet.id,
+        id: petRecord.id,
+        name: petRecord.name,
+        species: petRecord.species,
+        city: location.city,
+        state: location.state,
+        responsibleUserId: petRecord.responsibleUserId ?? '',
+        sourceType: petRecord.sourceType,
+        sourceName: petRecord.sourceName,
+        adoptionStatus: petRecord.adoptionStatus,
+      };
+    });
   }
 
   private async findPetByIdentifier(identifier: string) {
@@ -261,7 +295,10 @@ export class PetsService {
     }
 
     if (!createdPet) {
-      throw new BadRequestException('Falha ao gerar identificador público único para o pet.');
+      this.logger.error('Exhausted attempts to generate a unique publicId for a new pet.');
+      throw new InternalServerErrorException(
+        'Erro interno ao cadastrar o pet. Por favor, tente novamente.',
+      );
     }
 
     if (this.auditService) {
@@ -471,36 +508,61 @@ export class PetsService {
     details?: Record<string, unknown>,
   ) {
     const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
+    if (!internalId) {
+      throw new NotFoundException(`Pet com id "${id}" não encontrado`);
+    }
+
     const currentPet = await tx.pet.findUnique({
-      where: { id: internalId ?? id },
-      select: { id: true, deleted: true, status: true, responsibleUserId: true },
+      where: { id: internalId },
+      select: {
+        id: true,
+        deleted: true,
+        status: true,
+        responsibleUserId: true,
+        deletedBy: true,
+        deletedReason: true,
+      },
     });
 
     if (!currentPet || !currentPet.deleted) {
-      // Keep behavior similar to public remove: treat as not found
       throw new NotFoundException(`Pet com id "${id}" não encontrado ou já está ativo`);
+    }
+
+    // Apenas permitir reativação se for pelo mesmo usuário que deletou, se for admin,
+    // ou se o motivo foi um bloqueio administrativo (que agora está sendo revertido)
+    const isAuthorized =
+      performedBy === currentPet.deletedBy ||
+      currentPet.deletedReason === CANCEL_REASON_ADMIN_BLOCK;
+
+    if (!isAuthorized) {
+      throw new ForbiddenException('Você não tem permissão para reativar este pet.');
     }
 
     await tx.pet.update({
       where: { id: currentPet.id },
-      data: { deleted: false, status: 'AVAILABLE' },
+      data: {
+        deleted: false,
+        status: 'AVAILABLE',
+        deletedAt: null,
+        deletedBy: null,
+        deletedReason: null,
+      },
     });
 
     // Restaurar solicitações canceladas automaticamente pela moderação
-    if (tx.adoptionRequest) {
-      await tx.adoptionRequest.updateMany({
-        where: {
-          petId: currentPet.id,
-          status: 'CANCELLED',
-          note: CANCEL_REASON_ADMIN_BLOCK,
-        },
-        data: {
-          status: 'PENDING',
-          note: null,
-          version: { increment: 1 },
-        },
-      });
-    }
+    // Apenas as que foram canceladas recentemente (ex: motivo ADMIN_BLOCK)
+    await tx.adoptionRequest.updateMany({
+      where: {
+        petId: currentPet.id,
+        status: 'CANCELLED',
+        note: CANCEL_REASON_ADMIN_BLOCK,
+      },
+      data: {
+        status: 'PENDING',
+        note: null,
+        version: { increment: 1 },
+      },
+    });
 
     if (this.auditService) {
       await this.auditService.createWithTx(tx, {
@@ -520,13 +582,16 @@ export class PetsService {
     details?: Record<string, unknown>,
   ) {
     const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
+    if (!internalId) {
+      throw new NotFoundException(`Pet with id "${id}" not found`);
+    }
+
     const currentPet = await tx.pet.findUnique({
-      where: { id: internalId ?? id },
+      where: { id: internalId },
       select: { id: true, deleted: true, status: true, responsibleUserId: true },
     });
 
     if (!currentPet || currentPet.deleted) {
-      // Keep behavior similar to public remove: treat as not found
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
@@ -535,23 +600,24 @@ export class PetsService {
       data: {
         deleted: true,
         status: 'UNAVAILABLE',
+        deletedAt: new Date(),
+        deletedBy: performedBy,
+        deletedReason: (details?.reason as string) || CANCEL_REASON_ADMIN_BLOCK,
       },
     });
 
     // Cancelar solicitações pendentes do pet
-    if (tx.adoptionRequest) {
-      await tx.adoptionRequest.updateMany({
-        where: {
-          petId: currentPet.id,
-          status: { in: ['PENDING', 'CONTACT_SHARED'] },
-        },
-        data: {
-          status: 'CANCELLED',
-          note: CANCEL_REASON_ADMIN_BLOCK,
-          version: { increment: 1 },
-        },
-      });
-    }
+    await tx.adoptionRequest.updateMany({
+      where: {
+        petId: currentPet.id,
+        status: { in: ['PENDING', 'CONTACT_SHARED'] },
+      },
+      data: {
+        status: 'CANCELLED',
+        note: CANCEL_REASON_ADMIN_BLOCK,
+        version: { increment: 1 },
+      },
+    });
 
     if (this.auditService && performedBy) {
       await this.auditService.createWithTx(tx, {

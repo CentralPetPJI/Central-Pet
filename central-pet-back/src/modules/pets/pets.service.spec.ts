@@ -65,6 +65,9 @@ describe('PetsService', () => {
       upsert: jest.Mock;
       count: jest.Mock;
     };
+    adoptionRequest: {
+      updateMany: jest.Mock;
+    };
     auditLog: {
       create: jest.Mock;
     };
@@ -296,6 +299,9 @@ describe('PetsService', () => {
         count: jest.fn((args: { where: { id: string; deleted: boolean } }) =>
           userRecords.get(args.where.id)?.deleted === args.where.deleted ? 1 : 0,
         ),
+      },
+      adoptionRequest: {
+        updateMany: jest.fn(() => Promise.resolve({ count: 0 })),
       },
       auditLog: {
         create: jest.fn(),

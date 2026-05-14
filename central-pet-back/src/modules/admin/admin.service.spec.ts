@@ -15,9 +15,9 @@ describe('AdminService', () => {
   let auditServiceMock: AuditService;
 
   beforeEach(() => {
-    // Note: prismaMock is automatically reset via the singleton's beforeEach
+    // Nota: prismaMock é resetado automaticamente via singleton antes de cada teste
 
-    // Manually mock $transaction for AdminService logic
+    // Mock manual de $transaction para a lógica de AdminService
     // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
     (prismaMock as any).$transaction = jest.fn((callback: any) => callback(prismaMock));
 

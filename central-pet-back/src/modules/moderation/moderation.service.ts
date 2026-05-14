@@ -11,18 +11,28 @@ import { CreateReportDto } from './dto/create-report.dto';
 import { AuditService } from '@/modules/audit/audit.service';
 import { Prisma } from '../../../generated/prisma/client';
 import { ModerationTargetType } from './moderation-target-type';
+import { PetsService } from '@/modules/pets/pets.service';
 
 @Injectable()
 export class ModerationService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly petsService: PetsService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async createReport(reporterId: string, dto: CreateReportDto) {
+    let targetId = dto.targetId;
+
     if (dto.targetType === ModerationTargetType.PET) {
+      const internalId = await this.petsService.resolveInternalId(dto.targetId);
+      if (!internalId) {
+        throw new NotFoundException('Pet não encontrado');
+      }
+      targetId = internalId;
+
       const pet = await this.prisma.pet.findUnique({
-        where: { id: dto.targetId },
+        where: { id: targetId },
       });
 
       if (!pet) {
@@ -56,6 +66,10 @@ export class ModerationService {
       if (adoptionRequest.adopterId === reporterId) {
         throw new ForbiddenException('Você não pode denunciar sua própria solicitação de adoção');
       }
+
+      if (adoptionRequest.responsibleUserId === reporterId) {
+        throw new ForbiddenException('Você não pode denunciar sua própria solicitação de adoção');
+      }
     } else {
       throw new BadRequestException('Tipo de alvo de denúncia inválido');
     }
@@ -66,7 +80,7 @@ export class ModerationService {
           data: {
             reporterId,
             targetType: dto.targetType,
-            targetId: dto.targetId,
+            targetId: targetId,
             reason: dto.reason,
           },
         });
@@ -74,7 +88,7 @@ export class ModerationService {
           await this.auditService.createWithTx(tx, {
             userId: reporterId,
             action: 'CREATE_REPORT',
-            targetId: dto.targetId,
+            targetId: targetId,
             targetType: dto.targetType,
             details: { reason: dto.reason, reportId: report.id },
           });

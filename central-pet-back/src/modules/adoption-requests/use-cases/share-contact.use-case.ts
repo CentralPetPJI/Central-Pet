@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dto';
 import type {
@@ -8,11 +8,13 @@ import type {
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 import { AuditService } from '@/modules/audit/audit.service';
 import { Prisma } from '../../../../generated/prisma/client';
+import { PetsService } from '@/modules/pets/pets.service';
 
 @Injectable()
 export class ShareContactUseCase {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly petsService: PetsService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
@@ -25,15 +27,15 @@ export class ShareContactUseCase {
     updatedReq: AdoptionRequestRecord;
     notification?: AdoptionRequestNotification;
   }> {
-    const currentRequest = await this.prisma.adoptionRequest.findUnique({
-      where: { id: requestId },
-    });
-
-    if (!currentRequest) {
-      throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
-    }
-
     const updatedRequest = await this.prisma.$transaction(async (tx) => {
+      const currentRequest = await tx.adoptionRequest.findUnique({
+        where: { id: requestId },
+      });
+
+      if (!currentRequest) {
+        throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+      }
+
       let updated: AdoptionRequestRecord;
       try {
         updated = await tx.adoptionRequest.update({
@@ -50,7 +52,9 @@ export class ShareContactUseCase {
         });
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-          throw new NotFoundException(`Solicitação de adoção com id "${requestId}" não encontrada`);
+          throw new ConflictException(
+            `A solicitação de adoção "${requestId}" foi alterada por outro usuário. Por favor, recarregue a página.`,
+          );
         }
         throw error;
       }
@@ -68,13 +72,15 @@ export class ShareContactUseCase {
       return updated;
     });
 
-    // TODO: Acredito que podemos modififcar para o manage criar a notificacao
+    const pet = await this.petsService.findOne(updatedRequest.petId);
+    const petPublicId = pet.data.id;
+
     const notification = {
       id: `${requestId}-notification-contact-shared`,
       requestId,
       recipientId: updatedRequest.adopterId,
       type: 'CONTACT_SHARED' as const,
-      message: `O tutor compartilhou o contato referente ao pet ${updatedRequest.petId}.`,
+      message: `O tutor compartilhou o contato referente ao pet ${petPublicId}.`,
       createdAt: updatedRequest.updatedAt.toISOString(),
     };
 
