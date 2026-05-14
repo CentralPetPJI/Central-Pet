@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { PetApiResponse } from '@/Models/pet';
-import { clearPublicIdMappings } from './public-id-mapping';
 import { mapApiResponseToPet } from './pet-helpers';
 
 const makeApiPet = (selectedPersonalities: string[]): PetApiResponse => ({
@@ -33,10 +32,6 @@ const makeApiPet = (selectedPersonalities: string[]): PetApiResponse => ({
 });
 
 describe('mapApiResponseToPet', () => {
-  afterEach(() => {
-    clearPublicIdMappings();
-  });
-
   it('exibe os títulos das personalidades em português no card do pet', () => {
     const pet = mapApiResponseToPet(makeApiPet(['playful', 'friendly']), [
       {

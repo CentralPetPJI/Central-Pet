@@ -1,7 +1,8 @@
-import { IsBoolean, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateAdoptionRequestDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   petId: string;
 
   @IsOptional()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Eye, EyeOff } from 'lucide-react';
 import { resolvePublicId } from '@/storage/pets/pet-helpers';
@@ -11,61 +11,60 @@ export function PetsTab() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filterUserId, setFilterUserId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(12);
   const [total, setTotal] = useState<number>(0);
 
-  const fetchPets = async (userId?: string, pageNum = 1) => {
-    setLoading(true);
-    try {
-      const url = new URL('/admin/pets', window.location.origin);
-      if (userId) url.searchParams.set('userId', String(userId));
-      url.searchParams.set('page', String(pageNum));
-      url.searchParams.set('limit', String(limit));
+  const fetchPets = useCallback(
+    async (userId?: string, pageNum = 1) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.get('/admin/pets', {
+          params: {
+            ...(userId ? { userId } : {}),
+            page: pageNum,
+            limit,
+          },
+        });
+        const payload = response.data ?? {};
+        setPets(payload.data ?? []);
+        setTotal(payload.total ?? 0);
+        setPage(payload.page ?? pageNum);
+      } catch (_caughtError) {
+        setError('Não foi possível carregar os pets.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [limit],
+  );
 
-      const response = await api.get(url.pathname + url.search);
-      const payload = response.data ?? {};
-      setPets(payload.data ?? []);
-      setTotal(payload.total ?? 0);
-      setPage(payload.page ?? pageNum);
-    } catch (_error) {
-      // verificar log dos pets
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await api.get('/admin/users');
       setUsers(response.data ?? []);
-    } catch (_error) {
-      //
+    } catch (_caughtError) {
+      setError('Não foi possível carregar os usuários para o filtro.');
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-    fetchPets();
   }, []);
 
   useEffect(() => {
-    // quando o filtro mudar, resetar para a página 1 e recarregar pets
-    setPage(1);
-    fetchPets(filterUserId, 1);
-  }, [filterUserId]);
+    void fetchUsers();
+  }, [fetchUsers]);
 
   useEffect(() => {
     // quando a página mudar, buscar a nova página
-    fetchPets(filterUserId, page);
-  }, [page]);
+    void fetchPets(filterUserId, page);
+  }, [fetchPets, filterUserId, page]);
 
   const toggleDeletion = async (petId: string) => {
     try {
       await api.patch(`/admin/pets/${petId}/toggle-deletion`);
-      fetchPets(filterUserId, page);
-    } catch (_error) {
-      //
+      void fetchPets(filterUserId, page);
+    } catch (_caughtError) {
+      setError('Não foi possível atualizar o status do pet.');
     }
   };
 
@@ -75,11 +74,19 @@ export function PetsTab() {
 
   return (
     <div>
+      {error ? (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
       <div className="mb-4 flex items-center gap-4">
         <label className="text-sm text-gray-700">Filtrar por usuário:</label>
         <select
           value={filterUserId ?? ''}
-          onChange={(e) => setFilterUserId(e.target.value || undefined)}
+          onChange={(e) => {
+            setFilterUserId(e.target.value || undefined);
+            setPage(1);
+          }}
           className="border rounded px-2 py-1 text-sm"
         >
           <option value="">Todos</option>

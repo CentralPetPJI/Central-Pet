@@ -6,13 +6,14 @@ import {
   Optional,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
-import { ModerationStatus, ModerationTargetType } from '../../../generated/prisma/client';
+import { ModerationStatus } from '../../../generated/prisma/client';
 
 import { UsersService } from '@/modules/users/users.service';
 import { AdminCreateUserDto } from '@/modules/users/dto/admin-create-user.dto';
 import { AuditService } from '@/modules/audit/audit.service';
 import { PetsService } from '@/modules/pets/pets.service';
 import { generateRandomPassword } from '@/modules/auth/password.util';
+import { ModerationTargetType } from '@/modules/moderation/moderation-target-type';
 
 @Injectable()
 export class AdminService {

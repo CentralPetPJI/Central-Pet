@@ -12,7 +12,8 @@ import { AdoptionRequestSimulationService, ManageAdoptionRequestsService } from 
 import { PetsService, type PetForAdoptionRequest } from '../pets/pets.service';
 import { UserPersistenceService } from '../users/user-persistence.service';
 import { CreateAdoptionRequestDto } from '@/modules/adoption-requests/dto/create-adoption-request.dto';
-import { Prisma } from '../../../generated/prisma/client';
+import { Prisma } from '@/../generated/prisma/client';
+
 @Injectable()
 export class AdoptionRequestsService {
   constructor(
@@ -23,7 +24,10 @@ export class AdoptionRequestsService {
     private readonly userPersistence: UserPersistenceService,
   ) {}
 
-  private buildUnavailablePetBlockNote(): string {
+  private buildUnavailablePetBlockNote(reason: 'CANCELLED' | 'NOT_FOUND' = 'CANCELLED'): string {
+    if (reason === 'NOT_FOUND') {
+      return 'Este pet não foi encontrado e pode ter sido removido. A solicitação foi cancelada.';
+    }
     return 'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.';
   }
 
@@ -46,14 +50,11 @@ export class AdoptionRequestsService {
     }
     const persistedUsersById = await this.userPersistence.buildUserMap(allUserIds);
 
-    const petsById = new Map<string, PetForAdoptionRequest | null>();
-    // Buscar pets incluindo soft-deleted para que solicitações existentes continuem visíveis
-    await Promise.all(
-      requests.map(async (r) => {
-        const pet = await this.petsService.findByIdForAdoption(r.petId, { includeDeleted: true });
-        petsById.set(r.petId, pet ?? null);
-      }),
-    );
+    const pets = await this.petsService.findAllForAdoptionInternal({
+      ids: requests.map((r) => r.petId),
+      includeDeleted: true,
+    });
+    const petsById = new Map<string, PetForAdoptionRequest>(pets.map((p) => [p.internalId, p]));
 
     return requests.map((r) => {
       const petFound = petsById.get(r.petId);
@@ -63,7 +64,8 @@ export class AdoptionRequestsService {
       if (!petFound) {
         // Pet não existe no banco; retornar placeholder UNAVAILABLE mantendo referência ao responsável quando disponível
         petForResponseObj = {
-          id: r.petId,
+          internalId: r.petId,
+          id: '', // Evita expor o UUID interno
           name: 'Indisponível',
           species: 'UNKNOWN',
           city: '',
@@ -80,7 +82,7 @@ export class AdoptionRequestsService {
       const petForResponse = mapPetForResponse(petForResponseObj);
       const blockNote =
         petForResponseObj.adoptionStatus === 'UNAVAILABLE'
-          ? this.buildUnavailablePetBlockNote()
+          ? this.buildUnavailablePetBlockNote(petFound ? 'CANCELLED' : 'NOT_FOUND')
           : undefined;
 
       const adopterForResponse = mapAdopterForResponse(
@@ -151,10 +153,15 @@ export class AdoptionRequestsService {
    * Retorna true se existir, false caso contrário.
    */
   async hasRequest(adopterId: string, petId: string): Promise<boolean> {
+    const internalPetId = await this.petsService.resolveInternalId(petId);
+    if (!internalPetId) {
+      return false;
+    }
+
     const found = await this.prisma.adoptionRequest.findFirst({
       where: {
         adopterId,
-        petId,
+        petId: internalPetId,
       },
     });
     return !!found;
@@ -241,7 +248,7 @@ export class AdoptionRequestsService {
     // 3. Validar se já existe solicitação pendente
     const existingRequest = await this.prisma.adoptionRequest.findFirst({
       where: {
-        petId,
+        petId: pet.internalId,
         adopterId,
       },
     });
@@ -261,7 +268,7 @@ export class AdoptionRequestsService {
     try {
       created = (await this.prisma.adoptionRequest.create({
         data: {
-          petId,
+          petId: pet.internalId,
           adopterId,
           responsibleUserId: pet.responsibleUserId,
           message: message ?? '',

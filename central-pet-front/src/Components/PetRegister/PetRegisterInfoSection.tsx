@@ -41,10 +41,10 @@ const PetRegisterInfoSection = () => {
             ))}
           </FormSelect>
         </FormField>
-        <FormField label="Raca" error={errors.breed?.message}>
+        <FormField label="Raça" error={errors.breed?.message}>
           <FormInput {...register('breed')} />
         </FormField>
-        <FormField label="Especie" error={errors.species?.message}>
+        <FormField label="Espécie" error={errors.species?.message}>
           <FormSelect {...register('species')}>
             {petSpeciesOptions.map((option) => (
               <option key={option.value} value={option.value}>

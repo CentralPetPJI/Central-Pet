@@ -14,7 +14,11 @@ const ReportPetModal: React.FC<ReportPetModalProps> = ({ isOpen, onClose, onConf
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setReason('');
+      setError(null);
+      return;
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {

@@ -4,6 +4,7 @@ import {
   fazerLogin,
   gerarUsuarioUnico,
 } from "../utils/user-helpers";
+import { obterImagemFixtureParaUpload } from "../utils/file-fixtures";
 
 /**
  * Teste E2E: fluxo crítico de cadastro e visualização de pets.
@@ -39,17 +40,17 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const petName = `Claude E2E ${timestamp}`;
 
     const fileInput = page.locator('input[type="file"]').first();
-    await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
+    await fileInput.setInputFiles(obterImagemFixtureParaUpload());
 
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
       .fill(petName);
     await page.getByLabel("Faixa etária").selectOption("ADULTO");
     await page
-      .getByRole("textbox", { name: "Raca", exact: true })
+      .getByRole("textbox", { name: "Raça", exact: true })
       .fill("Inteligência Artificial");
 
-    await page.getByLabel("Especie").selectOption("dog");
+    await page.getByLabel("Espécie").selectOption("dog");
     await page.getByLabel("Sexo").selectOption("male");
     await page.getByLabel("Porte").selectOption("medium");
 
@@ -57,7 +58,7 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     await page.getByRole("button", { name: /Sociável/i }).click();
     await page.getByRole("button", { name: "Salvar pet" }).click();
 
-    await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });
+    await page.waitForURL(/\/pets\/pet_[a-z0-9]+$/, { timeout: 15000 });
     await expect(
       page.getByRole("heading", { level: 1, name: petName }),
     ).toBeVisible();
@@ -92,21 +93,21 @@ test.describe("Fluxo de Cadastro de Pets", () => {
     const petName = `No Duplicate ${timestamp}`;
 
     const fileInput = page.locator('input[type="file"]').first();
-    await fileInput.setInputFiles("../central-pet-front/public/icon-pet.png");
+    await fileInput.setInputFiles(obterImagemFixtureParaUpload());
 
     await page
       .getByRole("textbox", { name: "Nome", exact: true })
       .fill(petName);
     await page.getByLabel("Faixa etária").selectOption("JOVEM");
-    await page.getByRole("textbox", { name: "Raca", exact: true }).fill("SRD");
+    await page.getByRole("textbox", { name: "Raça", exact: true }).fill("SRD");
 
-    await page.getByLabel("Especie").selectOption("dog");
+    await page.getByLabel("Espécie").selectOption("dog");
     await page.getByLabel("Sexo").selectOption("male");
     await page.getByLabel("Porte").selectOption("medium");
 
     await page.getByRole("button", { name: "Salvar pet" }).click();
 
-    await page.waitForURL(/\/pets\/\d+$/, { timeout: 15000 });
+    await page.waitForURL(/\/pets\/pet_[a-z0-9]+$/, { timeout: 15000 });
     await expect(
       page.getByRole("heading", { level: 1, name: petName }),
     ).toBeVisible();

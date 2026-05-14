@@ -66,6 +66,7 @@ describe('Servico de solicitacoes de adocao', () => {
         'pet-001',
         {
           id: 'pet-001',
+          internalId: 'pet-001',
           name: 'Mimi',
           species: 'CAT',
           city: 'Sao Paulo',
@@ -80,6 +81,7 @@ describe('Servico de solicitacoes de adocao', () => {
         'pet-002',
         {
           id: 'pet-002',
+          internalId: 'pet-002',
           name: 'Rex',
           species: 'DOG',
           city: 'Sao Paulo',
@@ -374,7 +376,13 @@ describe('Servico de solicitacoes de adocao', () => {
     };
 
     const petsServiceMock = {
+      resolveInternalId: jest.fn((id: string) => Promise.resolve(petsById.has(id) ? id : null)),
       findByIdForAdoption: jest.fn((id: string) => petsById.get(id) ?? null),
+      findAllForAdoptionInternal: jest.fn((filters: { ids: string[] }) => {
+        return Promise.resolve(
+          filters.ids.map((id) => petsById.get(id)).filter((p): p is PetForAdoptionRequest => !!p),
+        );
+      }),
       finalizeAdoption: jest.fn((id: string, newResponsibleUserId: string) => {
         const pet = petsById.get(id);
 
@@ -596,5 +604,30 @@ describe('Servico de solicitacoes de adocao', () => {
     expect(sent.data[0].blockNote).toBe(
       'Este pet foi cancelado e não está mais disponível para adoção. A solicitação foi cancelada automaticamente.',
     );
+  });
+
+  it('deve retornar false no hasRequest quando não houver resolução de petId', async () => {
+    const hasRequest = await service.hasRequest(mockUserIds.RAFAEL_LIMA, 'pet-nao-existe');
+
+    expect(hasRequest).toBe(false);
+  });
+
+  it('deve considerar petId resolvido ao verificar hasRequest', async () => {
+    records.push({
+      id: 'req-existente',
+      petId: 'pet-001',
+      responsibleUserId: mockUserIds.ONG_PATAS_DO_CENTRO,
+      adopterId: mockUserIds.RAFAEL_LIMA,
+      adopterContactShareConsent: true,
+      message: 'Mensagem',
+      status: AdoptionRequestStatus.PENDING,
+      note: null,
+      requestedAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const hasRequest = await service.hasRequest(mockUserIds.RAFAEL_LIMA, 'pet-001');
+
+    expect(hasRequest).toBe(true);
   });
 });
