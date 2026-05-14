@@ -61,10 +61,11 @@ describe('AdminService', () => {
 
       const result = await service.togglePetDeletion(petId, adminId);
 
-      expect(result.message).toBe('Pet bloqueado com sucesso');
+      expect(result.message).toBe('Pet removido com sucesso');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(petsServiceMock.removeTransactional).toHaveBeenCalledWith(prismaMock, petId, adminId, {
-        reason: 'Pet bloqueado por admin',
+        isAdmin: true,
+        reason: 'Pet removido por admin',
       });
     });
 
@@ -85,13 +86,13 @@ describe('AdminService', () => {
 
       const result = await service.togglePetDeletion(petId, adminId);
 
-      expect(result.message).toBe('Pet desbloqueado com sucesso');
+      expect(result.message).toBe('Pet reativado com sucesso');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(petsServiceMock.reactivatePetTransactional).toHaveBeenCalledWith(
         prismaMock,
         petId,
         adminId,
-        { reason: 'Pet desbloqueado por admin' },
+        { reason: 'Pet reativado por admin' },
       );
     });
   });
