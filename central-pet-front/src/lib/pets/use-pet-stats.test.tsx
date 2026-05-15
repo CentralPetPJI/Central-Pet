@@ -48,7 +48,7 @@ describe('usePetStats', () => {
     MockEventSource.instances = [];
   });
 
-  it('carrega estatisticas dos pets', async () => {
+  it('carrega estatísticas dos pets', async () => {
     apiGetMock.mockResolvedValue({
       data: {
         data: {

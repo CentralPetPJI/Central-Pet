@@ -696,7 +696,7 @@ describe('PetsService', () => {
     expect(listed.data.find((pet) => pet.id === created.data.id)).toBeUndefined();
   });
 
-  it('deve calcular estatisticas publicas sem incluir pets bloqueados ou indisponiveis', async () => {
+  it('deve calcular estatísticas públicas sem incluir pets bloqueados ou indisponíveis', async () => {
     await service.create(
       await validateCreateDto({ ...makeCreateDto(), name: 'Dog 1', species: 'dog' }),
       mockUserIds.RAFAEL_LIMA,

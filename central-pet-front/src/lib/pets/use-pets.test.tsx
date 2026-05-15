@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '@/lib/api';
-import { usePets } from './use-pets';
+import { usePets } from '@/lib/pets/use-pets';
 
 const { getMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
