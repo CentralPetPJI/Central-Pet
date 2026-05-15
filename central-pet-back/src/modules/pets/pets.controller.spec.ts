@@ -7,6 +7,7 @@ import { UserPersistenceService } from '../users/user-persistence.service';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 import { PetSeedService } from './pet-seed.service';
+import { PetStatsEventsService } from './pet-stats-events.service';
 
 describe('Controlador de pets', () => {
   let controller: PetsController;
@@ -44,6 +45,13 @@ describe('Controlador de pets', () => {
           provide: PetSeedService,
           useValue: {
             ensureSeed: () => Promise.resolve(),
+          },
+        },
+        {
+          provide: PetStatsEventsService,
+          useValue: {
+            events: () => undefined,
+            emitChanged: () => undefined,
           },
         },
       ],
