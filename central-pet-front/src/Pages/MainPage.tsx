@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '@/Components/Carousel';
 import { routes } from '@/routes';
-import { usePets } from '@/lib/pets';
+import { PET_STATS_CHANGED_BROWSER_EVENT, usePets } from '@/lib/pets';
 import { SITE_NAME } from '@/lib/site-config';
 
 const MainPage: React.FC = () => {
@@ -13,7 +13,19 @@ const MainPage: React.FC = () => {
     [],
   );
 
-  const { pets, isLoading, error } = usePets(filters);
+  const { pets, isLoading, error, refetch } = usePets(filters);
+
+  useEffect(() => {
+    const handlePetStatsChanged = () => {
+      void refetch();
+    };
+
+    window.addEventListener(PET_STATS_CHANGED_BROWSER_EVENT, handlePetStatsChanged);
+
+    return () => {
+      window.removeEventListener(PET_STATS_CHANGED_BROWSER_EVENT, handlePetStatsChanged);
+    };
+  }, [refetch]);
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">

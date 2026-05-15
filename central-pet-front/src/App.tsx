@@ -11,11 +11,10 @@ import { usePetStats } from '@/lib/pets';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const { stats } = usePetStats();
-  const speciesCounts = useMemo(() => stats.availableBySpecies, [stats.availableBySpecies]);
-
   const routedContent = useAppRoutes();
   const showSidePanel = location.pathname === routes.home.path;
+  const { stats } = usePetStats({ enabled: showSidePanel });
+  const speciesCounts = useMemo(() => stats.availableBySpecies, [stats.availableBySpecies]);
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">

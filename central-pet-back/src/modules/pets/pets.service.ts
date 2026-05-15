@@ -18,6 +18,7 @@ import { PetSeedService } from './pet-seed.service';
 import { PetMapper } from './mappers/pet-record.mapper';
 import type { PetForAdoptionRequest, PetRecord, PetResponseRecord } from './models/pet-record';
 import { Prisma } from '@/../generated/prisma/client';
+import { PetStatsEventsService } from './pet-stats-events.service';
 export type { PetForAdoptionRequest } from './models/pet-record';
 
 const generatePetPublicIdSuffix = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 12);
@@ -44,6 +45,7 @@ export class PetsService {
     private readonly personalityTraitsService: PersonalityTraitsService,
     private readonly userPersistence: UserPersistenceService,
     private readonly petSeedService: PetSeedService,
+    private readonly petStatsEvents: PetStatsEventsService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
@@ -311,6 +313,8 @@ export class PetsService {
       });
     }
 
+    this.petStatsEvents.emitChanged();
+
     return {
       message: 'Pet created successfully',
       data: this.withResponsibleLocation(PetMapper.toDomain(createdPet), responsibleMetadata),
@@ -472,6 +476,8 @@ export class PetsService {
       },
     });
 
+    this.petStatsEvents.emitChanged();
+
     return {
       pet: this.withResponsibleLocation(
         PetMapper.toDomain(updatedPet),
@@ -529,6 +535,8 @@ export class PetsService {
         selectedPersonalitiesJson: updatePetDto.selectedPersonalities,
       },
     });
+
+    this.petStatsEvents.emitChanged();
 
     return {
       message: 'Pet updated successfully',
@@ -678,6 +686,8 @@ export class PetsService {
     const deletedPet = await this.prisma.$transaction(async (tx) => {
       return this.removeTransactional(tx, id, performedBy);
     });
+
+    this.petStatsEvents.emitChanged();
 
     return {
       message: 'Pet deleted successfully',

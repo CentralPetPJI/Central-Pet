@@ -8,6 +8,7 @@ import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetsService } from './pets.service';
 import { PetSeedService } from './pet-seed.service';
+import { PetStatsEventsService } from './pet-stats-events.service';
 
 type PrismaPetRecord = {
   id: string;
@@ -51,6 +52,7 @@ describe('PetsService', () => {
   let validationPipe: ValidationPipe;
   let records: PrismaPetRecord[];
   let userRecords: Map<string, PrismaUserRecord>;
+  let petStatsEventsMock: PetStatsEventsService;
   let prismaMock: {
     pet: {
       count: jest.Mock;
@@ -388,11 +390,16 @@ describe('PetsService', () => {
       ensureSeed: jest.fn(async () => {}),
     } as unknown as PetSeedService;
 
+    petStatsEventsMock = {
+      emitChanged: jest.fn(),
+    } as unknown as PetStatsEventsService;
+
     service = new PetsService(
       prismaMock as unknown as PrismaService,
       personalityTraitsMock,
       userPersistenceMock as unknown as UserPersistenceService,
       seedServiceMock,
+      petStatsEventsMock,
     );
 
     validationPipe = new ValidationPipe({

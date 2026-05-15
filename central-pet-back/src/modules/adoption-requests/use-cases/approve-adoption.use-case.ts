@@ -5,6 +5,7 @@ import type { ManageAdoptionRequestDto } from '../dto/manage-adoption-request.dt
 import type { AdoptionRequestRecord } from '@/modules/adoption-requests/models';
 import { AdoptionRequestStatus } from '@/modules/adoption-requests/models';
 import { AuditService } from '@/modules/audit/audit.service';
+import { PetStatsEventsService } from '@/modules/pets/pet-stats-events.service';
 
 @Injectable()
 export class ApproveAdoptionUseCase {
@@ -12,6 +13,7 @@ export class ApproveAdoptionUseCase {
     private readonly prisma: PrismaService,
     private readonly petsService: PetsService,
     @Optional() private readonly auditService?: AuditService,
+    @Optional() private readonly petStatsEvents?: PetStatsEventsService,
   ) {}
 
   async execute(
@@ -112,6 +114,8 @@ export class ApproveAdoptionUseCase {
 
       return { updatedReq, autoRejectedCount };
     });
+
+    this.petStatsEvents?.emitChanged();
 
     return {
       message:
