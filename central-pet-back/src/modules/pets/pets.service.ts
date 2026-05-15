@@ -356,6 +356,44 @@ export class PetsService {
     };
   }
 
+  async getStats() {
+    await this.ensureMockPetsSeededIfEnabled();
+
+    const [availableDogs, availableCats, adoptedPets] = await Promise.all([
+      this.prisma.pet.count({
+        where: {
+          deleted: false,
+          status: 'AVAILABLE',
+          species: 'DOG',
+        },
+      }),
+      this.prisma.pet.count({
+        where: {
+          deleted: false,
+          status: 'AVAILABLE',
+          species: 'CAT',
+        },
+      }),
+      this.prisma.pet.count({
+        where: {
+          deleted: false,
+          status: 'ADOPTED',
+        },
+      }),
+    ]);
+
+    return {
+      message: 'Pet stats retrieved successfully',
+      data: {
+        availableBySpecies: {
+          dog: availableDogs,
+          cat: availableCats,
+        },
+        adopted: adoptedPets,
+      },
+    };
+  }
+
   async findOne(id: string) {
     await this.ensureMockPetsSeededIfEnabled();
 

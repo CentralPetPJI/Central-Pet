@@ -39,6 +39,11 @@ export class PetsController {
     });
   }
 
+  @Get('stats')
+  getStats() {
+    return this.petsService.getStats();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.petsService.findOne(id);

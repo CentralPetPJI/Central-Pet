@@ -53,6 +53,7 @@ describe('PetsService', () => {
   let userRecords: Map<string, PrismaUserRecord>;
   let prismaMock: {
     pet: {
+      count: jest.Mock;
       create: jest.Mock;
       findMany: jest.Mock;
       findUnique: jest.Mock;
@@ -142,6 +143,22 @@ describe('PetsService', () => {
 
     prismaMock = {
       pet: {
+        count: jest.fn(
+          (args?: {
+            where?: {
+              responsibleUserId?: string;
+              deleted?: boolean;
+              status?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
+              species?: 'DOG' | 'CAT';
+              sex?: 'MALE' | 'FEMALE';
+              size?: 'SMALL' | 'MEDIUM' | 'LARGE';
+              responsibleUser?: { state?: string };
+            };
+          }) => {
+            const matchingPets = prismaMock.pet.findMany(args) as PrismaPetRecord[];
+            return matchingPets.length;
+          },
+        ),
         create: jest.fn(
           (args: { data: Omit<PrismaPetRecord, 'id' | 'createdAt' | 'updatedAt'> }) => {
             const created: PrismaPetRecord = {
@@ -670,5 +687,49 @@ describe('PetsService', () => {
     expect(deleted.data.adoptionStatus).toBe('UNAVAILABLE');
     await expect(service.findOne(created.data.id)).rejects.toThrow(NotFoundException);
     expect(listed.data.find((pet) => pet.id === created.data.id)).toBeUndefined();
+  });
+
+  it('deve calcular estatisticas publicas sem incluir pets bloqueados ou indisponiveis', async () => {
+    await service.create(
+      await validateCreateDto({ ...makeCreateDto(), name: 'Dog 1', species: 'dog' }),
+      mockUserIds.RAFAEL_LIMA,
+    );
+    await service.create(
+      await validateCreateDto({ ...makeCreateDto(), name: 'Cat 1', species: 'cat' }),
+      mockUserIds.RAFAEL_LIMA,
+    );
+    const adopted = await service.create(
+      await validateCreateDto({ ...makeCreateDto(), name: 'Cat Adopted', species: 'cat' }),
+      mockUserIds.ANA_SOUZA,
+    );
+    const unavailable = await service.create(
+      await validateCreateDto({ ...makeCreateDto(), name: 'Dog Unavailable', species: 'dog' }),
+      mockUserIds.ANA_SOUZA,
+    );
+    const blockedAdopted = await service.create(
+      await validateCreateDto({ ...makeCreateDto(), name: 'Blocked Adopted', species: 'dog' }),
+      mockUserIds.ANA_SOUZA,
+    );
+
+    const adoptedRecord = records.find((record) => record.name === adopted.data.name)!;
+    const unavailableRecord = records.find((record) => record.name === unavailable.data.name)!;
+    const blockedAdoptedRecord = records.find(
+      (record) => record.name === blockedAdopted.data.name,
+    )!;
+
+    adoptedRecord.status = 'ADOPTED';
+    unavailableRecord.status = 'UNAVAILABLE';
+    blockedAdoptedRecord.status = 'ADOPTED';
+    blockedAdoptedRecord.deleted = true;
+
+    const result = await service.getStats();
+
+    expect(result.data).toEqual({
+      availableBySpecies: {
+        dog: 1,
+        cat: 1,
+      },
+      adopted: 1,
+    });
   });
 });

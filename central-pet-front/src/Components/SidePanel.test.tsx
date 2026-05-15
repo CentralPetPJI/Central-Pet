@@ -4,14 +4,15 @@ import SidePanel from '@/Components/SidePanel';
 
 describe('SidePanel', () => {
   it('renderiza labels no singular e plural conforme a contagem', () => {
-    render(<SidePanel speciesCounts={{ dog: 1, cat: 2 }} />);
+    render(<SidePanel speciesCounts={{ dog: 1, cat: 2 }} adoptedCount={4} />);
 
     expect(screen.getByText('Cachorro cadastrado')).toBeInTheDocument();
     expect(screen.getByText('Gatos cadastrados')).toBeInTheDocument();
+    expect(screen.getByText('Pets adotados pela plataforma')).toBeInTheDocument();
   });
 
   it('usa zero quando a especie nao existe no mapa de contagem', () => {
-    render(<SidePanel speciesCounts={{ dog: 3 }} />);
+    render(<SidePanel speciesCounts={{ dog: 3 }} adoptedCount={0} />);
 
     expect(
       screen.getAllByRole('heading', { level: 2 }).some((element) => element.textContent === '0'),
