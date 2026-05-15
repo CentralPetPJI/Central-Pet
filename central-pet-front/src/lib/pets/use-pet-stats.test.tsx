@@ -20,7 +20,7 @@ describe('usePetStats', () => {
     apiGetMock.mockReset();
   });
 
-  it('carrega estatisticas dos pets', async () => {
+  it('carrega estatísticas dos pets', async () => {
     apiGetMock.mockResolvedValue({
       data: {
         data: {
