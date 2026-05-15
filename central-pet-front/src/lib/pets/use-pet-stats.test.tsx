@@ -76,7 +76,7 @@ describe('usePetStats', () => {
     expect(apiGetMock).toHaveBeenCalledWith('/pets/stats');
   });
 
-  it('refaz estatisticas e notifica a home ao receber evento SSE', async () => {
+  it('refaz estatísticas e notifica a home ao receber evento SSE', async () => {
     vi.stubGlobal('EventSource', MockEventSource);
     const localEventListener = vi.fn();
     window.addEventListener(PET_STATS_CHANGED_BROWSER_EVENT, localEventListener);
