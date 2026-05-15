@@ -507,7 +507,7 @@ export class PetsService {
     tx: Prisma.TransactionClient,
     id: string,
     performedBy: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown> & { isAdmin?: boolean },
   ) {
     const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
     if (!internalId) {
@@ -532,9 +532,7 @@ export class PetsService {
 
     // Apenas permitir reativação se for pelo mesmo usuário que deletou, se for admin,
     // ou se o motivo foi um bloqueio administrativo (que agora está sendo revertido)
-    const isAuthorized =
-      performedBy === currentPet.deletedBy ||
-      currentPet.deletedReason === CANCEL_REASON_ADMIN_BLOCK;
+    const isAuthorized = performedBy === currentPet.deletedBy || details?.isAdmin || false;
 
     if (!isAuthorized) {
       throw new ForbiddenException('Você não tem permissão para reativar este pet.');
@@ -557,7 +555,6 @@ export class PetsService {
       where: {
         petId: currentPet.id,
         status: 'CANCELLED',
-        note: CANCEL_REASON_ADMIN_BLOCK,
       },
       data: {
         status: 'PENDING',
@@ -598,7 +595,9 @@ export class PetsService {
     }
 
     const isAdmin = details?.isAdmin ?? false;
-    const deletedReason = isAdmin ? CANCEL_REASON_ADMIN_BLOCK : (details?.reason as string);
+    const deletedReason = isAdmin
+      ? CANCEL_REASON_ADMIN_BLOCK
+      : (details?.reason ?? CANCEL_REASON_OWNER);
 
     const deletedPet = await tx.pet.update({
       where: { id: currentPet.id },
@@ -607,7 +606,7 @@ export class PetsService {
         status: 'UNAVAILABLE',
         deletedAt: new Date(),
         deletedBy: performedBy,
-        deletedReason: deletedReason || CANCEL_REASON_ADMIN_BLOCK,
+        deletedReason,
       },
     });
 

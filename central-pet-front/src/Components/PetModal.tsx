@@ -12,11 +12,15 @@ interface PetModalProps {
 }
 
 const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isLoading } = useAuth();
   const routeId = getPetRouteId(petData);
   const locationText = petData.city
     ? `${petData.city}${petData.state ? `/${formatState(petData.state)}` : ''}`
     : 'Nao informado';
+
+  const buttonText =
+    !isLoading && currentUser?.id === petData.responsibleUserId ? 'Ver Perfil' : 'Quero adotar';
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
@@ -54,8 +58,9 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
         <Link
           to={routes.pets.detail.build(routeId)}
           className="mt-6 block w-full rounded-xl bg-primary-400 py-3 text-center font-semibold text-white transition hover:bg-primary-600"
+          aria-disabled={isLoading}
         >
-          {currentUser?.id === petData.responsibleUserId ? 'Ver Perfil' : 'Quero adotar'}
+          {buttonText}
         </Link>
       </div>
     </div>
