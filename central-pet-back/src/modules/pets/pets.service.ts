@@ -532,7 +532,7 @@ export class PetsService {
 
     // Apenas permitir reativação se for pelo mesmo usuário que deletou, se for admin,
     // ou se o motivo foi um bloqueio administrativo (que agora está sendo revertido)
-    const isAuthorized = performedBy === currentPet.deletedBy || details?.isAdmin || false;
+    const isAuthorized = performedBy === currentPet.deletedBy || details?.isAdmin;
 
     if (!isAuthorized) {
       throw new ForbiddenException('Você não tem permissão para reativar este pet.');
@@ -595,9 +595,7 @@ export class PetsService {
     }
 
     const isAdmin = details?.isAdmin ?? false;
-    const deletedReason = isAdmin
-      ? CANCEL_REASON_ADMIN_BLOCK
-      : (details?.reason ?? CANCEL_REASON_OWNER);
+    const deletedReason = isAdmin ? CANCEL_REASON_ADMIN_BLOCK : CANCEL_REASON_OWNER;
 
     const deletedPet = await tx.pet.update({
       where: { id: currentPet.id },

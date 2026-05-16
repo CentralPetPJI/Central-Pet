@@ -124,6 +124,7 @@ export class AdminService {
     await this.prisma.$transaction(async (tx) => {
       if (pet.deleted) {
         await this.petsService.reactivatePetTransactional(tx, petId, adminId, {
+          isAdmin: true,
           reason: 'Pet reativado por admin',
         });
       } else {
@@ -162,7 +163,12 @@ export class AdminService {
       }),
     ]);
 
-    return { data: pets, total, page, limit };
+    const mappedPets = pets.map((pet) => ({
+      ...pet,
+      adoptionStatus: pet.status,
+    }));
+
+    return { data: mappedPets, total, page, limit };
   }
 
   async getAuditLogs(userId?: string, page = 1, limit = 20) {

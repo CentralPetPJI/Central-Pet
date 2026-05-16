@@ -107,6 +107,20 @@ export const mockUsers: MockUser[] = [
     deleted: false,
     acceptedTermsAt: undefined,
   },
+  {
+    id: mockUserIds.ADMIN_CENTRAL_PET,
+    fullName: 'Admin Central Pet',
+    email: 'admina@centralpet.com',
+    role: 'ADMIN',
+    city: 'Campinas',
+    state: 'SP',
+    birthDate: new Date('1990-01-20'),
+    cpf: '987.321.321-00',
+    createdAt: new Date('2026-03-06T16:20:00.000Z'),
+    updatedAt: new Date('2026-03-06T16:20:00.000Z'),
+    deleted: false,
+    acceptedTermsAt: new Date('2026-03-06T16:20:00.000Z'),
+  },
 ];
 
 export const defaultMockUserId = mockUserIds.ONG_PATAS_DO_CENTRO;
