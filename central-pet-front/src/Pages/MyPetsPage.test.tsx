@@ -24,7 +24,7 @@ vi.mock('@/lib/auth-context', () => ({
   }),
 }));
 
-describe('Pagina Meus Pets', () => {
+describe('Página Meus Pets', () => {
   beforeEach(() => {
     getMock.mockReset();
     deleteMock.mockReset();
