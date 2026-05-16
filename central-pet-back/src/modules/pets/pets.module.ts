@@ -7,11 +7,12 @@ import { PetsService } from './pets.service';
 import { UsersModule } from '@/modules/users/users.module';
 import { PetOwnerGuard } from './guards/pet-owner.guard';
 import { PetSeedService } from './pet-seed.service';
+import { PetStatsEventsService } from './pet-stats-events.service';
 
 @Module({
   imports: [PrismaModule, PersonalityTraitsModule, UsersModule],
   controllers: [PetsController],
-  providers: [PetsService, PetOwnerGuard, PetSeedService],
-  exports: [PetsService],
+  providers: [PetsService, PetOwnerGuard, PetSeedService, PetStatsEventsService],
+  exports: [PetsService, PetStatsEventsService],
 })
 export class PetsModule {}

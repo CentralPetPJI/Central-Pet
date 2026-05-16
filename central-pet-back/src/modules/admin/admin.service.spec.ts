@@ -4,6 +4,7 @@ import { AdminService } from './admin.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { UsersService } from '@/modules/users/users.service';
 import { PetsService } from '@/modules/pets/pets.service';
+import { PetStatsEventsService } from '@/modules/pets/pet-stats-events.service';
 import { AuditService } from '@/modules/audit/audit.service';
 import { prismaMock } from '../../../singleton';
 import { Pet } from '../../../generated/prisma/client';
@@ -12,6 +13,7 @@ describe('AdminService', () => {
   let service: AdminService;
   let usersServiceMock: UsersService;
   let petsServiceMock: PetsService;
+  let petStatsEventsMock: PetStatsEventsService;
   let auditServiceMock: AuditService;
 
   beforeEach(() => {
@@ -32,6 +34,10 @@ describe('AdminService', () => {
       reactivatePetTransactional: jest.fn(),
     } as unknown as PetsService;
 
+    petStatsEventsMock = {
+      emitChanged: jest.fn(),
+    } as unknown as PetStatsEventsService;
+
     auditServiceMock = {
       create: jest.fn(),
       createWithTx: jest.fn(),
@@ -41,6 +47,7 @@ describe('AdminService', () => {
       prismaMock as unknown as PrismaService,
       usersServiceMock as unknown as UsersService,
       petsServiceMock as unknown as PetsService,
+      petStatsEventsMock,
       auditServiceMock as unknown as AuditService,
     );
   });

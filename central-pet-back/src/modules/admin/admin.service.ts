@@ -12,6 +12,7 @@ import { UsersService } from '@/modules/users/users.service';
 import { AdminCreateUserDto } from '@/modules/users/dto/admin-create-user.dto';
 import { AuditService } from '@/modules/audit/audit.service';
 import { PetsService } from '@/modules/pets/pets.service';
+import { PetStatsEventsService } from '@/modules/pets/pet-stats-events.service';
 import { generateRandomPassword } from '@/modules/auth/password.util';
 import { ModerationTargetType } from '@/modules/moderation/moderation-target-type';
 
@@ -21,6 +22,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly petsService: PetsService,
+    private readonly petStatsEvents: PetStatsEventsService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
 
@@ -108,6 +110,8 @@ export class AdminService {
       }
     });
 
+    this.petStatsEvents.emitChanged();
+
     return { message: `Usuário ${shouldDeactivate ? 'desativado' : 'reativado'} com sucesso` };
   }
 
@@ -134,6 +138,8 @@ export class AdminService {
         });
       }
     });
+
+    this.petStatsEvents.emitChanged();
 
     return { message: `Pet ${pet.deleted ? 'reativado' : 'removido'} com sucesso` };
   }
@@ -256,6 +262,14 @@ export class AdminService {
         }
       }
     });
+
+    if (
+      status === ModerationStatus.APPROVED &&
+      blockPet &&
+      report.targetType === ModerationTargetType.PET
+    ) {
+      this.petStatsEvents.emitChanged();
+    }
 
     return { message: 'Denúncia resolvida com sucesso' };
   }

@@ -45,9 +45,9 @@ test.describe.serial("Fluxo de Adoção", () => {
     // 1. ADOTANTE: Solicitar adoção
     await fazerLogin(page, adopter);
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
     // Selecionar o pet exato pelo nome único usando exact text
     const petCard = page.locator("h3").filter({ hasText: pet.name }).first();
+    await expect(petCard).toBeVisible({ timeout: 15000 });
     await petCard.click({ force: true });
 
     await page.getByRole("link", { name: "Quero adotar" }).click();
@@ -64,8 +64,6 @@ test.describe.serial("Fluxo de Adoção", () => {
     await fazerLogout(page);
     await fazerLogin(page, donor);
     await page.goto("/adoption-requests");
-    await page.waitForLoadState("networkidle");
-
     const receivedCard = page
       .locator("article")
       .filter({ hasText: pet.name })
@@ -98,9 +96,8 @@ test.describe.serial("Fluxo de Adoção", () => {
   }) => {
     await fazerLogin(page, donor);
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
     const petCard = page.locator("h3").filter({ hasText: pet.name }).first();
+    await expect(petCard).toBeVisible({ timeout: 15000 });
     await petCard.click({ force: true });
     await page.getByRole("link", { name: "Ver Perfil" }).click();
 

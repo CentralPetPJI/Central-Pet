@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Cat, Dog, PawPrint, type LucideIcon } from 'lucide-react';
+import { Cat, Dog, HeartHandshake, PawPrint, type LucideIcon } from 'lucide-react';
 import { petSpeciesOptions } from '@/storage/pets';
 
 interface SidePanelProps {
   speciesCounts: Record<string, number>;
+  adoptedCount: number;
 }
 
 const speciesIconByValue: Record<string, LucideIcon> = {
@@ -11,7 +12,7 @@ const speciesIconByValue: Record<string, LucideIcon> = {
   cat: Cat,
 };
 
-const SidePanel: React.FC<SidePanelProps> = ({ speciesCounts }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ speciesCounts, adoptedCount }) => {
   const speciesCards = petSpeciesOptions.map((speciesOption) => ({
     ...speciesOption,
     count: speciesCounts[speciesOption.value] ?? 0,
@@ -28,6 +29,12 @@ const SidePanel: React.FC<SidePanelProps> = ({ speciesCounts }) => {
           number={speciesCard.count}
         />
       ))}
+      <StatCard
+        icon={HeartHandshake}
+        label="Pets adotados pela plataforma"
+        number={adoptedCount}
+        useFixedLabel
+      />
     </div>
   );
 };
@@ -36,11 +43,16 @@ interface StatCardProps {
   icon: LucideIcon;
   label: string;
   number: number;
+  useFixedLabel?: boolean;
 }
 
-function StatCard({ icon: Icon, label, number }: StatCardProps) {
+function StatCard({ icon: Icon, label, number, useFixedLabel = false }: StatCardProps) {
   const [count, setCount] = useState(0);
-  const normalizedLabel = number === 1 ? `${label} cadastrado` : `${label}s cadastrados`;
+  const normalizedLabel = useFixedLabel
+    ? label
+    : number === 1
+      ? `${label} cadastrado`
+      : `${label}s cadastrados`;
 
   useEffect(() => {
     let start = 0;

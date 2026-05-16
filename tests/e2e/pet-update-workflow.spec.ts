@@ -11,7 +11,7 @@ import { obterImagemFixtureParaUpload } from "../utils/file-fixtures";
  * Teste E2E: fluxo de atualização de pets.
  * Dividido em mini-testes para cobrir cada seção do formulário.
  */
-test.describe("Fluxo de Atualização de Pets - Seções", () => {
+test.describe.serial("Fluxo de Atualização de Pets - Seções", () => {
   let petId: string;
   let usuario: any;
   let petIdsCriados: string[] = [];
