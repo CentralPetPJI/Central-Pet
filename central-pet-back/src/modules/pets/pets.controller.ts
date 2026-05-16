@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Sse,
   UseGuards,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
@@ -16,10 +17,14 @@ import { UpdatePetDto } from './dto/update-pet.dto';
 import { SessionGuard } from '@/modules/auth/guards/session.guard';
 import { PetOwnerGuard } from './guards/pet-owner.guard';
 import { CurrentUser } from '@/decorators/current-user.decorator';
+import { PetStatsEventsService } from './pet-stats-events.service';
 
 @Controller('pets')
 export class PetsController {
-  constructor(private readonly petsService: PetsService) {}
+  constructor(
+    private readonly petsService: PetsService,
+    private readonly petStatsEvents: PetStatsEventsService,
+  ) {}
 
   @Post()
   @UseGuards(SessionGuard)
@@ -37,6 +42,16 @@ export class PetsController {
       sex: dto.sex,
       size: dto.size,
     });
+  }
+
+  @Get('stats')
+  getStats() {
+    return this.petsService.getStats();
+  }
+
+  @Sse('stats/events')
+  getStatsEvents() {
+    return this.petStatsEvents.events();
   }
 
   @Get(':id')

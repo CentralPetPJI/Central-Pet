@@ -7,29 +7,14 @@ import Footer from '@/Layout/Footer';
 import Header from '@/Layout/Header';
 import { routes, useAppRoutes } from '@/routes';
 import { shouldDisplayMockChoiceGates } from '@/lib/dev-mode.ts';
-import { usePets } from '@/lib/pets';
+import { usePetStats } from '@/lib/pets';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const filters = useMemo(
-    () => ({
-      adoptionStatus: 'AVAILABLE' as const,
-    }),
-    [],
-  );
-
-  const { pets } = usePets(filters);
-  const speciesCounts = useMemo(
-    () =>
-      pets.reduce<Record<string, number>>((counts, pet) => {
-        counts[pet.species] = (counts[pet.species] ?? 0) + 1;
-        return counts;
-      }, {}),
-    [pets],
-  );
-
   const routedContent = useAppRoutes();
   const showSidePanel = location.pathname === routes.home.path;
+  const { stats } = usePetStats({ enabled: showSidePanel });
+  const speciesCounts = useMemo(() => stats.availableBySpecies, [stats.availableBySpecies]);
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
@@ -43,7 +28,7 @@ const App: React.FC = () => {
 
           {showSidePanel ? (
             <aside className="hidden xl:block">
-              <SidePanel speciesCounts={speciesCounts} />
+              <SidePanel speciesCounts={speciesCounts} adoptedCount={stats.adopted} />
             </aside>
           ) : null}
         </div>

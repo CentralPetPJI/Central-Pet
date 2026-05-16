@@ -35,6 +35,9 @@ describe('PetMapper', () => {
     sourceName: 'Rafael Lima',
     status: PetStatus.AVAILABLE,
     deleted: false,
+    deletedAt: null,
+    deletedBy: null,
+    deletedReason: null,
     createdAt: new Date('2026-04-10T00:00:00Z'),
     updatedAt: new Date('2026-04-10T00:00:00Z'),
   };

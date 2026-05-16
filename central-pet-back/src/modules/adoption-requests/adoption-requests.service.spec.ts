@@ -409,7 +409,10 @@ describe('Servico de solicitacoes de adocao', () => {
       petsServiceMock,
     );
 
-    const shareContactUseCaseMock = new ShareContactUseCase(prismaMock as unknown as PrismaService);
+    const shareContactUseCaseMock = new ShareContactUseCase(
+      prismaMock as unknown as PrismaService,
+      petsServiceMock,
+    );
 
     const rejectAdoptionUseCaseMock = new RejectAdoptionUseCase(
       prismaMock as unknown as PrismaService,
