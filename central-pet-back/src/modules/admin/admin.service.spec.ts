@@ -68,10 +68,11 @@ describe('AdminService', () => {
 
       const result = await service.togglePetDeletion(petId, adminId);
 
-      expect(result.message).toBe('Pet bloqueado com sucesso');
+      expect(result.message).toBe('Pet removido com sucesso');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(petsServiceMock.removeTransactional).toHaveBeenCalledWith(prismaMock, petId, adminId, {
-        reason: 'Pet bloqueado por admin',
+        isAdmin: true,
+        reason: 'Pet removido por admin',
       });
     });
 
@@ -92,14 +93,45 @@ describe('AdminService', () => {
 
       const result = await service.togglePetDeletion(petId, adminId);
 
-      expect(result.message).toBe('Pet desbloqueado com sucesso');
+      expect(result.message).toBe('Pet reativado com sucesso');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(petsServiceMock.reactivatePetTransactional).toHaveBeenCalledWith(
         prismaMock,
         petId,
         adminId,
-        { reason: 'Pet desbloqueado por admin' },
+        { isAdmin: true, reason: 'Pet reativado por admin' },
       );
+    });
+  });
+
+  describe('getPets', () => {
+    it('deve retornar a lista de pets mapeada com adoptionStatus', async () => {
+      const mockPets = [
+        {
+          id: '1',
+          name: 'Buddy',
+          status: 'AVAILABLE',
+          deleted: false,
+          responsibleUser: { fullName: 'User 1' },
+        },
+        {
+          id: '2',
+          name: 'Max',
+          status: 'ADOPTED',
+          deleted: false,
+          responsibleUser: { fullName: 'User 2' },
+        },
+      ];
+
+      prismaMock.pet.count.mockResolvedValue(2);
+      prismaMock.pet.findMany.mockResolvedValue(mockPets as any);
+
+      const result = await service.getPets();
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].adoptionStatus).toBe('AVAILABLE');
+      expect(result.data[1].adoptionStatus).toBe('ADOPTED');
+      expect(result.total).toBe(2);
     });
   });
 });

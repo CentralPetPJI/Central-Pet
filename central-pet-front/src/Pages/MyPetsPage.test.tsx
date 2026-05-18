@@ -3,13 +3,15 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MyPetsPage from '@/Pages/MyPetsPage';
 
-const { getMock } = vi.hoisted(() => ({
+const { getMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
+  deleteMock: vi.fn(),
 }));
 
 vi.mock('@/lib/api', () => ({
   api: {
     get: getMock,
+    delete: deleteMock,
   },
 }));
 
@@ -22,9 +24,10 @@ vi.mock('@/lib/auth-context', () => ({
   }),
 }));
 
-describe('Pagina Meus Pets', () => {
+describe('Página Meus Pets', () => {
   beforeEach(() => {
     getMock.mockReset();
+    deleteMock.mockReset();
   });
 
   it('renderiza a lista de pets cadastrados pelo usuario atual', async () => {
@@ -96,5 +99,115 @@ describe('Pagina Meus Pets', () => {
     });
 
     expect(screen.queryByRole('heading', { name: 'Thor' })).not.toBeInTheDocument();
+  });
+
+  it('permite excluir um pet da listagem', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    getMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: '4',
+            name: 'Pringles',
+            species: 'CAT',
+            adoptionStatus: 'AVAILABLE',
+            responsibleUserId: '33333333-3333-3333-3333-333333333333',
+          },
+        ],
+      },
+    });
+    deleteMock.mockResolvedValue({ data: {} });
+
+    render(
+      <MemoryRouter>
+        <MyPetsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    });
+
+    screen.getByRole('button', { name: 'Excluir pet' }).click();
+
+    await waitFor(() => {
+      expect(deleteMock).toHaveBeenCalledWith('/pets/4');
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Pringles' })).not.toBeInTheDocument();
+    });
+
+    expect(confirmSpy).toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it('nao exclui pet quando usuario cancela a confirmacao', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    getMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: '4',
+            name: 'Pringles',
+            species: 'CAT',
+            adoptionStatus: 'AVAILABLE',
+            responsibleUserId: '33333333-3333-3333-3333-333333333333',
+          },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <MyPetsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    });
+
+    screen.getByRole('button', { name: 'Excluir pet' }).click();
+
+    expect(deleteMock).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    confirmSpy.mockRestore();
+  });
+
+  it('mantem pet na listagem quando API falha ao excluir', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    getMock.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: '4',
+            name: 'Pringles',
+            species: 'CAT',
+            adoptionStatus: 'AVAILABLE',
+            responsibleUserId: '33333333-3333-3333-3333-333333333333',
+          },
+        ],
+      },
+    });
+    const error = new Error('Erro ao excluir pet');
+    deleteMock.mockRejectedValue(error);
+
+    render(
+      <MemoryRouter>
+        <MyPetsPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    });
+
+    screen.getByRole('button', { name: 'Excluir pet' }).click();
+
+    await waitFor(() => {
+      expect(deleteMock).toHaveBeenCalledWith('/pets/4');
+    });
+    expect(screen.getByRole('heading', { name: 'Pringles' })).toBeInTheDocument();
+    confirmSpy.mockRestore();
   });
 });

@@ -31,6 +31,8 @@ type ResponsibleLocation = {
 const CANCEL_REASON_ADMIN_BLOCK =
   'Solicitação cancelada automaticamente devido ao bloqueio administrativo do pet.';
 
+const CANCEL_REASON_OWNER = 'Solicitação cancelada pelo dono do pet.';
+
 type ResponsiblePetMetadata = ResponsibleLocation & {
   sourceType: 'ONG' | 'PESSOA_FISICA';
   sourceName: string;
@@ -551,7 +553,7 @@ export class PetsService {
     tx: Prisma.TransactionClient,
     id: string,
     performedBy: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown> & { isAdmin?: boolean },
   ) {
     const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
     if (!internalId) {
@@ -576,9 +578,7 @@ export class PetsService {
 
     // Apenas permitir reativação se for pelo mesmo usuário que deletou, se for admin,
     // ou se o motivo foi um bloqueio administrativo (que agora está sendo revertido)
-    const isAuthorized =
-      performedBy === currentPet.deletedBy ||
-      currentPet.deletedReason === CANCEL_REASON_ADMIN_BLOCK;
+    const isAuthorized = performedBy === currentPet.deletedBy || details?.isAdmin;
 
     if (!isAuthorized) {
       throw new ForbiddenException('Você não tem permissão para reativar este pet.');
@@ -601,7 +601,6 @@ export class PetsService {
       where: {
         petId: currentPet.id,
         status: 'CANCELLED',
-        note: CANCEL_REASON_ADMIN_BLOCK,
       },
       data: {
         status: 'PENDING',
@@ -625,7 +624,7 @@ export class PetsService {
     tx: Prisma.TransactionClient,
     id: string,
     performedBy?: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown> & { isAdmin?: boolean },
   ) {
     const internalId = await this.resolveInternalIdWithPetClient(tx.pet, id);
     if (!internalId) {
@@ -641,6 +640,9 @@ export class PetsService {
       throw new NotFoundException(`Pet with id "${id}" not found`);
     }
 
+    const isAdmin = details?.isAdmin ?? false;
+    const deletedReason = isAdmin ? CANCEL_REASON_ADMIN_BLOCK : CANCEL_REASON_OWNER;
+
     const deletedPet = await tx.pet.update({
       where: { id: currentPet.id },
       data: {
@@ -648,11 +650,13 @@ export class PetsService {
         status: 'UNAVAILABLE',
         deletedAt: new Date(),
         deletedBy: performedBy,
-        deletedReason: (details?.reason as string) || CANCEL_REASON_ADMIN_BLOCK,
+        deletedReason,
       },
     });
 
     // Cancelar solicitações pendentes do pet
+    const cancellationNote = isAdmin ? CANCEL_REASON_ADMIN_BLOCK : CANCEL_REASON_OWNER;
+
     await tx.adoptionRequest.updateMany({
       where: {
         petId: currentPet.id,
@@ -660,7 +664,7 @@ export class PetsService {
       },
       data: {
         status: 'CANCELLED',
-        note: CANCEL_REASON_ADMIN_BLOCK,
+        note: cancellationNote,
         version: { increment: 1 },
       },
     });
@@ -675,6 +679,7 @@ export class PetsService {
           ...details,
           previousStatus: currentPet.status,
           newStatus: 'UNAVAILABLE',
+          performedByRole: isAdmin ? 'ADMIN' : 'OWNER',
         },
       });
     }

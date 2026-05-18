@@ -28,7 +28,7 @@ describe('Servico de autenticacao mock', () => {
   it('deve listar os usuarios mock disponiveis', () => {
     const result = service.listUsers();
 
-    expect(result.data.users).toHaveLength(5);
+    expect(result.data.users).toHaveLength(6);
     expect(result.data.defaultUserId).toBe(defaultMockUserId);
   });
 

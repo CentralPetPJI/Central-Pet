@@ -113,9 +113,19 @@ export function PetsTab() {
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{pet.name}</h3>
                 <span
-                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${pet.deleted ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}
+                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                    pet.deleted
+                      ? 'bg-red-100 text-red-800'
+                      : pet.adoptionStatus === 'ADOPTED'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
+                  }`}
                 >
-                  {pet.deleted ? 'Bloqueado' : 'Visível'}
+                  {pet.deleted
+                    ? 'Bloqueado'
+                    : pet.adoptionStatus === 'ADOPTED'
+                      ? 'Adotado'
+                      : 'Visível'}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mb-2">
@@ -131,10 +141,16 @@ export function PetsTab() {
                 </a>
                 <button
                   onClick={() => toggleDeletion(pet.id)}
-                  className={`ml-auto py-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
-                    pet.deleted
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-red-600 text-white hover:bg-red-700'
+                  disabled={pet.adoptionStatus === 'ADOPTED'}
+                  title={
+                    pet.adoptionStatus === 'ADOPTED' ? 'Não é possível bloquear um pet adotado' : ''
+                  }
+                  className={`ml-auto py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
+                    pet.adoptionStatus === 'ADOPTED'
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : pet.deleted
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-red-600 text-white hover:bg-red-700'
                   }`}
                 >
                   {pet.deleted ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}

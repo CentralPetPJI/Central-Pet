@@ -34,6 +34,8 @@ const PetPersonalityProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
 
   // Limpar a mensagem após 3 segundos
   useEffect(() => {
@@ -142,6 +144,30 @@ const PetPersonalityProfilePage = () => {
     }
   };
 
+  const handleDeletePet = async () => {
+    if (!petApi) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Tem certeza que deseja excluir o pet "${petApi.name}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteErrorMessage('');
+    setIsDeleting(true);
+
+    try {
+      await api.delete(`/pets/${petApi.id}`);
+      navigate(routes.pets.mine.path);
+    } catch {
+      setDeleteErrorMessage('Não foi possível excluir o pet. Tente novamente.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // TODO: Isso deve vir do back, talvez ;)
   const healthItems: PetProfileFact[] = [
     { label: 'Vacinado', value: formData.vaccinated },
@@ -178,6 +204,11 @@ const PetPersonalityProfilePage = () => {
           aria-atomic="true"
         >
           <p className="text-sm font-medium text-emerald-700">{displayMessage}</p>
+        </div>
+      )}
+      {deleteErrorMessage && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" role="alert">
+          <p className="text-sm font-medium text-red-700">{deleteErrorMessage}</p>
         </div>
       )}
       {!isNotFound ? (
@@ -221,6 +252,16 @@ const PetPersonalityProfilePage = () => {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => void handleDeletePet()}
+                  disabled={isDeleting}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isDeleting ? 'Excluindo...' : 'Excluir pet'}
+                </button>
+              )}
               {!isOwner && (
                 <button
                   onClick={handleReportClick}
