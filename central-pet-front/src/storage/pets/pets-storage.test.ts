@@ -25,8 +25,8 @@ describe('pet storage helpers', () => {
       species: 'dog',
       profilePhoto: 'https://example.com/thor.png',
       age: 'Filhote',
-      sex: 'male',
-      size: 'medium',
+      sex: 'female',
+      size: 'large',
     });
   });
 });
