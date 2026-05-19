@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import MyPetsPage from '@/Pages/MyPetsPage';
+import type { PetApiResponse } from '@/Models/pet';
 
 const { getMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
@@ -24,6 +25,37 @@ vi.mock('@/lib/auth-context', () => ({
   }),
 }));
 
+const createApiPet = (overrides: Partial<PetApiResponse>): PetApiResponse => ({
+  id: '4',
+  profilePhoto: 'https://example.com/pet.jpg',
+  galleryPhotos: [],
+  name: 'Pringles',
+  age: 'ADULTO',
+  species: 'cat',
+  breed: 'SRD',
+  sex: 'male',
+  size: 'medium',
+  microchipped: false,
+  city: 'Campinas',
+  state: 'SP',
+  vaccinated: true,
+  neutered: true,
+  dewormed: true,
+  needsHealthCare: false,
+  physicalLimitation: false,
+  visualLimitation: false,
+  hearingLimitation: false,
+  selectedPersonalities: [],
+  responsibleUserId: '33333333-3333-3333-3333-333333333333',
+  adoptionStatus: 'AVAILABLE',
+  sourceType: 'PESSOA_FISICA',
+  sourceName: 'Fulano',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  deleted: false,
+  ...overrides,
+});
+
 describe('Página Meus Pets', () => {
   beforeEach(() => {
     getMock.mockReset();
@@ -34,16 +66,12 @@ describe('Página Meus Pets', () => {
     getMock.mockResolvedValue({
       data: {
         data: [
-          {
+          createApiPet({
             id: '4',
             name: 'Pringles',
-            species: 'CAT',
+            species: 'cat',
             breed: 'Bengal',
-            city: 'Campinas',
-            state: 'SP',
-            adoptionStatus: 'AVAILABLE',
-            responsibleUserId: '33333333-3333-3333-3333-333333333333',
-          },
+          }),
         ],
       },
     });
@@ -70,20 +98,18 @@ describe('Página Meus Pets', () => {
     getMock.mockResolvedValue({
       data: {
         data: [
-          {
+          createApiPet({
             id: '4',
             name: 'Pringles',
-            species: 'CAT',
-            adoptionStatus: 'AVAILABLE',
+            species: 'cat',
             responsibleUserId: '33333333-3333-3333-3333-333333333333',
-          },
-          {
+          }),
+          createApiPet({
             id: '5',
             name: 'Thor',
-            species: 'DOG',
-            adoptionStatus: 'AVAILABLE',
+            species: 'dog',
             responsibleUserId: '99999999-9999-9999-9999-999999999999',
-          },
+          }),
         ],
       },
     });
@@ -106,13 +132,11 @@ describe('Página Meus Pets', () => {
     getMock.mockResolvedValue({
       data: {
         data: [
-          {
+          createApiPet({
             id: '4',
             name: 'Pringles',
-            species: 'CAT',
-            adoptionStatus: 'AVAILABLE',
-            responsibleUserId: '33333333-3333-3333-3333-333333333333',
-          },
+            species: 'cat',
+          }),
         ],
       },
     });
@@ -146,13 +170,11 @@ describe('Página Meus Pets', () => {
     getMock.mockResolvedValue({
       data: {
         data: [
-          {
+          createApiPet({
             id: '4',
             name: 'Pringles',
-            species: 'CAT',
-            adoptionStatus: 'AVAILABLE',
-            responsibleUserId: '33333333-3333-3333-3333-333333333333',
-          },
+            species: 'cat',
+          }),
         ],
       },
     });
@@ -179,13 +201,11 @@ describe('Página Meus Pets', () => {
     getMock.mockResolvedValue({
       data: {
         data: [
-          {
+          createApiPet({
             id: '4',
             name: 'Pringles',
-            species: 'CAT',
-            adoptionStatus: 'AVAILABLE',
-            responsibleUserId: '33333333-3333-3333-3333-333333333333',
-          },
+            species: 'cat',
+          }),
         ],
       },
     });

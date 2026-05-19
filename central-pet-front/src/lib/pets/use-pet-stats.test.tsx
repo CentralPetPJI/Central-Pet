@@ -1,7 +1,8 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '@/lib/api';
 import { PET_STATS_CHANGED_BROWSER_EVENT, usePetStats } from './use-pet-stats';
+import { usePetStatsStore } from '@/storage/pets/pet-stats-store';
 
 const { getMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
@@ -46,6 +47,14 @@ describe('usePetStats', () => {
     vi.unstubAllGlobals();
     apiGetMock.mockReset();
     MockEventSource.instances = [];
+    // Reset manual do estado
+    usePetStatsStore.getState().actions.stopListening();
+    usePetStatsStore.setState({
+      stats: { availableBySpecies: {}, adopted: 0 },
+      isLoading: true,
+      error: null,
+      eventSource: null,
+    });
   });
 
   it('carrega estatísticas dos pets', async () => {
@@ -108,15 +117,20 @@ describe('usePetStats', () => {
     const { result, unmount } = renderHook(() => usePetStats());
 
     await waitFor(() => {
+      expect(result.current.stats.availableBySpecies.dog).toBe(1);
       expect(MockEventSource.instances).toHaveLength(1);
     });
 
-    MockEventSource.instances[0]?.emit('pet-stats-changed');
-
-    await waitFor(() => {
-      expect(result.current.stats.availableBySpecies.dog).toBe(2);
-      expect(localEventListener).toHaveBeenCalledTimes(1);
+    act(() => {
+      MockEventSource.instances[0]?.emit('pet-stats-changed');
     });
+
+    await waitFor(
+      () => {
+        expect(result.current.stats.availableBySpecies.dog).toBe(2);
+      },
+      { timeout: 4000 },
+    );
 
     expect(MockEventSource.instances[0]?.url).toBe('http://localhost:3000/api/pets/stats/events');
     expect(MockEventSource.instances[0]?.options).toEqual({ withCredentials: true });

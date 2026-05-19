@@ -15,6 +15,7 @@ export type {
 // Context and Hook
 export { AuthProvider, AuthContext } from './context';
 export { useAuth } from './use-auth';
+export { useAuthStore } from '@/storage';
 
 // Strategies
 export { MockAuthStrategy } from './strategies/mock.strategy';

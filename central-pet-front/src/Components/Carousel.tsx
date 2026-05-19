@@ -1,6 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import type { Pet } from '@/Models/pet';
-import PetModal from './PetModal.tsx';
 import { formatState } from '@/lib/formatters';
 import AutoScroll from 'embla-carousel-auto-scroll';
 import type { CarouselApi } from '@/Components/ui/embla-carousel';
@@ -10,6 +9,8 @@ import {
   CarouselItem,
 } from '@/Components/ui/embla-carousel';
 
+import { useModalStore } from '@/storage';
+
 type CarouselProps = {
   petsData: Pet[];
 };
@@ -18,6 +19,7 @@ const MIN_PETS_FOR_LOOP = 2;
 
 const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
   const apiRef = useRef<CarouselApi | null>(null);
+  const openModal = useModalStore((state) => state.actions.openModal);
   const autoScrollRef = useRef(
     AutoScroll({
       speed: 1.25,
@@ -27,7 +29,6 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
       stopOnMouseEnter: true,
     }),
   );
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
   const shouldLoop = petsData.length >= MIN_PETS_FOR_LOOP;
   const items = useMemo(() => petsData, [petsData]);
@@ -54,7 +55,7 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
             <CarouselItem key={pet.id} className="basis-auto">
               <div
                 className="min-w-62.5 max-w-62.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition shrink-0 cursor-pointer"
-                onClick={() => setSelectedPet(pet)}
+                onClick={() => openModal('pet-details', pet)}
               >
                 <img
                   src={pet.photo}
@@ -78,7 +79,6 @@ const Carousel: React.FC<CarouselProps> = ({ petsData }) => {
           ))}
         </CarouselContent>
       </UiCarousel>
-      {selectedPet && <PetModal petData={selectedPet} onClick={() => setSelectedPet(null)} />}
     </section>
   );
 };

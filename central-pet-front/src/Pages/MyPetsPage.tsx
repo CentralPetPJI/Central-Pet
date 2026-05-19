@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { formatPetSpecies } from '@/lib/formatters';
 import { routes } from '@/routes';
-import { mapPetApiResponseToPetListItem } from '@/Models/pet-mapper';
-import type { PetApiResponse, PetListItem } from '@/Models/pet';
+import type { PetListItem } from '@/Models/pet';
+import { usePetRegistryStore } from '@/storage';
 
 const statusLabelMap: Record<string, string> = {
   AVAILABLE: 'Disponível',
@@ -15,72 +14,15 @@ const statusLabelMap: Record<string, string> = {
 
 export default function MyPetsPage() {
   const { currentUser, isLoading: isAuthLoading } = useAuth();
-  const [pets, setPets] = useState<PetListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { myPets, isMyPetsLoading, myPetsError, actions } = usePetRegistryStore();
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
   const [deletingPetId, setDeletingPetId] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    if (isAuthLoading || !currentUser?.id) return;
 
-    const loadPets = async () => {
-      if (isAuthLoading) {
-        return;
-      }
-
-      if (!currentUser?.id) {
-        setPets([]);
-        setIsLoading(false);
-        setErrorMessage(null);
-        return;
-      }
-
-      setIsLoading(true);
-      setErrorMessage(null);
-
-      try {
-        const response = await api.get<{ data: PetApiResponse[] }>('/pets', {
-          params: {
-            responsibleUserId: currentUser.id,
-          },
-        });
-
-        if (!isMounted) {
-          return;
-        }
-
-        const scopedPets = response.data.data.filter(
-          (pet) => !pet.responsibleUserId || pet.responsibleUserId === currentUser.id,
-        );
-
-        // Converte para PetListItem mantendo o ID original do backend
-        const normalizedPets = scopedPets.map((pet) =>
-          mapPetApiResponseToPetListItem({
-            ...pet,
-            adoptionStatus: pet.adoptionStatus ?? 'AVAILABLE',
-          }),
-        );
-
-        setPets(normalizedPets);
-      } catch {
-        if (!isMounted) {
-          return;
-        }
-        setErrorMessage('Nao foi possivel carregar os pets cadastrados.');
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadPets();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUser?.id, isAuthLoading]);
+    void actions.fetchMyPets(currentUser.id);
+  }, [currentUser?.id, isAuthLoading, actions]);
 
   const handleDeletePet = async (pet: PetListItem) => {
     const confirmed = window.confirm(`Tem certeza que deseja excluir o pet "${pet.name}"?`);
@@ -93,14 +35,17 @@ export default function MyPetsPage() {
     setDeletingPetId(pet.id);
 
     try {
-      await api.delete(`/pets/${pet.id}`);
-      setPets((previousPets) => previousPets.filter((item) => item.id !== pet.id));
+      await actions.deletePet(pet.id);
     } catch {
       setDeleteErrorMessage('Não foi possível excluir o pet. Tente novamente.');
     } finally {
       setDeletingPetId(null);
     }
   };
+
+  const isLoading = isMyPetsLoading || isAuthLoading;
+  const pets = myPets;
+  const errorMessage = myPetsError;
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">

@@ -6,145 +6,41 @@
  * via factory com base na configuração do ambiente.
  */
 
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-import type {
-  AuthContextValue,
-  AuthStrategy,
-  AuthUser,
-  LoginCredentials,
-  RegisterData,
-} from '@/Models';
-import { createAuthStrategy } from './strategies/factory';
+import { createContext, useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import type { AuthContextValue } from '@/Models';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { routes } from '@/routes.tsx';
+import { useAuthStore } from '@/storage';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [users, setUsers] = useState<AuthUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const store = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Cria a estratégia uma única vez na montagem
-  const strategyRef = useRef<AuthStrategy | null>(null);
-  if (!strategyRef.current) {
-    strategyRef.current = createAuthStrategy();
-  }
-  const strategy = strategyRef.current;
-
-  const refreshCurrentUser = useCallback(async () => {
-    try {
-      const user = await strategy.getCurrentUser();
-      setCurrentUser(user);
-    } catch {
-      setCurrentUser(null);
-    }
-  }, [strategy]);
-
-  const syncCurrentUser = useCallback((user: AuthUser | null) => {
-    setCurrentUser(user);
-  }, []);
-
-  const login = useCallback(
-    async (credentials: LoginCredentials) => {
-      setIsLoading(true);
-      try {
-        const user = await strategy.login(credentials);
-        setCurrentUser(user);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [strategy],
-  );
-
-  const logout = useCallback(
-    async (redirectTo?: string) => {
-      try {
-        await strategy.logout();
-      } finally {
-        setCurrentUser(null);
-        if (redirectTo) {
-          navigate(redirectTo);
-        } else {
-          navigate('/');
-        }
-      }
-    },
-    [strategy, navigate],
-  );
-
-  const register = useCallback(
-    async (data: RegisterData) => {
-      setIsLoading(true);
-      try {
-        const user = await strategy.register(data);
-        setCurrentUser(user);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [strategy],
-  );
-
-  const acceptTerms = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await strategy.acceptTerms();
-      await refreshCurrentUser();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [strategy, refreshCurrentUser]);
-
-  const selectUser = useCallback(
-    async (userId: string) => {
-      if (!strategy.selectUser) {
-        throw new Error('selectUser not available for this auth strategy');
-      }
-      await strategy.selectUser(userId);
-      await refreshCurrentUser();
-    },
-    [strategy, refreshCurrentUser],
-  );
+  const { currentUser, isLoading, actions } = store;
 
   // Inicializa na montagem
   useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        await strategy.initialize();
+    void actions.initialize();
+  }, [actions]);
 
-        if (strategy.getUsers) {
-          const availableUsers = await strategy.getUsers();
-          setUsers(availableUsers);
-        }
-
-        // Só tenta recuperar o usuário atual após initialize() completar
-        // Isso garante que em modo mock, o userId já estará no localStorage
-        await refreshCurrentUser();
-      } catch {
-        setCurrentUser(null);
-      } finally {
-        setIsLoading(false);
+  // Sobrescreve o logout para incluir navegação
+  const logout = useCallback(
+    async (redirectTo?: string) => {
+      await actions.logout();
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else {
+        navigate('/');
       }
-    };
-
-    void bootstrap();
-  }, [strategy, refreshCurrentUser]);
+    },
+    [actions, navigate],
+  );
 
   // Redireciona para termos se o usuário estiver logado mas não aceitou os termos
-  const location = useLocation();
-
   useEffect(() => {
     if (
       !isLoading &&
@@ -160,28 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      currentUser,
-      users,
-      isLoading,
-      isAuthenticated: currentUser !== null,
-      syncCurrentUser,
-      login,
-      logout,
-      register,
-      acceptTerms,
-      selectUser,
+      ...store,
+      logout, // Usa a versão com navegação
     }),
-    [
-      currentUser,
-      users,
-      isLoading,
-      syncCurrentUser,
-      login,
-      logout,
-      register,
-      acceptTerms,
-      selectUser,
-    ],
+    [store, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { routes } from '@/routes';
-import type { Pet } from '@/Models/pet';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
 import { formatPetSpecies, formatState } from '@/lib/formatters';
 import { useAuth } from '@/lib/auth-context';
+import { useModalStore } from '@/storage';
 
-interface PetModalProps {
-  petData: Pet;
-  onClick: () => void;
-}
-
-const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
+const PetModal: React.FC = () => {
   const { currentUser, isLoading } = useAuth();
+  const petData = useModalStore((state) =>
+    state.activeModal === 'pet-details' ? state.modalData : null,
+  );
+  const closeModal = useModalStore((state) => state.actions.closeModal);
+
+  if (!petData) return null;
+
   const routeId = getPetRouteId(petData);
   const locationText = petData.city
     ? `${petData.city}${petData.state ? `/${formatState(petData.state)}` : ''}`
@@ -24,7 +26,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50"
-      onClick={onClick}
+      onClick={() => closeModal()}
     >
       <div
         className="bg-white rounded-lg p-6 w-11/12 max-w-md relative shadow-lg"
@@ -32,7 +34,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
       >
         <button
           className="absolute top-1 right-2 text-gray-500 hover:text-gray-700"
-          onClick={onClick}
+          onClick={() => closeModal()}
         >
           ✕
         </button>
@@ -57,6 +59,7 @@ const PetModal: React.FC<PetModalProps> = ({ petData, onClick }) => {
 
         <Link
           to={routes.pets.detail.build(routeId)}
+          onClick={() => closeModal()}
           className="mt-6 block w-full rounded-xl bg-primary-400 py-3 text-center font-semibold text-white transition hover:bg-primary-600"
           aria-disabled={isLoading}
         >

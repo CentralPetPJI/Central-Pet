@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PetModal from '@/Components/PetModal';
 import type { Pet } from '@/Models/pet';
 import * as authModule from '@/lib/auth-context';
+import { useModalStore } from '@/storage';
 
 const petStub: Pet = {
   id: 42,
@@ -29,12 +30,16 @@ describe('PetModal', () => {
       selectUser: vi.fn(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
+
+    act(() => {
+      useModalStore.getState().actions.openModal('pet-details', petStub);
+    });
   });
 
   it('renderiza "Quero adotar" quando o usuário não é o dono', () => {
     render(
       <MemoryRouter>
-        <PetModal petData={petStub} onClick={vi.fn()} />
+        <PetModal />
       </MemoryRouter>,
     );
 
@@ -57,7 +62,7 @@ describe('PetModal', () => {
 
     render(
       <MemoryRouter>
-        <PetModal petData={petStub} onClick={vi.fn()} />
+        <PetModal />
       </MemoryRouter>,
     );
 

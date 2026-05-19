@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Carousel from '@/Components/Carousel';
 import type { Pet } from '@/Models/pet';
 import * as authModule from '@/lib/auth-context';
+import { ModalManager } from '@/Components/ModalManager';
+import { useModalStore } from '@/storage';
 
 const petsStub: Pet[] = [
   {
@@ -41,11 +43,13 @@ describe('Carousel', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    useModalStore.getState().actions.closeModal();
   });
 
   it('abre o modal com os dados do pet ao clicar no card', () => {
     render(
       <MemoryRouter>
+        <ModalManager />
         <Carousel petsData={petsStub} />
       </MemoryRouter>,
     );
@@ -54,6 +58,7 @@ describe('Carousel', () => {
 
     fireEvent.click(screen.getAllByText('Bolt')[0]);
 
+    // O modal deve ser renderizado pelo ModalManager fora do Carousel
     expect(screen.getByRole('heading', { level: 2, name: 'Bolt' })).toBeInTheDocument();
     expect(screen.getAllByText('Osasco/São Paulo')[0]).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Quero adotar' })).toHaveAttribute('href', '/pets/7');

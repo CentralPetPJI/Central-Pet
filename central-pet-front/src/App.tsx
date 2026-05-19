@@ -8,6 +8,7 @@ import Header from '@/Layout/Header';
 import { routes, useAppRoutes } from '@/routes';
 import { shouldDisplayMockChoiceGates } from '@/lib/dev-mode.ts';
 import { usePetStats } from '@/lib/pets';
+import { ModalManager } from '@/Components/ModalManager';
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
       <Header />
+      <ModalManager />
 
       {shouldDisplayMockChoiceGates() ? <MockUserChoiceGate /> : null}
 

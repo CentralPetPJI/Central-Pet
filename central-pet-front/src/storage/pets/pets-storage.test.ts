@@ -1,18 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { buildRegisterFormDataFromPet, getStoredPets, petsStorageKey } from '@/storage/pets';
+import { buildRegisterFormDataFromPet } from '@/storage/pets';
 
 describe('pet storage helpers', () => {
   beforeEach(() => {
     window.localStorage.clear();
-  });
-
-  it('retorna lista vazia e limpa dados invalidos', () => {
-    window.localStorage.setItem(petsStorageKey, 'not-json');
-
-    const pets = getStoredPets();
-
-    expect(pets).toEqual([]);
-    expect(window.localStorage.getItem(petsStorageKey)).toBeNull();
   });
 
   it('reconstrói o form data de um pet existente preservando a idade exibida', () => {

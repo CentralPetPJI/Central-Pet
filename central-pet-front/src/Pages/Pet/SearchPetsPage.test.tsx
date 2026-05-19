@@ -2,14 +2,24 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SearchPetsPage from './SearchPetsPage';
+import { usePetSearchStore } from '@/storage';
 
-const { usePetsMock } = vi.hoisted(() => ({
-  usePetsMock: vi.fn(),
+// Mock da store
+const { setFiltersMock, fetchPetsMock, clearFiltersMock } = vi.hoisted(() => ({
+  setFiltersMock: vi.fn(),
+  fetchPetsMock: vi.fn(),
+  clearFiltersMock: vi.fn(),
 }));
 
-vi.mock('@/lib/pets', () => ({
-  usePets: usePetsMock,
-}));
+vi.mock('@/storage', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/storage')>();
+  return {
+    ...actual,
+    usePetSearchStore: vi.fn(),
+  };
+});
+
+const usePetSearchStoreMock = vi.mocked(usePetSearchStore);
 
 function LocationDisplay() {
   const location = useLocation();
@@ -18,13 +28,19 @@ function LocationDisplay() {
 
 describe('SearchPetsPage', () => {
   beforeEach(() => {
-    usePetsMock.mockReset();
-    usePetsMock.mockReturnValue({
+    vi.clearAllMocks();
+    usePetSearchStoreMock.mockReturnValue({
       pets: [],
       isLoading: false,
       error: null,
-      refetch: vi.fn(),
-    });
+      filters: { adoptionStatus: 'AVAILABLE' },
+      actions: {
+        setFilters: setFiltersMock,
+        fetchPets: fetchPetsMock,
+        clearFilters: clearFiltersMock,
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   });
 
   it('carrega filtros iniciais a partir da URL', () => {
@@ -36,7 +52,7 @@ describe('SearchPetsPage', () => {
       </MemoryRouter>,
     );
 
-    expect(usePetsMock).toHaveBeenCalledWith(
+    expect(setFiltersMock).toHaveBeenCalledWith(
       expect.objectContaining({
         species: 'CAT',
         size: 'SMALL',
@@ -70,5 +86,6 @@ describe('SearchPetsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }));
 
     expect(screen.getByTestId('location-search').textContent).toBe('');
+    expect(clearFiltersMock).toHaveBeenCalled();
   });
 });

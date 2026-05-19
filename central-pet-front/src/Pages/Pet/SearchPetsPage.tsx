@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { usePets } from '@/lib/pets';
 import {
   brazilianStates,
   formatPetSpecies,
@@ -11,6 +10,7 @@ import {
 } from '@/lib/formatters';
 import { getPetRouteId } from '@/storage/pets/pet-helpers';
 import { routes } from '@/routes';
+import { usePetSearchStore } from '@/storage';
 
 type SearchFilterKey = 'state' | 'species' | 'sex' | 'size';
 type SpeciesFilter = Uppercase<(typeof petSpeciesOptions)[number]['value']>;
@@ -44,24 +44,27 @@ const hasOption = <T extends string>(
 
 export default function SearchPetsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { pets, isLoading, error, filters, actions } = usePetSearchStore();
 
-  const selectedState = searchParams.get('state') ?? '';
-  const selectedSpecies = searchParams.get('species') ?? '';
-  const selectedSex = searchParams.get('sex') ?? '';
-  const selectedSize = searchParams.get('size') ?? '';
+  // Sincroniza os filtros da URL com a store na montagem e quando a URL muda
+  useEffect(() => {
+    const selectedState = searchParams.get('state') ?? '';
+    const selectedSpecies = searchParams.get('species') ?? '';
+    const selectedSex = searchParams.get('sex') ?? '';
+    const selectedSize = searchParams.get('size') ?? '';
 
-  const filters = useMemo(
-    () => ({
-      adoptionStatus: 'AVAILABLE' as const,
+    actions.setFilters({
       state: selectedState || undefined,
       species: hasOption(speciesOptions, selectedSpecies) ? selectedSpecies : undefined,
       sex: hasOption(sexOptions, selectedSex) ? selectedSex : undefined,
       size: hasOption(sizeOptions, selectedSize) ? selectedSize : undefined,
-    }),
-    [selectedSize, selectedSex, selectedSpecies, selectedState],
-  );
+    });
+  }, [searchParams, actions]);
 
-  const { pets, isLoading, error } = usePets(filters);
+  // Dispara a busca quando os filtros mudam
+  useEffect(() => {
+    void actions.fetchPets();
+  }, [filters, actions]);
 
   const handleFilterChange = (key: SearchFilterKey, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -75,7 +78,13 @@ export default function SearchPetsPage() {
 
   const handleClearFilters = () => {
     setSearchParams(new URLSearchParams());
+    actions.clearFilters();
   };
+
+  const selectedState = filters.state ?? '';
+  const selectedSpecies = filters.species ?? '';
+  const selectedSex = filters.sex ?? '';
+  const selectedSize = filters.size ?? '';
 
   return (
     <section className="w-full px-1 pb-8 pt-4 lg:px-0 lg:pt-5">

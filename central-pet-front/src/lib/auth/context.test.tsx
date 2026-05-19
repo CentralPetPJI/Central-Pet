@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './context';
 import { useAuth } from './use-auth';
+import { useAuthStore } from '@/storage';
 
 const { createAuthStrategyMock, strategyMock } = vi.hoisted(() => {
   const strategy = {
@@ -75,6 +76,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.getState().actions.reset();
   });
 
   it('inicializa a estrategia e expõe a sessao atual', async () => {

@@ -1,17 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-import type { Pet, PetApiResponse } from '@/Models/pet';
-import { mapApiResponseToPet } from '@/storage/pets/pet-helpers';
-import type { PetPersonalityApiOption } from '@/storage/pets/pet-personality-options';
+import { useCallback, useEffect, useMemo } from 'react';
+import { usePetFeedStore } from '@/storage';
+import type { Pet } from '@/Models/pet';
+import type { PetFeedFilters } from '@/storage/pets/pet-feed-store';
 
-export type UsePetsFilters = {
-  responsibleUserId?: string;
-  adoptionStatus?: 'AVAILABLE' | 'ADOPTED' | 'UNAVAILABLE';
-  state?: string;
-  species?: 'DOG' | 'CAT';
-  sex?: 'MALE' | 'FEMALE';
-  size?: 'SMALL' | 'MEDIUM' | 'LARGE';
-};
+export type UsePetsFilters = PetFeedFilters;
 
 interface UsePetsResult {
   pets: Pet[];
@@ -24,34 +16,34 @@ interface UsePetsResult {
  * Hook para buscar pets exclusivamente do backend.
  */
 export const usePets = (filters?: UsePetsFilters): UsePetsResult => {
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const pets = usePetFeedStore((state) => state.pets);
+  const isLoading = usePetFeedStore((state) => state.isLoading);
+  const error = usePetFeedStore((state) => state.error);
+  const actions = usePetFeedStore((state) => state.actions);
+
+  const normalizedFilters = useMemo<UsePetsFilters>(
+    () => ({
+      responsibleUserId: filters?.responsibleUserId,
+      adoptionStatus: filters?.adoptionStatus,
+      state: filters?.state,
+      species: filters?.species,
+      sex: filters?.sex,
+      size: filters?.size,
+    }),
+    [
+      filters?.responsibleUserId,
+      filters?.adoptionStatus,
+      filters?.state,
+      filters?.species,
+      filters?.sex,
+      filters?.size,
+    ],
+  );
 
   const fetchPets = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const [response, personalityResponse] = await Promise.all([
-        api.get<{ data: PetApiResponse[] }>('/pets', {
-          params: filters,
-        }),
-        api.get<{ data: PetPersonalityApiOption[] }>('/personality-traits').catch(() => null),
-      ]);
-      const personalityOptions = personalityResponse?.data.data ?? [];
-
-      const backendPets = response.data.data.map((pet) =>
-        mapApiResponseToPet(pet, personalityOptions),
-      );
-      setPets(backendPets);
-    } catch (err) {
-      setPets([]);
-      setError(err instanceof Error ? err : new Error('Erro ao carregar pets'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters]);
+    actions.setFilters(normalizedFilters);
+    await actions.fetchPets();
+  }, [actions, normalizedFilters]);
 
   useEffect(() => {
     void fetchPets();
