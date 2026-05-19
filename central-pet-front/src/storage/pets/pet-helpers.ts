@@ -53,6 +53,7 @@ export const mapApiResponseToPet = (
     id: apiPet.id,
     name: apiPet.name,
     species: apiPet.species,
+    breed: apiPet.breed || undefined,
     photo: apiPet.profilePhoto,
     city: apiPet.city || undefined,
     state: apiPet.state || undefined,

@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from '@/lib/api';
-import type { ReceivedAdoptionRequest } from '@/Models/pet';
+import { useCallback, useEffect } from 'react';
+import { useAdoptionRequestsSentStore } from '@/storage/adoption-requests';
 
 type UseAdoptionRequestsSentParams = {
   currentUserId?: string;
@@ -11,60 +10,37 @@ export function useAdoptionRequestsSent({
   currentUserId,
   isAuthLoading,
 }: UseAdoptionRequestsSentParams) {
-  const [requests, setRequests] = useState<ReceivedAdoptionRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { actions, requests, isLoading, errorMessage } = useAdoptionRequestsSentStore();
 
-  const requestIdRef = useRef<number>(0);
-
-  const loadRequests = useCallback(async (userId: string) => {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    requestIdRef.current += 1;
-    const currentRequestId = requestIdRef.current;
-
-    try {
-      const response = await api.get<{ data: ReceivedAdoptionRequest[] }>('/adoption-requests', {
-        params: {
-          type: 'sent',
-          adopterId: userId,
-        },
-      });
-
-      if (currentRequestId === requestIdRef.current) {
-        setRequests(response.data.data);
-      }
-    } catch {
-      if (currentRequestId === requestIdRef.current) {
-        setErrorMessage('Não foi possível carregar as solicitações enviadas no momento.');
-      }
-    } finally {
-      if (currentRequestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
+  const loadRequests = useCallback(() => {
+    if (!currentUserId) {
+      return;
     }
-  }, []);
+
+    void actions.loadRequests(currentUserId);
+  }, [actions, currentUserId]);
 
   useEffect(() => {
+    actions.setCurrentUserId(currentUserId ?? null);
+
     if (isAuthLoading) {
       return;
     }
 
     if (!currentUserId) {
-      setIsLoading(false);
-      setErrorMessage(null);
-      setRequests([]);
+      actions.resetSessionState();
       return;
     }
 
-    void loadRequests(currentUserId);
-  }, [currentUserId, isAuthLoading, loadRequests]);
+    void actions.loadRequests(currentUserId);
+  }, [actions, currentUserId, isAuthLoading]);
+
+  useEffect(() => () => actions.reset(), [actions]);
 
   return {
     requests,
     isLoading,
     errorMessage,
-    loadRequests: () => currentUserId && loadRequests(currentUserId),
+    loadRequests,
   };
 }

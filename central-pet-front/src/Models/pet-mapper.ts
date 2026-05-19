@@ -23,6 +23,7 @@ export const mapStoredPetToPetListItem = (pet: Pet): PetListItem => ({
   id: String(pet.id),
   name: pet.name,
   species: pet.species,
+  breed: pet.breed,
   adoptionStatus: 'AVAILABLE',
 });
 

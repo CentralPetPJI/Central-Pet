@@ -60,6 +60,7 @@ export const usePetRegistryStore = create<PetRegistryState>()(
               id: String(pet.id),
               name: pet.name,
               species: pet.species,
+              breed: pet.breed,
               city: pet.city,
               state: pet.state,
               adoptionStatus: pet.adoptionStatus ?? 'AVAILABLE',

@@ -5,6 +5,7 @@ export interface Pet {
   id: string | number; // ID público gerado pelo backend para uso em URLs
   name: string;
   species: 'dog' | 'cat';
+  breed?: string;
   physicalCharacteristics: string;
   behavioralCharacteristics: string;
   notes: string;
